@@ -1,4 +1,4 @@
-package com.sprint.otboo;
+package com.onepiece.otboo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package com.sprint.otboo;
+package com.onepiece.otboo;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
