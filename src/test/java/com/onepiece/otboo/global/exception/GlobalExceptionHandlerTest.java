@@ -15,7 +15,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void 커스텀예외_핸들러_테스트() {
-        CustomException ex = new CustomException(ErrorCode.USER_NOT_FOUND, Map.of("userId", 123L));
+        GlobalException ex = new GlobalException(ErrorCode.USER_NOT_FOUND, Map.of("userId", 123L));
         ResponseEntity<ErrorResponseDto> response = handler.handleCustomException(ex);
 
         assertEquals(ErrorCode.USER_NOT_FOUND.getStatus(), response.getStatusCode());

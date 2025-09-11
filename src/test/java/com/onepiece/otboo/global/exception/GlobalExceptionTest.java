@@ -7,13 +7,13 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-class CustomExceptionTest {
+class GlobalExceptionTest {
 
     @Test
     void 에러코드와_details가_포함된_커스텀예외_생성() {
         ErrorCode errorCode = ErrorCode.USER_NOT_FOUND;
         Map<String, Object> details = Map.of("userId", 123L);
-        CustomException exception = new CustomException(errorCode, details);
+        GlobalException exception = new GlobalException(errorCode, details);
 
         assertEquals(errorCode, exception.getErrorCode());
         assertEquals(errorCode.getMessage(), exception.getMessage());
@@ -25,7 +25,7 @@ class CustomExceptionTest {
     @Test
     void details가_없는_커스텀예외는_빈_details_반환() {
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
-        CustomException exception = new CustomException(errorCode);
+        GlobalException exception = new GlobalException(errorCode);
 
         assertEquals(errorCode.getMessage(), exception.getMessage());
         assertTrue(exception.getDetails().isEmpty());

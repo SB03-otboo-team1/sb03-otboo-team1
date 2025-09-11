@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponseDto> handleCustomException(CustomException e) {
+    public ResponseEntity<ErrorResponseDto> handleCustomException(GlobalException e) {
         ErrorResponseDto errorResponse = ErrorResponseDto.of(e.getErrorCode(), e, e.getDetails());
         return ResponseEntity
             .status(e.getErrorCode().getStatus())
