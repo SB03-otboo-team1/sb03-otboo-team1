@@ -1,13 +1,14 @@
 package com.onepiece.otboo.global.exception;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 class CustomExceptionTest {
+
     @Test
     void 에러코드와_details가_포함된_커스텀예외_생성() {
         ErrorCode errorCode = ErrorCode.USER_NOT_FOUND;
@@ -17,7 +18,7 @@ class CustomExceptionTest {
         assertEquals(errorCode, exception.getErrorCode());
         assertEquals(errorCode.getMessage(), exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getErrorCode().getStatus());
-        assertEquals("존재하지 않는 사용자입니다.", exception.getErrorCode().getMessage());
+        assertEquals("존재하지 않는 사용자입니다.", exception.getErrorCode().getDetail());
         assertEquals(details, exception.getDetails());
     }
 
