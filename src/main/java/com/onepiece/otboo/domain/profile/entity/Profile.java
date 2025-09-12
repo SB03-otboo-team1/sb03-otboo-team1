@@ -43,8 +43,8 @@ public class Profile extends BaseUpdatableEntity {
     @Column(name = "temp_sensitivity")
     private Integer tempSensitivity;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
     @OneToOne(fetch = FetchType.LAZY)
