@@ -49,7 +49,8 @@ CREATE TABLE IF NOT EXISTS users (
   created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at      TIMESTAMP WITH TIME ZONE,
   CHECK (provider IN ('LOCAL','GOOGLE','KAKAO')),
-  CHECK (role IN ('USER','ADMIN'))
+  CHECK (role IN ('USER','ADMIN')),
+  UNIQUE (provider, provider_user_id)
 );
 
 CREATE TABLE IF NOT EXISTS locations (
