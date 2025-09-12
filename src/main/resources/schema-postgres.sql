@@ -17,23 +17,23 @@
 ============= DROP (초기화용) =============
 */
 -- Postgres에서 필요시 활성화, 테스트/H2에서는 별도 관리
-DROP TABLE IF EXISTS feed_clothes CASCADE;
-DROP TABLE IF EXISTS clothes_attributes CASCADE;
-DROP TABLE IF EXISTS clothes_attribute_options CASCADE;
-DROP TABLE IF EXISTS clothes_attribute_defs CASCADE;
-DROP TABLE IF EXISTS feed_comments CASCADE;
-DROP TABLE IF EXISTS feed_likes CASCADE;
-DROP TABLE IF EXISTS recommendation_clothes CASCADE;
-DROP TABLE IF EXISTS recommendation CASCADE;
-DROP TABLE IF EXISTS direct_messages CASCADE;
-DROP TABLE IF EXISTS follows CASCADE;
-DROP TABLE IF EXISTS weather_data CASCADE;
-DROP TABLE IF EXISTS notifications CASCADE;
-DROP TABLE IF EXISTS user_profiles CASCADE;
-DROP TABLE IF EXISTS feeds CASCADE;
-DROP TABLE IF EXISTS clothes CASCADE;
-DROP TABLE IF EXISTS locations CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+-- DROP TABLE IF EXISTS feed_clothes CASCADE;
+-- DROP TABLE IF EXISTS clothes_attributes CASCADE;
+-- DROP TABLE IF EXISTS clothes_attribute_options CASCADE;
+-- DROP TABLE IF EXISTS clothes_attribute_defs CASCADE;
+-- DROP TABLE IF EXISTS feed_comments CASCADE;
+-- DROP TABLE IF EXISTS feed_likes CASCADE;
+-- DROP TABLE IF EXISTS recommendation_clothes CASCADE;
+-- DROP TABLE IF EXISTS recommendation CASCADE;
+-- DROP TABLE IF EXISTS direct_messages CASCADE;
+-- DROP TABLE IF EXISTS follows CASCADE;
+-- DROP TABLE IF EXISTS weather_data CASCADE;
+-- DROP TABLE IF EXISTS notifications CASCADE;
+-- DROP TABLE IF EXISTS user_profiles CASCADE;
+-- DROP TABLE IF EXISTS feeds CASCADE;
+-- DROP TABLE IF EXISTS clothes CASCADE;
+-- DROP TABLE IF EXISTS locations CASCADE;
+-- DROP TABLE IF EXISTS users CASCADE;
 
 /**
 ============= 사용자, 위치 정보 =============
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS clothes_attribute_options (
   option_value  varchar(50) NOT NULL,
   definition_id uuid NOT NULL,
   FOREIGN KEY (definition_id) REFERENCES clothes_attribute_defs(id) ON DELETE CASCADE,
-  UNIQUE (definition_id)
+  UNIQUE (definition_id, option_value)
 );
 
 CREATE TABLE IF NOT EXISTS clothes_attributes (
