@@ -1,16 +1,18 @@
 package com.onepiece.otboo.infra.seeder;
 
-import static com.onepiece.otboo.infra.seeder.SeedUtils.fetchIds;
-import static com.onepiece.otboo.infra.seeder.SeedUtils.hasAny;
 import static com.onepiece.otboo.infra.seeder.SeedUtils.randInt;
-import static com.onepiece.otboo.infra.seeder.SeedUtils.uuid;
 
+import com.onepiece.otboo.domain.location.entity.Location;
+import com.onepiece.otboo.domain.location.repository.LocationRepository;
+import com.onepiece.otboo.domain.profile.entity.Profile;
+import com.onepiece.otboo.domain.profile.enums.Gender;
+import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
+import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -19,40 +21,40 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserProfileTableSeeder implements DataSeeder {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final ProfileRepository profileRepository;
+    private final UserRepository userRepository;
+    private final LocationRepository locationRepository;
 
     @Override
     public void seed() {
-        if (hasAny(jdbcTemplate, "user_profiles")) {
+        if (profileRepository.count() > 0) {
             return;
         }
-
-        List<String> userIds = fetchIds(jdbcTemplate, "users");
-        List<String> locationIds = fetchIds(jdbcTemplate, "locations");
-
-        if (userIds.isEmpty()) {
+        // 모든 유저, 위치 id 조회
+        List<User> users = userRepository.findAll();
+        List<Location> locations = locationRepository.findAll();
+        if (users.isEmpty()) {
             return;
         }
         int count = 0;
-        for (int i = 0; i < userIds.size(); i++) {
-            String userId = userIds.get(i);
-            String locationId =
-                locationIds.isEmpty() ? null : locationIds.get(i % locationIds.size());
-            UUID id = uuid();
+        for (int i = 0; i < users.size(); i++) {
+            User user = users.get(i);
+            Location location = locations.isEmpty() ? null : locations.get(i % locations.size());
             String nickname = "user" + (i + 1);
-            String gender = switch (i % 3) {
-                case 0 -> "MALE";
-                case 1 -> "FEMALE";
-                default -> "OTHER";
+            Gender gender = switch (i % 3) {
+                case 0 -> Gender.MALE;
+                case 1 -> Gender.FEMALE;
+                default -> Gender.OTHER;
             };
             Integer tempSensitivity = randInt(1, 5);
-
-            jdbcTemplate.update(
-                "INSERT INTO user_profiles (id, user_id, location_id, nickname, gender, temp_sensitivity, created_at) VALUES (?,?,?,?,?,?,now())",
-                id, UUID.fromString(userId),
-                locationId == null ? null : UUID.fromString(locationId), nickname, gender,
-                tempSensitivity
-            );
+            Profile profile = Profile.builder()
+                .user(user)
+                .location(location)
+                .nickname(nickname)
+                .gender(gender)
+                .tempSensitivity(tempSensitivity)
+                .build();
+            profileRepository.save(profile);
             count++;
         }
         log.info("UserProfileTableSeeder: {}개의 프로필 더미 데이터가 추가되었습니다.", count);

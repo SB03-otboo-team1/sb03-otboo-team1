@@ -1,15 +1,13 @@
 package com.onepiece.otboo.infra.seeder;
 
-import static com.onepiece.otboo.infra.seeder.SeedUtils.hasAny;
 import static com.onepiece.otboo.infra.seeder.SeedUtils.randDouble;
 import static com.onepiece.otboo.infra.seeder.SeedUtils.randInt;
-import static com.onepiece.otboo.infra.seeder.SeedUtils.uuid;
 
-import java.util.UUID;
+import com.onepiece.otboo.domain.location.entity.Location;
+import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -18,11 +16,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class LocationTableSeeder implements DataSeeder {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final LocationRepository locationRepository;
 
     @Override
     public void seed() {
-        if (hasAny(jdbcTemplate, "locations")) {
+        if (locationRepository.count() > 0) {
             return;
         }
         String[] cities = {"서울특별시", "부산광역시", "인천광역시", "대구광역시", "대전광역시", "광주광역시", "울산광역시", "경기도",
@@ -33,7 +31,6 @@ public class LocationTableSeeder implements DataSeeder {
             "학익동", "우동", "범일동", "신촌동", "덕천동", "용두동", "노형동"};
         int count = 0;
         for (int i = 1; i <= 10; i++) {
-            UUID id = uuid();
             double lat = randDouble(33.0, 38.0);
             double lon = randDouble(124.0, 132.0);
             int x = randInt(10, 200);
@@ -42,12 +39,14 @@ public class LocationTableSeeder implements DataSeeder {
             String district = districts[randInt(0, districts.length - 1)];
             String neighborhood = neighborhoods[randInt(0, neighborhoods.length - 1)];
             String locationName = city + " " + district + " " + neighborhood;
-            jdbcTemplate.update(
-                "INSERT INTO locations (id, latitude, longitude, x_coordinate, y_coordinate, location_names) "
-                    +
-                    "VALUES (?,?,?,?,?, ?)",
-                id, lat, lon, x, y, locationName
-            );
+            Location location = Location.builder()
+                .latitude(lat)
+                .longitude(lon)
+                .xCoordinate(x)
+                .yCoordinate(y)
+                .locationNames(locationName)
+                .build();
+            locationRepository.save(location);
             count++;
         }
         log.info("LocationTableSeeder: {}개의 위치 더미 데이터가 추가되었습니다.", count);

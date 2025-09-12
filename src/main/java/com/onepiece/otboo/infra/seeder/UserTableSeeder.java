@@ -1,12 +1,12 @@
 package com.onepiece.otboo.infra.seeder;
 
-import static com.onepiece.otboo.infra.seeder.SeedUtils.*;
-
-import java.util.UUID;
+import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.enums.Provider;
+import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -15,22 +15,23 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserTableSeeder implements DataSeeder {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final UserRepository userRepository;
 
     @Override
     public void seed() {
-        if (hasAny(jdbcTemplate, "users")) {
+        if (userRepository.count() > 0) {
             return;
         }
         int count = 0;
         for (int i = 1; i <= 10; i++) {
-            UUID id = uuid();
-            String email = "user" + i + "@example.com";
-            String password = "!qwe1234";
-            jdbcTemplate.update(
-                "INSERT INTO users (id, provider, email, password, role, locked, created_at) VALUES (?,?,?,?,?,?,now())",
-                id, "LOCAL", email, password, "USER", false
-            );
+            User user = User.builder()
+                .provider(Provider.LOCAL)
+                .email("user" + i + "@example.com")
+                .password("!qwe1234")
+                .role(Role.USER)
+                .locked(false)
+                .build();
+            userRepository.save(user);
             count++;
         }
         log.info("UserTableSeeder: {}개의 유저 더미 데이터가 추가되었습니다.", count);
