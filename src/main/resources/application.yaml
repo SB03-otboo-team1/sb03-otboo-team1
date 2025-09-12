@@ -8,3 +8,7 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+  h2:
+    console:
+      enabled: true      # H2 Console 사용 여부
+      path: /h2-console  # H2 Console 접속 주소
