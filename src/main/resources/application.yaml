@@ -7,4 +7,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+    show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true      # H2 Console 사용 여부
+      path: /h2-console  # H2 Console 접속 주소
