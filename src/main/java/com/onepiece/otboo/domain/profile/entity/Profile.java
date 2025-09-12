@@ -6,6 +6,8 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.global.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -32,6 +34,7 @@ public class Profile extends BaseUpdatableEntity {
     private String profileImageUrl;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private Gender gender;
 
     @Column(name = "birth_date")
