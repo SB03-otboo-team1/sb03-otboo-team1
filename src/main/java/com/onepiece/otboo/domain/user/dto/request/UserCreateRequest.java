@@ -16,7 +16,7 @@ public record UserCreateRequest(
 
     @NotBlank
     @Pattern(
-        regexp = "(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{6,100}$",
+        regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{6,100}$",
         message = "비밀번호는 영어, 숫자, 특수문자를 포함하여 6자 이상 입력해야 합니다."
     )
     String password

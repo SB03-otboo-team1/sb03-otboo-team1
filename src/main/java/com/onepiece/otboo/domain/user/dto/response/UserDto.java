@@ -12,6 +12,7 @@ public record UserDto(
     UUID id,
     Instant createdAt,
     String email,
+    String name,
     Role role,
     List<Provider> linkedOAuthProviders,
     boolean locked

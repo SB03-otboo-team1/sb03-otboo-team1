@@ -42,12 +42,13 @@ class UserControllerTest {
     void 회원가입_성공시_201을_반환한다() throws Exception {
         // given
         UserCreateRequest userCreateRequest = new UserCreateRequest("test", "test@test.com",
-            "test1234");
+            "test1234@");
 
         UserDto userDto = UserDto.builder()
             .id(UUID.randomUUID())
             .createdAt(Instant.now())
             .email("test@test.com")
+            .name("test")
             .role(Role.USER)
             .linkedOAuthProviders(List.of(Provider.LOCAL))
             .locked(false)
@@ -67,7 +68,7 @@ class UserControllerTest {
         verify(userService).create(argThat(req ->
             req.name().equals("test") &&
             req.email().equals("test@test.com") &&
-            req.password().equals("password")));
+            req.password().equals("test1234@")));
     }
 
     @Test
@@ -76,7 +77,7 @@ class UserControllerTest {
         String longName = "a".repeat(101);
 
         UserCreateRequest invalidRequest = new UserCreateRequest(longName, "aa@aa.com",
-            "pwd1234");
+            "pwd1234@");
 
         // when
         ResultActions result = mockMvc.perform(post("/api/users")
@@ -93,7 +94,7 @@ class UserControllerTest {
         String invalidEmail = "test#test.com";
 
         UserCreateRequest invalidRequest = new UserCreateRequest("test", invalidEmail,
-            "test1234");
+            "test1234@");
 
         // when
         ResultActions result = mockMvc.perform(post("/api/users")
@@ -117,16 +118,16 @@ class UserControllerTest {
         for (String pwd : invalidPasswords) {
             String invalidRequest = String.format("""
                     {
-                        "name": "test",
-                        "email": "test@test.com",
-                        "password": "%s"
+                      "name": "test",
+                      "email": "test@test.coom",
+                      "password": "%s"
                     }
                 """, pwd);
 
             // when
             ResultActions result = mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidRequest)));
+                .content(invalidRequest));
 
             // then
             result.andExpect(status().isBadRequest());
