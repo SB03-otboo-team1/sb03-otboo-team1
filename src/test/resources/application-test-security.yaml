@@ -1,0 +1,8 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+logging:
+  level:
+    com.onepiece.otboo: debug
+    org.hibernate.SQL: debug
