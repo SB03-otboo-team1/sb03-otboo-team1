@@ -1,4 +1,8 @@
 spring:
+  application:
+    name: otboo
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL
     driver-class-name: org.h2.Driver
@@ -12,3 +16,13 @@ spring:
     console:
       enabled: true      # H2 Console 사용 여부
       path: /h2-console  # H2 Console 접속 주소
+
+otboo:
+  jwt:
+    access-token:
+      secret: ${JWT_ACCESS_SECRET}
+      expiration-ms: ${JWT_ACCESS_EXPIRATION_MS}
+    refresh-token:
+      secret: ${JWT_REFRESH_SECRET}
+      expiration-ms: ${JWT_REFRESH_EXPIRATION_MS}
+    max-active-jwt-count: 1
