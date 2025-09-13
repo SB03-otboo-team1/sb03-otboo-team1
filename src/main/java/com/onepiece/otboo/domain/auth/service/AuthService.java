@@ -47,7 +47,7 @@ public class AuthService {
         try {
             return jwtProvider.generateAccessToken(userDetails);
         } catch (JOSEException e) {
-            throw new CustomAuthException(ErrorCode.TOKEN_CREATE_FAIL, e);
+            throw new CustomAuthException(ErrorCode.TOKEN_CREATE_FAILED, e);
         }
     }
 }

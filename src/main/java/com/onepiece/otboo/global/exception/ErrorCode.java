@@ -14,7 +14,7 @@ public enum ErrorCode {
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 유효하지 않습니다.", "비밀번호를 확인해 주세요."),
 
     // AUTH
-    TOKEN_CREATE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "토큰 생성에 실패했습니다.", "다시 로그인해 주세요."),
+    TOKEN_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "토큰 생성에 실패했습니다.", "다시 로그인해 주세요."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다.", "다시 로그인해 주세요."),
     TOKEN_ERROR(HttpStatus.UNAUTHORIZED, "토큰 처리 중 에러가 발생했습니다.", "다시 로그인해 주세요."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.", "다시 로그인해 주세요."),
