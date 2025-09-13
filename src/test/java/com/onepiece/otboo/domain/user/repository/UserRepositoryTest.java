@@ -4,14 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.fixture.UserFixture;
+import com.onepiece.otboo.global.config.JpaConfig;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@Import(JpaConfig.class)
 class UserRepositoryTest {
 
     @Autowired
