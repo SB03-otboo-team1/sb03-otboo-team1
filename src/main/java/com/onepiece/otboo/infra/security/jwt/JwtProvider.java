@@ -9,6 +9,8 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import com.onepiece.otboo.infra.security.userdetails.CustomUserDetailsService;
 import jakarta.servlet.http.Cookie;
 import java.util.Date;
 import java.util.UUID;
@@ -18,15 +20,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 public class JwtProvider {
 
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
 
@@ -45,7 +45,7 @@ public class JwtProvider {
         @Value("${otboo.jwt.access-token.expiration-ms}") int accessTokenExpirationMs,
         @Value("${otboo.jwt.refresh-token.secret}") String refreshTokenSecret,
         @Value("${otboo.jwt.refresh-token.expiration-ms}") int refreshTokenExpirationMs,
-        UserDetailsService userDetailsService)
+        CustomUserDetailsService userDetailsService)
         throws JOSEException {
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
@@ -66,20 +66,20 @@ public class JwtProvider {
         if (email == null) {
             return null;
         }
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        CustomUserDetails userDetails = userDetailsService.loadUserByUsername(email);
         return new UsernamePasswordAuthenticationToken(
             userDetails, null, userDetails.getAuthorities());
     }
 
-    public String generateAccessToken(UserDetails userDetails) throws JOSEException {
+    public String generateAccessToken(CustomUserDetails userDetails) throws JOSEException {
         return generateToken(userDetails, accessTokenExpirationMs, accessTokenSigner, "access");
     }
 
-    public String generateRefreshToken(UserDetails userDetails) throws JOSEException {
+    public String generateRefreshToken(CustomUserDetails userDetails) throws JOSEException {
         return generateToken(userDetails, refreshTokenExpirationMs, refreshTokenSigner, "refresh");
     }
 
-    private String generateToken(UserDetails userDetails, int expirationMs, JWSSigner signer,
+    private String generateToken(CustomUserDetails userDetails, int expirationMs, JWSSigner signer,
         String tokenType) throws JOSEException {
         String tokenId = UUID.randomUUID().toString();
         String username = userDetails.getUsername();
