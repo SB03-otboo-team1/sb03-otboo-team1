@@ -15,4 +15,17 @@ public class UserFixture {
             .role(Role.USER)
             .build();
     }
+
+    public static User createUserWithTemporaryPassword(String tempPassword,
+        java.time.Instant expiration) {
+        return User.builder()
+            .provider(Provider.LOCAL)
+            .email("test@example.com")
+            .password("password")
+            .temporaryPassword(tempPassword)
+            .temporaryPasswordExpirationTime(expiration)
+            .locked(false)
+            .role(Role.USER)
+            .build();
+    }
 }
