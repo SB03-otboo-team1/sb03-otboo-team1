@@ -30,6 +30,8 @@ public class UserTableSeeder implements DataSeeder {
                 .password("!qwe1234")
                 .role(Role.USER)
                 .locked(false)
+                .temporaryPassword(null)
+                .temporaryPasswordExpirationTime(null)
                 .build();
             userRepository.save(user);
             count++;

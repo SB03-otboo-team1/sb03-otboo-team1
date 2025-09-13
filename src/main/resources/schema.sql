@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS users (
   provider_user_id varchar(255),
   email           varchar(255) NOT NULL UNIQUE,
   password        varchar(255) NOT NULL,
+  temporary_password varchar(255),
+  temporary_password_expiration_time TIMESTAMP WITH TIME ZONE,
   role            varchar(20) NOT NULL DEFAULT 'USER',
   locked          boolean NOT NULL DEFAULT false,
   created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
