@@ -10,11 +10,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.profile.entity.Profile;
+import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import java.time.Instant;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +42,9 @@ class UserServiceImplTest {
 
     @Mock
     private UserMapper userMapper;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -54,7 +60,7 @@ class UserServiceImplTest {
         user = User.builder()
             .provider(Provider.LOCAL)
             .email("test@test.com")
-            .password("test1234@")
+            .password("encodedPassword")
             .locked(false)
             .role(Role.USER)
             .build();
@@ -63,12 +69,13 @@ class UserServiceImplTest {
         profileId = UUID.randomUUID();
 
         ReflectionTestUtils.setField(user, "id", userId);
-        ReflectionTestUtils.setField(profile, "id", profileId);
 
         profile = Profile.builder()
             .user(user)
             .nickname("test")
             .build();
+
+        ReflectionTestUtils.setField(profile, "id", profileId);
 
         userDto = UserDto.builder()
             .id(userId)
@@ -84,14 +91,14 @@ class UserServiceImplTest {
     @Test
     void 회원가입_성공시_사용자_정보와_프로필이_저장된다() {
         // given
-        UserCreateRequest request = new UserCreateRequest("test", "tset@test.com",
+        UserCreateRequest request = new UserCreateRequest("test", "test@test.com",
             "test1234@");
 
         given(userRepository.existsByEmail(anyString())).willReturn(false);
-        given(userMapper.toEntity(any())).willReturn(user);
         given(userRepository.save(any(User.class))).willReturn(user);
-        given(userMapper.toDto(any(User.class))).willReturn(userDto);
+        given(userMapper.toDto(any(User.class), any(Profile.class))).willReturn(userDto);
         given(profileRepository.save(any(Profile.class))).willReturn(profile);
+        given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
 
         // when
         UserDto result = userService.create(request);
@@ -100,8 +107,8 @@ class UserServiceImplTest {
         assertNotNull(result);
         assertEquals(userDto, result);
         verify(userRepository).existsByEmail("test@test.com");
-        verify(userMapper).toEntity(request);
-        verify(userMapper).toDto(user);
+        verify(passwordEncoder).encode(anyString());
+        verify(userMapper).toDto(user, profile);
         verify(userRepository).save(any(User.class));
         verify(profileRepository).save(any(Profile.class));
     }
