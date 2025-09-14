@@ -1,0 +1,127 @@
+package com.onepiece.otboo.domain.user.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.ThrowableAssert.catchThrowable;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
+import com.onepiece.otboo.domain.profile.entity.Profile;
+import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
+import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.enums.Provider;
+import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.mapper.UserMapper;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+@ExtendWith(MockitoExtension.class)
+class UserServiceImplTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ProfileRepository profileRepository;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @InjectMocks
+    private UserServiceImpl userService;
+
+    private User user;
+    private Profile profile;
+    private UserDto userDto;
+    private UUID userId;
+    private UUID profileId;
+
+    @BeforeEach
+    void setUp() {
+        user = User.builder()
+            .provider(Provider.LOCAL)
+            .email("test@test.com")
+            .password("test1234@")
+            .locked(false)
+            .role(Role.USER)
+            .build();
+
+        userId = UUID.randomUUID();
+        profileId = UUID.randomUUID();
+
+        ReflectionTestUtils.setField(user, "id", userId);
+        ReflectionTestUtils.setField(profile, "id", profileId);
+
+        profile = Profile.builder()
+            .user(user)
+            .nickname("test")
+            .build();
+
+        userDto = UserDto.builder()
+            .id(userId)
+            .createdAt(Instant.now())
+            .name("test")
+            .email("test@test.com")
+            .role(Role.USER)
+            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .locked(false)
+            .build();
+    }
+
+    @Test
+    void 회원가입_성공시_사용자_정보와_프로필이_저장된다() {
+        // given
+        UserCreateRequest request = new UserCreateRequest("test", "tset@test.com",
+            "test1234@");
+
+        given(userRepository.existsByEmail(anyString())).willReturn(false);
+        given(userMapper.toEntity(any())).willReturn(user);
+        given(userRepository.save(any(User.class))).willReturn(user);
+        given(userMapper.toDto(any(User.class))).willReturn(userDto);
+        given(profileRepository.save(any(Profile.class))).willReturn(profile);
+
+        // when
+        UserDto result = userService.create(request);
+
+        // then
+        assertNotNull(result);
+        assertEquals(userDto, result);
+        verify(userRepository).existsByEmail("test@test.com");
+        verify(userMapper).toEntity(request);
+        verify(userMapper).toDto(user);
+        verify(userRepository).save(any(User.class));
+        verify(profileRepository).save(any(Profile.class));
+    }
+
+    @Test
+    void 중복_이메일로_회원가입시_사용자_등록에_실패한다() {
+
+        // given
+        String existsEmail = "duplicate@duplicate.com";
+
+        UserCreateRequest request = new UserCreateRequest("test", existsEmail, "test1234@");
+
+        given(userRepository.existsByEmail(existsEmail)).willReturn(true);
+
+        // when
+        Throwable thrown = catchThrowable(() -> userService.create(request));
+
+        // then
+        assertThat(thrown)
+            .isInstanceOf(DuplicateEmailException.class);
+        verify(userRepository, never()).save(any());
+    }
+}
