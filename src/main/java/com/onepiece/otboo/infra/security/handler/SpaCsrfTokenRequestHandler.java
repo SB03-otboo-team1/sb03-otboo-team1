@@ -9,18 +9,13 @@ import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.util.StringUtils;
 
-public class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
-
-    private final CsrfTokenRequestHandler plain;
-    private final CsrfTokenRequestHandler xor;
+public record SpaCsrfTokenRequestHandler(
+    CsrfTokenRequestHandler plain,
+    CsrfTokenRequestHandler xor
+) implements CsrfTokenRequestHandler {
 
     public SpaCsrfTokenRequestHandler() {
         this(new CsrfTokenRequestAttributeHandler(), new XorCsrfTokenRequestAttributeHandler());
-    }
-
-    public SpaCsrfTokenRequestHandler(CsrfTokenRequestHandler plain, CsrfTokenRequestHandler xor) {
-        this.plain = plain;
-        this.xor = xor;
     }
 
     @Override
