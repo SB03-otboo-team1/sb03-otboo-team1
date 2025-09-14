@@ -1,4 +1,4 @@
-package com.onepiece.otboo.global.config;
+package com.onepiece.otboo.infra.security.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
