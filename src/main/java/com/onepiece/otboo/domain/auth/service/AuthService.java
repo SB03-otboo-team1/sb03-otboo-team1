@@ -1,7 +1,9 @@
 package com.onepiece.otboo.domain.auth.service;
 
 import com.nimbusds.jose.JOSEException;
+import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.CustomAuthException;
+import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserException;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
@@ -24,10 +26,11 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final JwtRegistry jwtRegistry;
 
+
     @Transactional
-    public String login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> UserNotFoundException.byEmail(email));
+    public JwtDto login(String username, String password) {
+        User user = userRepository.findByEmail(username)
+            .orElseThrow(() -> UserNotFoundException.byEmail(username));
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new UserException(ErrorCode.INVALID_PASSWORD);
         }
@@ -44,10 +47,14 @@ public class AuthService {
             user.getTemporaryPasswordExpirationTime()
         );
 
+        String token;
         try {
-            return jwtProvider.generateAccessToken(userDetails);
+            token = jwtProvider.generateAccessToken(userDetails);
         } catch (JOSEException e) {
             throw new CustomAuthException(ErrorCode.TOKEN_CREATE_FAILED, e);
         }
+
+        UserDto userDto = UserDto.from(user);
+        return new JwtDto(token, userDto);
     }
 }

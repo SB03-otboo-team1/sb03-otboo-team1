@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.CustomAuthException;
 import com.onepiece.otboo.domain.auth.service.AuthService;
 import com.onepiece.otboo.domain.user.exception.UserException;
@@ -35,7 +36,7 @@ class AuthControllerTest {
     @Test
     void 로그인_성공_JWT_반환() throws Exception {
         String jwt = "jwt-token";
-        given(authService.login(anyString(), anyString())).willReturn(jwt);
+        given(authService.login(anyString(), anyString())).willReturn(new JwtDto(jwt, null));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/sign-in")
                 .param("username", "test@email.com")
@@ -46,7 +47,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void 이메일_없음_401() throws Exception {
+    void 이메일_없음_404() throws Exception {
         given(authService.login(anyString(), anyString()))
             .willThrow(new UserNotFoundException());
 
@@ -54,12 +55,12 @@ class AuthControllerTest {
                 .param("username", "notfound@email.com")
                 .param("password", "password123")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.error").value(ErrorCode.USER_NOT_FOUND.name()));
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value(ErrorCode.USER_NOT_FOUND.name()));
     }
 
     @Test
-    void 비밀번호_불일치_401() throws Exception {
+    void 비밀번호_불일치_400() throws Exception {
         given(authService.login(anyString(), anyString()))
             .willThrow(new UserException(
                 ErrorCode.INVALID_PASSWORD));
@@ -68,8 +69,8 @@ class AuthControllerTest {
                 .param("username", "test@email.com")
                 .param("password", "wrong")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.error").value(ErrorCode.INVALID_PASSWORD.name()));
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_PASSWORD.name()));
     }
 
     @Test
@@ -83,6 +84,6 @@ class AuthControllerTest {
                 .param("password", "password123")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED))
             .andExpect(status().isInternalServerError())
-            .andExpect(jsonPath("$.error").value(ErrorCode.TOKEN_CREATE_FAILED.name()));
+            .andExpect(jsonPath("$.code").value(ErrorCode.TOKEN_CREATE_FAILED.name()));
     }
 }
