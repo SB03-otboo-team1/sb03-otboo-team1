@@ -10,16 +10,17 @@ import static org.mockito.BDDMockito.then;
 
 import com.nimbusds.jose.JOSEException;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
-import com.onepiece.otboo.domain.auth.exception.CustomAuthException;
+import com.onepiece.otboo.domain.auth.exception.TokenCreateFailedException;
+import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
-import com.onepiece.otboo.domain.user.exception.UserException;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
-import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
+import com.onepiece.otboo.infra.security.mapper.CustomUserDetailsMapper;
+import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,9 @@ class AuthServiceTest {
     private JwtProvider jwtProvider;
     @Mock
     private JwtRegistry jwtRegistry;
+
+    @Mock
+    private CustomUserDetailsMapper customUserDetailsMapper;
 
     @InjectMocks
     private AuthService authService;
@@ -71,7 +75,7 @@ class AuthServiceTest {
         JwtDto jwtDto = authService.login("test@email.com", "password");
 
         assertThat(jwtDto.getAccessToken()).isEqualTo("jwt-token");
-        then(jwtRegistry).should().invalidateAllTokens(any());
+        then(jwtRegistry).should().invalidateAllTokens(any(), any());
     }
 
     @Test
@@ -81,8 +85,7 @@ class AuthServiceTest {
         given(passwordEncoder.matches(any(), any())).willReturn(false);
 
         assertThatThrownBy(() -> authService.login("test@email.com", "wrong"))
-            .isInstanceOf(UserException.class)
-            .hasMessageContaining(ErrorCode.INVALID_PASSWORD.getMessage());
+            .isInstanceOf(UnAuthorizedException.class);
     }
 
     @Test
@@ -97,10 +100,11 @@ class AuthServiceTest {
         User user = mockUser();
         given(userRepository.findByEmail(any())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(any(), any())).willReturn(true);
+        given(customUserDetailsMapper.toCustomUserDetails(any())).willReturn(
+            mock(CustomUserDetails.class));
         given(jwtProvider.generateAccessToken(any())).willThrow(new JOSEException("fail"));
 
         assertThatThrownBy(() -> authService.login("test@email.com", "password"))
-            .isInstanceOf(CustomAuthException.class)
-            .hasMessageContaining(ErrorCode.TOKEN_CREATE_FAILED.getMessage());
+            .isInstanceOf(TokenCreateFailedException.class);
     }
 }

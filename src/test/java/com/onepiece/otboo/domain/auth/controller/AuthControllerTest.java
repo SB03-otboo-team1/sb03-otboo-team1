@@ -6,9 +6,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
-import com.onepiece.otboo.domain.auth.exception.CustomAuthException;
+import com.onepiece.otboo.domain.auth.exception.TokenCreateFailedException;
+import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.auth.service.AuthService;
-import com.onepiece.otboo.domain.user.exception.UserException;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.config.TestSecurityConfig;
@@ -39,9 +39,8 @@ class AuthControllerTest {
         given(authService.login(anyString(), anyString())).willReturn(new JwtDto(jwt, null));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/sign-in")
-                .param("username", "test@email.com")
-                .param("password", "password123")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .content("{\"username\":\"test@email.com\",\"password\":\"password123\"}")
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.accessToken").value(jwt));
     }
@@ -52,37 +51,32 @@ class AuthControllerTest {
             .willThrow(new UserNotFoundException());
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/sign-in")
-                .param("username", "notfound@email.com")
-                .param("password", "password123")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .content("{\"username\":\"notfound@email.com\",\"password\":\"password123\"}")
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value(ErrorCode.USER_NOT_FOUND.name()));
     }
 
     @Test
-    void 비밀번호_불일치_400() throws Exception {
+    void 비밀번호_불일치_401() throws Exception {
         given(authService.login(anyString(), anyString()))
-            .willThrow(new UserException(
-                ErrorCode.INVALID_PASSWORD));
+            .willThrow(new UnAuthorizedException());
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/sign-in")
-                .param("username", "test@email.com")
-                .param("password", "wrong")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_PASSWORD.name()));
+                .content("{\"username\":\"test@email.com\",\"password\":\"wrong\"}")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value(ErrorCode.UNAUTHORIZED.name()));
     }
 
     @Test
     void 토큰_생성_실패_500() throws Exception {
         given(authService.login(anyString(), anyString()))
-            .willThrow(new CustomAuthException(
-                ErrorCode.TOKEN_CREATE_FAILED));
+            .willThrow(new TokenCreateFailedException());
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/sign-in")
-                .param("username", "test@email.com")
-                .param("password", "password123")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .content("{\"username\":\"test@email.com\",\"password\":\"password123\"}")
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.code").value(ErrorCode.TOKEN_CREATE_FAILED.name()));
     }
