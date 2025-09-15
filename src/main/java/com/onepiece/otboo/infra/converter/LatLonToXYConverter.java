@@ -57,6 +57,14 @@ public class LatLonToXYConverter {
         ro = roTemp;
     }
 
+    /**
+     * 주어진 위도와 경도를 Lambert Conformal Conic 투영법을 사용하여
+     * 기상청 격자 좌표(X, Y)로 변환합니다.
+     *
+     * @param lat 위도 값 (단위: degree, -90 ~ 90 권장)
+     * @param lon 경도 값 (단위: degree, -180 ~ 180 권장)
+     * @return 변환된 {@link Point} 객체 (격자 좌표 X, Y 포함)
+     */
     public static Point latLonToXY(double lat, double lon) {
         double ra = Math.tan(Math.PI * 0.25 + (lat) * DEGRAD * 0.5);
         ra = (RE / GRID) * sf / Math.pow(ra, sn);
@@ -70,8 +78,8 @@ public class LatLonToXYConverter {
         }
         theta *= sn;
 
-        int x = (int) Math.floor(ra * Math.sin(theta) + XO + 0.5);
-        int y = (int) Math.floor(ro - ra * Math.cos(theta) + YO + 0.5);
+        int x = (int) Math.floor(ra * Math.sin(theta) + XO + 1.5);
+        int y = (int) Math.floor(ro - ra * Math.cos(theta) + YO + 1.5);
 
         return new Point(x, y);
     }
