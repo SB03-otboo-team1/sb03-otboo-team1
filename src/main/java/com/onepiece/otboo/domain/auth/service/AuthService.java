@@ -6,6 +6,7 @@ import com.onepiece.otboo.domain.auth.exception.TokenCreateFailedException;
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
@@ -26,6 +27,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final JwtRegistry jwtRegistry;
     private final CustomUserDetailsMapper customUserDetailsMapper;
+    private final UserMapper userMapper;
 
     @Transactional
     public JwtDto login(String username, String password) {
@@ -47,7 +49,7 @@ public class AuthService {
             throw new TokenCreateFailedException(e);
         }
 
-        UserDto userDto = UserDto.from(user);
+        UserDto userDto = userMapper.toDto(user, null);
         return new JwtDto(token, userDto);
     }
 }
