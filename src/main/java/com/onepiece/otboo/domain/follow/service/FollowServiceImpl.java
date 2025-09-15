@@ -26,9 +26,9 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public FollowResponse createFollow(FollowRequest request) {
-        User follower = userRepository.findById(request.followerId())
+        User follower = userRepository.findById(request.getFollowerId())
             .orElseThrow(() -> new IllegalArgumentException("Follower not found"));
-        User following = userRepository.findById(request.followingId())
+        User following = userRepository.findById(request.getFollowingId())
             .orElseThrow(() -> new IllegalArgumentException("Following not found"));
 
         // 이미 팔로우 했는지 검증
@@ -68,9 +68,9 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public void deleteFollow(FollowRequest request) {
-        User follower = userRepository.findById(request.followerId())
+        User follower = userRepository.findById(request.getFollowerId())
             .orElseThrow(() -> new IllegalArgumentException("Follower not found"));
-        User following = userRepository.findById(request.followingId())
+        User following = userRepository.findById(request.getFollowingId())
             .orElseThrow(() -> new IllegalArgumentException("Following not found"));
 
         followRepository.deleteByFollowerAndFollowing(follower, following);
