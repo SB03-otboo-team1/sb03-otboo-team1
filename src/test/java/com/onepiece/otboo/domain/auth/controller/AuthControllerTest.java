@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.auth.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -9,10 +10,14 @@ import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.TokenCreateFailedException;
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.auth.service.AuthService;
-import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
+import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -29,14 +34,17 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
+    @Mock
+    private UserMapper userMapper;
     @MockitoBean
     private AuthService authService;
 
     @Test
     void 로그인_성공_JWT_반환() throws Exception {
         String jwt = "jwt-token";
-        given(authService.login(anyString(), anyString())).willReturn(new JwtDto(jwt, null));
+        UserDto userDto = Mockito.mock(UserDto.class);
+        given(userMapper.toDto(any(User.class), any())).willReturn(userDto);
+        given(authService.login(anyString(), anyString())).willReturn(new JwtDto(jwt, userDto));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/sign-in")
                 .content("{\"username\":\"test@email.com\",\"password\":\"password123\"}")
@@ -48,13 +56,13 @@ class AuthControllerTest {
     @Test
     void 이메일_없음_404() throws Exception {
         given(authService.login(anyString(), anyString()))
-            .willThrow(new UserNotFoundException());
+            .willThrow(new UnAuthorizedException());
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/sign-in")
                 .content("{\"username\":\"notfound@email.com\",\"password\":\"password123\"}")
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code").value(ErrorCode.USER_NOT_FOUND.name()));
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value(ErrorCode.UNAUTHORIZED.name()));
     }
 
     @Test

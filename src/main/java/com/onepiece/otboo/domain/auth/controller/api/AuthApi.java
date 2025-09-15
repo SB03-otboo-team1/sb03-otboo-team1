@@ -8,9 +8,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "인증 관리", description = "인증 관련 API")
 public interface AuthApi {
@@ -33,5 +34,5 @@ public interface AuthApi {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    ResponseEntity<JwtDto> signIn(@ModelAttribute SignInRequest request);
+    ResponseEntity<JwtDto> signIn(@Valid @RequestBody SignInRequest request);
 }

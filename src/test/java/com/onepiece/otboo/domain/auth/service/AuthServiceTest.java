@@ -15,7 +15,7 @@ import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
-import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
+import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
@@ -43,9 +43,10 @@ class AuthServiceTest {
     private JwtProvider jwtProvider;
     @Mock
     private JwtRegistry jwtRegistry;
-
     @Mock
     private CustomUserDetailsMapper customUserDetailsMapper;
+    @Mock
+    private UserMapper userMapper;
 
     @InjectMocks
     private AuthService authService;
@@ -74,7 +75,7 @@ class AuthServiceTest {
 
         JwtDto jwtDto = authService.login("test@email.com", "password");
 
-        assertThat(jwtDto.getAccessToken()).isEqualTo("jwt-token");
+        assertThat(jwtDto.accessToken()).isEqualTo("jwt-token");
         then(jwtRegistry).should().invalidateAllTokens(any(), any());
     }
 
@@ -92,7 +93,7 @@ class AuthServiceTest {
     void 이메일_없음_예외() {
         given(userRepository.findByEmail(any())).willReturn(Optional.empty());
         assertThatThrownBy(() -> authService.login("notfound@email.com", "password"))
-            .isInstanceOf(UserNotFoundException.class);
+            .isInstanceOf(UnAuthorizedException.class);
     }
 
     @Test
