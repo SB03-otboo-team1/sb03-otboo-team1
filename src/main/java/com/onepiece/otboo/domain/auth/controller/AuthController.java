@@ -28,4 +28,9 @@ public class AuthController implements AuthApi {
     @PostMapping(value = "/sign-in", consumes = "multipart/form-data")
     public void signIn(@ModelAttribute SignInRequest signInRequest) {
     }
+
+    @Override
+    @PostMapping("/sign-out")
+    public void signOut() {
+    }
 }
