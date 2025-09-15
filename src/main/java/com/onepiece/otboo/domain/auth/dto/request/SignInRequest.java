@@ -1,6 +1,14 @@
 package com.onepiece.otboo.domain.auth.dto.request;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public record SignInRequest(String username, String password) {
+@Getter
+@Setter
+@NoArgsConstructor
+public class SignInRequest {
 
+    private String username;
+    private String password;
 }

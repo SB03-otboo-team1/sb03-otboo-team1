@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,12 +24,11 @@ public class AuthController implements AuthApi {
 
     @PostMapping(
         path = "/sign-in",
-        consumes = MediaType.APPLICATION_JSON_VALUE,
+        consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE},
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<JwtDto> signIn(
-        @Valid @RequestBody(required = false) SignInRequest request) {
-        JwtDto jwtDto = authService.login(request.username(), request.password());
+    public ResponseEntity<JwtDto> signIn(@Valid SignInRequest request) {
+        JwtDto jwtDto = authService.login(request.getUsername(), request.getPassword());
         return ResponseEntity.ok(jwtDto);
     }
 
