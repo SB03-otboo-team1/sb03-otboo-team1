@@ -11,3 +11,12 @@ spring:
       ddl-auto: create-drop
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+
+logging:
+  level:
+    root: info
+    com.onepiece.otboo: debug
+    org.springframework.security: trace
+    # Spring Cache 관련 디버그 로그 활성화 (캐시 Hit/Miss 추적)
+    org.springframework.cache: debug
+    org.springframework.cache.interceptor: trace
