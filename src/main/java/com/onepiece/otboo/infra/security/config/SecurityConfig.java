@@ -1,16 +1,15 @@
 package com.onepiece.otboo.infra.security.config;
 
-import com.onepiece.otboo.infra.security.handler.SpaCsrfTokenRequestHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -19,23 +18,31 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http)
-        throws Exception {
-        http
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/csrf-token").permitAll()
-                .anyRequest().permitAll()
-            )
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-            )
-            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
-        return http.build();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            // H2 콘솔 & 회원 API는 CSRF 검사 제외 (개발용)
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/users/**"))
+
+            .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
+
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/h2-console/**",
+                    "/",
+                    "/index.html", "logo_symbol.svg", "vite.svg",
+                    "/error",
+                    "/favicon.ico",
+                    "/assets/**",
+                    "/static/**",
+                    "/swagger-ui/**", "/v3/api-docs/**",
+                    "/api/users").permitAll()
+                .anyRequest().authenticated()
+            );
+
+        return http.build();
     }
 }

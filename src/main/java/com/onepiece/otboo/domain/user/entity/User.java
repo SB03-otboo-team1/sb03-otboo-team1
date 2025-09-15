@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,9 +32,15 @@ public class User extends BaseUpdatableEntity {
 
     @Column(nullable = false)
     private String email;
-    
+
     @Column(nullable = false)
     private String password;
+
+    @Column(name = "temporary_password")
+    private String temporaryPassword;
+
+    @Column(name = "temporary_password_expiration_time")
+    private Instant temporaryPasswordExpirationTime;
 
     @Column(nullable = false)
     private boolean locked;
@@ -44,6 +51,21 @@ public class User extends BaseUpdatableEntity {
 
     public void updatePassword(String password) {
         this.password = password;
+        this.temporaryPassword = null;
+        this.temporaryPasswordExpirationTime = null;
+    }
+
+    public void updateTemporaryPassword(String tempPassword, Instant expirationTime) {
+        this.temporaryPassword = tempPassword;
+        this.temporaryPasswordExpirationTime = expirationTime;
+    }
+
+    public boolean isTemporaryPasswordValid(String inputPassword) {
+        if (this.temporaryPassword == null || this.temporaryPasswordExpirationTime == null) {
+            return false;
+        }
+        return this.temporaryPassword.equals(inputPassword)
+            && Instant.now().isBefore(this.temporaryPasswordExpirationTime);
     }
 
     public void updateLocked(boolean locked) {
