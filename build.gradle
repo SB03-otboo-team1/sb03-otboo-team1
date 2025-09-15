@@ -18,7 +18,9 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(
                 files(classDirectories.files.collect {
-                    fileTree(dir: it, exclude: [])
+                    fileTree(dir: it, exclude: [
+                            '**/seeder/**'
+                    ])
                 })
         )
     }
@@ -81,6 +83,10 @@ dependencies {
     // DB
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'com.h2database:h2'
+
+    // Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
