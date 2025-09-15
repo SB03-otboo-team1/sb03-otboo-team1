@@ -4,13 +4,13 @@ import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
 import java.util.Map;
 
-public class UserException extends GlobalException {
+public class FollowException extends GlobalException {
 
-    public UserException(ErrorCode errorCode) {
+    public FollowException(ErrorCode errorCode) {
         super(errorCode);
     }
 
-    public UserException(ErrorCode errorCode, Map<String, Object> details) {
+    public FollowException(ErrorCode errorCode, Map<String, Object> details) {
         super(errorCode, details);
     }
 }
