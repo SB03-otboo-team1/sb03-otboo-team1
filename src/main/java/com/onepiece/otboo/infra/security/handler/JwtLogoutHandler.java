@@ -14,7 +14,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+
 public class JwtLogoutHandler implements LogoutHandler {
+
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final int BEARER_PREFIX_LENGTH = BEARER_PREFIX.length();
 
     private final JwtProvider jwtProvider;
     private final JwtRegistry jwtRegistry;
@@ -27,16 +31,19 @@ public class JwtLogoutHandler implements LogoutHandler {
         Authentication authentication
     ) {
         String bearer = request.getHeader("Authorization");
-        if (bearer != null && bearer.startsWith("Bearer ")) {
-            String token = bearer.substring(7);
-            if (jwtProvider.validateAccessToken(token)) {
-                String email = jwtProvider.getEmailFromToken(token);
-                if (email != null) {
-                    var userDetails = userDetailsService.loadUserByUsername(email);
-                    UUID userId = userDetails.getUserId();
-                    jwtRegistry.invalidateAllTokens(userId, Instant.now());
-                }
-            }
+        if (bearer == null || !bearer.startsWith(BEARER_PREFIX)) {
+            return;
         }
+        String token = bearer.substring(BEARER_PREFIX_LENGTH);
+        if (!jwtProvider.validateAccessToken(token)) {
+            return;
+        }
+        String email = jwtProvider.getEmailFromToken(token);
+        if (email == null) {
+            return;
+        }
+        var userDetails = userDetailsService.loadUserByUsername(email);
+        UUID userId = userDetails.getUserId();
+        jwtRegistry.invalidateAllTokens(userId, Instant.now());
     }
 }

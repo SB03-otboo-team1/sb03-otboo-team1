@@ -1,8 +1,8 @@
 package com.onepiece.otboo.infra.security.config;
 
+import com.onepiece.otboo.infra.security.handler.JwtLoginFailureHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLoginSuccessHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLogoutHandler;
-import com.onepiece.otboo.infra.security.handler.LoginFailureHandler;
 import com.onepiece.otboo.infra.security.handler.SpaCsrfTokenRequestHandler;
 import com.onepiece.otboo.infra.security.jwt.JwtAuthenticationFilter;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
@@ -32,8 +32,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         JwtProvider jwtTokenProvider,
-        JwtLoginSuccessHandler loginSuccessHandler,
-        LoginFailureHandler loginFailureHandler,
+        JwtLoginSuccessHandler jwtLoginSuccessHandler,
+        JwtLoginFailureHandler jwtLoginFailureHandler,
         JwtLogoutHandler jwtLogoutHandler
     ) throws Exception {
 
@@ -68,8 +68,8 @@ public class SecurityConfig {
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .formLogin(login -> login
                 .loginProcessingUrl("/api/auth/sign-in")
-                .successHandler(loginSuccessHandler)
-                .failureHandler(loginFailureHandler)
+                .successHandler(jwtLoginSuccessHandler)
+                .failureHandler(jwtLoginFailureHandler)
             )
             .logout(logout -> logout
                 .logoutUrl("/api/auth/sign-out")
