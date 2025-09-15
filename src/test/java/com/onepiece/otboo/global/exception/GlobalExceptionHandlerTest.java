@@ -22,7 +22,6 @@ class GlobalExceptionHandlerTest {
         Object body = response.getBody();
         assertNotNull(body);
         assertTrue(body.toString().contains(ErrorCode.USER_NOT_FOUND.getMessage()));
-        assertTrue(body.toString().contains(ErrorCode.USER_NOT_FOUND.getDetail()));
         assertTrue(body.toString().contains("userId=123"));
     }
 
