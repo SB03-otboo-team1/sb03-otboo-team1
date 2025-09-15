@@ -1,0 +1,10 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+logging:
+  level:
+    root: info
+    com.onepiece.otboo: info
+    org.springframework: info
+    org.hibernate.SQL: warn
