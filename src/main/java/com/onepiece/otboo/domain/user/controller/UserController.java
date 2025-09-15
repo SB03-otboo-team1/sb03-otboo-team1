@@ -1,6 +1,6 @@
 package com.onepiece.otboo.domain.user.controller;
 
-import com.onepiece.otboo.domain.user.api.UserApi;
+import com.onepiece.otboo.domain.user.controller.api.UserApi;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.service.UserService;

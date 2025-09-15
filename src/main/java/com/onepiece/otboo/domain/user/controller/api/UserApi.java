@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.user.api;
+package com.onepiece.otboo.domain.user.controller.api;
 
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;

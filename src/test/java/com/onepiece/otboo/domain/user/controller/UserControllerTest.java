@@ -1,6 +1,5 @@
 package com.onepiece.otboo.domain.user.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
@@ -15,18 +14,25 @@ import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.service.UserService;
+import com.onepiece.otboo.global.config.JpaConfig;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-@WebMvcTest(UserController.class)
+@WebMvcTest(value = UserController.class,
+    excludeAutoConfiguration = {JpaConfig.class}
+)
+@AutoConfigureMockMvc(addFilters = false)
+@DisplayName("UserController 단위 테스트")
 class UserControllerTest {
 
     @Autowired
@@ -58,8 +64,8 @@ class UserControllerTest {
 
         // when
         ResultActions result = mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userCreateRequest)));
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(userCreateRequest)));
 
         // then
         result.andExpect(status().isCreated())
@@ -67,8 +73,8 @@ class UserControllerTest {
             .andExpect(jsonPath(("$.email")).value("test@test.com"));
         verify(userService).create(argThat(req ->
             req.name().equals("test") &&
-            req.email().equals("test@test.com") &&
-            req.password().equals("test1234@")));
+                req.email().equals("test@test.com") &&
+                req.password().equals("test1234@")));
     }
 
     @Test
