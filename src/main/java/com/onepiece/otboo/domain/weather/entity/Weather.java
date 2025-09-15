@@ -58,12 +58,14 @@ public class Weather extends BaseEntity {
     private Double precipitationProbability;
 
     @Column(name = "precipitation_type")
+    @Enumerated(EnumType.STRING)
     private PrecipitationType precipitationType;
 
     @Column(name = "wind_speed")
     private Double windSpeed;
 
     @Column(name = "wind_speed_as_word")
+    @Enumerated(EnumType.STRING)
     private WindSpeedWord windSpeedWord;
 
     @Column(name = "humidity")
