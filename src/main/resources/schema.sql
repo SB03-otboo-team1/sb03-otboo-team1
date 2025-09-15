@@ -134,7 +134,6 @@ CREATE TABLE IF NOT EXISTS clothes_attributes (
 CREATE TABLE IF NOT EXISTS weather_data (
   id                                   uuid PRIMARY KEY,
   location_id                           uuid NOT NULL,
-  user_id                               uuid NOT NULL,
   forecasted_at                         TIMESTAMP WITH TIME ZONE,
   forecast_at                           TIMESTAMP WITH TIME ZONE,
   temperature_current                   double precision NOT NULL,
@@ -151,7 +150,6 @@ CREATE TABLE IF NOT EXISTS weather_data (
   humidity_compared_to_day_before       double precision,
   created_at                            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id)     REFERENCES users(id)     ON DELETE CASCADE,
   CHECK (sky_status IN ('CLEAR','MOSTLY_CLOUDY','CLOUDY')),
   CHECK (precipitation_type IN ('NONE','RAIN','RAIN_SNOW','SNOW','SHOWER')),
   CHECK (wind_speed_as_word IN ('WEAK','MODERATE','STRONG'))

@@ -6,3 +6,4 @@ logging:
   level:
     com.onepiece.otboo: debug
     org.hibernate.SQL: debug
+    org.springframework.security: trace
