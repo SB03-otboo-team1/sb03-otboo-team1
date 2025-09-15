@@ -26,6 +26,11 @@ public interface AuthApi {
             content = @Content(schema = @Schema(implementation = JwtDto.class))
         ),
         @ApiResponse(
+            responseCode = "400",
+            description = "인증 입력값 오류",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
             responseCode = "401",
             description = "로그인 실패",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
@@ -44,8 +49,5 @@ public interface AuthApi {
         @ApiResponse(responseCode = "400", description = "CSRF 토큰 조회 실패")
     })
     @GetMapping("/csrf-token")
-    ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken) {
-        csrfToken.getToken();
-        return ResponseEntity.noContent().build();
-    }
+    ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken);
 }

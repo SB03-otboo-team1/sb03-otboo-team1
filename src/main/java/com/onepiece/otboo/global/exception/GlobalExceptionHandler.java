@@ -4,7 +4,9 @@ import com.onepiece.otboo.global.dto.response.ErrorResponseDto;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -51,5 +53,16 @@ public class GlobalExceptionHandler {
             .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
             .body(ErrorResponseDto.of(ErrorCode.INVALID_INPUT_VALUE, e,
                 Map.of("validationError", errors)));
+    }
+
+    @ExceptionHandler({
+        HttpMessageNotReadableException.class,
+        HttpMediaTypeNotSupportedException.class
+    })
+    public ResponseEntity<ErrorResponseDto> handleBadRequest(Exception e) {
+        return ResponseEntity
+            .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+            .body(ErrorResponseDto.of(ErrorCode.INVALID_INPUT_VALUE, e,
+                Map.of("reason", "잘못된 요청 형식 또는 Content-Type")));
     }
 }
