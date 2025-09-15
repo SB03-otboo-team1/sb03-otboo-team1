@@ -21,6 +21,14 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 public class SecurityConfig {
 
     @Bean
+    public CookieCsrfTokenRepository csrfRepo() {
+        CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repo.setCookieName("XSRF-TOKEN");
+        repo.setHeaderName("X-XSRF-TOKEN");
+        return repo;
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -31,7 +39,7 @@ public class SecurityConfig {
             // H2 콘솔 & 회원 API는 CSRF 검사 제외 (개발용)
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/h2-console/**", "/api/users/**")
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRepository(csrfRepo())
                 .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
             )
 
