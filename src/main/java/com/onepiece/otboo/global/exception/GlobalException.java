@@ -13,6 +13,12 @@ public class GlobalException extends RuntimeException {
         this.details = Map.of();
     }
 
+    public GlobalException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getMessage(), cause);
+        this.errorCode = errorCode;
+        this.details = Map.of();
+    }
+
     public GlobalException(ErrorCode errorCode, Map<String, Object> details) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
