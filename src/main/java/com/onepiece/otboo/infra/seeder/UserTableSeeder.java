@@ -7,6 +7,7 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 public class UserTableSeeder implements DataSeeder {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void seed() {
@@ -27,7 +29,7 @@ public class UserTableSeeder implements DataSeeder {
             User user = User.builder()
                 .provider(Provider.LOCAL)
                 .email("user" + i + "@example.com")
-                .password("!qwe1234")
+                .password(passwordEncoder.encode("!qwe1234"))
                 .role(Role.USER)
                 .locked(false)
                 .temporaryPassword(null)
