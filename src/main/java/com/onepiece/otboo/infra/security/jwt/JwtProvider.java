@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 public class JwtProvider {
 
     private final CustomUserDetailsService userDetailsService;
+    private final JwtRegistry jwtRegistry;
 
     public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
 
@@ -45,7 +46,8 @@ public class JwtProvider {
         @Value("${otboo.jwt.access-token.expiration-ms}") int accessTokenExpirationMs,
         @Value("${otboo.jwt.refresh-token.secret}") String refreshTokenSecret,
         @Value("${otboo.jwt.refresh-token.expiration-ms}") int refreshTokenExpirationMs,
-        CustomUserDetailsService userDetailsService)
+        CustomUserDetailsService userDetailsService,
+        JwtRegistry jwtRegistry)
         throws JOSEException {
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
@@ -56,6 +58,7 @@ public class JwtProvider {
         this.refreshTokenSigner = new MACSigner(refreshSecretBytes);
         this.refreshTokenVerifier = new MACVerifier(refreshSecretBytes);
         this.userDetailsService = userDetailsService;
+        this.jwtRegistry = jwtRegistry;
     }
 
     public Authentication getAuthentication(String token) {
@@ -133,6 +136,28 @@ public class JwtProvider {
                 return false;
             }
 
+            // 무효화 시각 기반 토큰 검증
+            String subject = signedJWT.getJWTClaimsSet().getSubject();
+            Date issuedAt = signedJWT.getJWTClaimsSet().getIssueTime();
+            if (subject != null && issuedAt != null) {
+                CustomUserDetails userDetails = null;
+
+                try {
+                    userDetails = userDetailsService.loadUserByUsername(subject);
+                } catch (Exception e) {
+                    return false;
+                }
+
+                if (userDetails != null) {
+                    UUID userId = userDetails.getUserId();
+                    java.time.Instant invalidatedAt = jwtRegistry.getInvalidatedAt(userId);
+                    if (invalidatedAt != null && issuedAt.toInstant().isBefore(invalidatedAt)) {
+                        // 토큰 발급 시각이 무효화 시각 이전이면 무효
+                        return false;
+                    }
+                }
+            }
+
             return true;
         } catch (Exception e) {
             return false;
@@ -142,12 +167,13 @@ public class JwtProvider {
     public Cookie generateRefreshTokenCookie(String refreshToken) {
         Cookie refreshCookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
         refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenExpirationMs / 1000);
         return refreshCookie;
     }
 
-    public Cookie genereateRefreshTokenExpirationCookie() {
+    public Cookie generateRefreshTokenExpirationCookie() {
         Cookie refreshCookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, "");
         refreshCookie.setHttpOnly(true);
         refreshCookie.setSecure(true);

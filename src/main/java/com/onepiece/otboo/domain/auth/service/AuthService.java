@@ -2,16 +2,16 @@ package com.onepiece.otboo.domain.auth.service;
 
 import com.nimbusds.jose.JOSEException;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
-import com.onepiece.otboo.domain.auth.exception.CustomAuthException;
+import com.onepiece.otboo.domain.auth.exception.TokenCreateFailedException;
+import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.exception.UserException;
-import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
-import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import com.onepiece.otboo.infra.security.userdetails.CustomUserDetailsService;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,28 +30,21 @@ public class AuthService {
     @Transactional
     public JwtDto login(String username, String password) {
         User user = userRepository.findByEmail(username)
-            .orElseThrow(() -> UserNotFoundException.byEmail(username));
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new UserException(ErrorCode.INVALID_PASSWORD);
+            .orElse(null);
+
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+            throw new UnAuthorizedException();
         }
 
-        jwtRegistry.invalidateAllTokens(user.getId());
+        jwtRegistry.invalidateAllTokens(user.getId(), Instant.now());
 
-        CustomUserDetails userDetails = new CustomUserDetails(
-            user.getId(),
-            user.getEmail(),
-            user.getPassword(),
-            user.getRole(),
-            user.isLocked(),
-            user.getTemporaryPassword(),
-            user.getTemporaryPasswordExpirationTime()
-        );
+        CustomUserDetails userDetails = CustomUserDetailsService.toCustomUserDetails(user);
 
         String token;
         try {
             token = jwtProvider.generateAccessToken(userDetails);
         } catch (JOSEException e) {
-            throw new CustomAuthException(ErrorCode.TOKEN_CREATE_FAILED, e);
+            throw new TokenCreateFailedException(e);
         }
 
         UserDto userDto = UserDto.from(user);

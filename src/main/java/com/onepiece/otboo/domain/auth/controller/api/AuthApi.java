@@ -11,11 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(name = "인증 관리", description = "인증 관련 API")
-@RequestMapping("/api/auth")
 public interface AuthApi {
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호를 입력하여 로그인합니다.")
@@ -36,6 +33,5 @@ public interface AuthApi {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PostMapping("/sign-in")
     ResponseEntity<JwtDto> signIn(@ModelAttribute SignInRequest request);
 }
