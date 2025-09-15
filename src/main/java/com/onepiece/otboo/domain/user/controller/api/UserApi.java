@@ -38,5 +38,5 @@ public interface UserApi {
             )
         )
     })
-    ResponseEntity<UserDto> create(UserCreateRequest userCreateRequest);
+    ResponseEntity<UserDto> create(@Valid @RequestBody UserCreateRequest userCreateRequest);
 }

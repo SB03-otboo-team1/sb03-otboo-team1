@@ -78,9 +78,9 @@ class UserControllerTest {
     }
 
     @Test
-    void 이름을_100자_넘게_입력시_400_에러를_반환한다() throws Exception {
+    void 이름을_20자_넘게_입력시_400_에러를_반환한다() throws Exception {
         // given
-        String longName = "a".repeat(101);
+        String longName = "a".repeat(21);
 
         UserCreateRequest invalidRequest = new UserCreateRequest(longName, "aa@aa.com",
             "pwd1234@");
