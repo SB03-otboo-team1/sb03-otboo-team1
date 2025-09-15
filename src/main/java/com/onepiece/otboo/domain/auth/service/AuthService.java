@@ -9,8 +9,8 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
+import com.onepiece.otboo.infra.security.mapper.CustomUserDetailsMapper;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
-import com.onepiece.otboo.infra.security.userdetails.CustomUserDetailsService;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +25,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final JwtRegistry jwtRegistry;
-
+    private final CustomUserDetailsMapper customUserDetailsMapper;
 
     @Transactional
     public JwtDto login(String username, String password) {
@@ -38,7 +38,7 @@ public class AuthService {
 
         jwtRegistry.invalidateAllTokens(user.getId(), Instant.now());
 
-        CustomUserDetails userDetails = CustomUserDetailsService.toCustomUserDetails(user);
+        CustomUserDetails userDetails = customUserDetailsMapper.toCustomUserDetails(user);
 
         String token;
         try {
