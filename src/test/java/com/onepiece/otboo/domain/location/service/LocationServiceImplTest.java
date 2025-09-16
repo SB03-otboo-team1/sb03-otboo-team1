@@ -12,8 +12,10 @@ import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
 import com.onepiece.otboo.infra.api.dto.KakaoLocationItem;
 import com.onepiece.otboo.infra.api.provider.LocationProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,19 +32,21 @@ class LocationServiceImplTest {
     @InjectMocks
     private LocationServiceImpl locationService;
 
+    double longitude;
+    double latitude;
+    KakaoLocationItem item;
+
+    @BeforeEach
+    void setUp() {
+        longitude = 126.8054724084087;
+        latitude = 37.43751196107601;
+
+        item = new KakaoLocationItem("경기도", "시흥시", "은행동", "");
+    }
+
     @Test
     void 위치_정보_조회_성공_테스트() {
         // given
-        double longitude = 126.8054724084087;
-        double latitude = 37.43751196107601;
-
-        KakaoLocationItem item = new KakaoLocationItem(
-            "경기도",
-            "시흥시",
-            "은행동",
-            ""
-        );
-
         Location location = Location.builder()
             .latitude(latitude)
             .longitude(longitude)
@@ -66,5 +70,28 @@ class LocationServiceImplTest {
         assertThat(result.locationNames()).contains("경기도", "시흥시", "은행동");
         verify(locationProvider).getLocation(longitude, latitude);
         verify(locationRepository).save(any(Location.class));
+    }
+
+    @Test
+    void 위도_경도_반올림_적용_테스트() {
+        // given
+        ArgumentCaptor<Location> captor = ArgumentCaptor.forClass(Location.class);
+
+        given(locationProvider.getLocation(longitude, latitude)).willReturn(item);
+        given(locationRepository.save(any(Location.class)))
+            .willAnswer(invocation -> invocation.getArgument(0)); // save 대상 그대로 반환
+
+        // when
+        WeatherAPILocation result = locationService.getLocation(longitude, latitude);
+
+        // then
+        verify(locationRepository).save(captor.capture());
+        Location saved = captor.getValue();
+        assertEquals(37.4375, saved.getLatitude());
+        assertEquals(126.8055, saved.getLongitude());
+        assertEquals("경기도,시흥시,은행동,", saved.getLocationNames());
+        assertEquals(37.4375, result.latitude());
+        assertEquals(126.8055, result.longitude());
+        assertThat(result.locationNames()).contains("경기도", "시흥시", "은행동");
     }
 }
