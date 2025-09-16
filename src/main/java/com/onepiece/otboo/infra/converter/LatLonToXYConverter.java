@@ -93,10 +93,5 @@ public class LatLonToXYConverter {
             this.x = x;
             this.y = y;
         }
-
-        @Override
-        public String toString() {
-            return "X=" + x + ", Y=" + y;
-        }
     }
 }
