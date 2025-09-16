@@ -1,19 +1,17 @@
 package com.onepiece.otboo.infra.seeder;
 
-import static com.onepiece.otboo.infra.seeder.SeedUtils.fetchIds;
-import static com.onepiece.otboo.infra.seeder.SeedUtils.hasAny;
 import static com.onepiece.otboo.infra.seeder.SeedUtils.randInt;
-import static com.onepiece.otboo.infra.seeder.SeedUtils.uuid;
 
-import java.util.ArrayList;
+import com.onepiece.otboo.domain.follow.entity.Follow;
+import com.onepiece.otboo.domain.follow.repository.FollowRepository;
+import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -22,38 +20,35 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class FollowsTableSeeder implements DataSeeder {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final FollowRepository followRepository;
+    private final UserRepository userRepository;
 
     @Override
     public void seed() {
-        if (hasAny(jdbcTemplate, "follows")) {
+        if (followRepository.count() > 0) {
             return;
         }
 
-        List<String> users = fetchIds(jdbcTemplate, "users");
+        List<User> users = userRepository.findAll();
         if (users.size() < 2) {
             return;
-        }
-
-        List<UUID> ids = new ArrayList<>();
-        for (String u : users) {
-            ids.add(UUID.fromString(u));
         }
 
         Set<String> used = new HashSet<>();
         int created = 0;
         while (created < 10 && used.size() < users.size() * users.size()) {
-            UUID follower = ids.get(randInt(0, ids.size() - 1));
-            UUID following = ids.get(randInt(0, ids.size() - 1));
-            if (follower.equals(following)) {
+            User follower = users.get(randInt(0, users.size() - 1));
+            User following = users.get(randInt(0, users.size() - 1));
+            if (follower.getId().equals(following.getId())) {
                 continue; // 자기 자신을 팔로우할 수 없음
             }
-            String key = follower + ":" + following;
+            String key = follower.getId() + ":" + following.getId();
             if (used.add(key)) {
-                jdbcTemplate.update(
-                    "INSERT INTO follows (id, follower_id, following_id, created_at) VALUES (?,?,?,now())",
-                    uuid(), follower, following
-                );
+                Follow follow = Follow.builder()
+                    .follower(follower)
+                    .following(following)
+                    .build();
+                followRepository.save(follow);
                 created++;
             }
         }
