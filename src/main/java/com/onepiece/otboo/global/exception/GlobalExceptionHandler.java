@@ -1,8 +1,9 @@
 package com.onepiece.otboo.global.exception;
 
-import com.onepiece.otboo.global.dto.response.ErrorResponseDto;
+import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -16,33 +17,46 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(value = {NoHandlerFoundException.class,
-        HttpRequestMethodNotSupportedException.class})
-    public ResponseEntity<ErrorResponseDto> handleNoPageFoundException(Exception e) {
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(NoHandlerFoundException e) {
         return ResponseEntity
-            .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-            .body(ErrorResponseDto.of(ErrorCode.INTERNAL_SERVER_ERROR, e,
-                Map.of("reason", "No handler or unsupported method")));
+            .status(ErrorCode.NOT_FOUND.getStatus())
+            .body(ErrorResponse.of(ErrorCode.NOT_FOUND, e,
+                Map.of("reason", "요청 경로를 찾을 수 없음")));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(
+        HttpRequestMethodNotSupportedException e) {
+        return ResponseEntity
+            .status(ErrorCode.METHOD_NOT_ALLOWED.getStatus())
+            .body(ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED, e,
+                Map.of("reason", "허용되지 않은 HTTP 메서드")));
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponseDto> handleCustomException(GlobalException e) {
-        ErrorResponseDto errorResponse = ErrorResponseDto.of(e.getErrorCode(), e, e.getDetails());
+    public ResponseEntity<ErrorResponse> handleCustomException(GlobalException e) {
+        Map<String, String> details = e.getDetails().entrySet().stream()
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                entry -> String.valueOf(entry.getValue())
+            ));
+        ErrorResponse errorResponse = ErrorResponse.of(e.getErrorCode(), e, details);
         return ResponseEntity
             .status(e.getErrorCode().getStatus())
             .body(errorResponse);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponseDto> handleException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
         return ResponseEntity
             .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-            .body(ErrorResponseDto.of(ErrorCode.INTERNAL_SERVER_ERROR, e,
-                Map.of("reason", "Unexpected error")));
+            .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, e,
+                Map.of("reason", "예상치 못한 오류가 발생했습니다.")));
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValidException(
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
         MethodArgumentNotValidException e) {
         BindingResult bindingResult = e.getBindingResult();
         List<String> errors = bindingResult.getFieldErrors().stream()
@@ -51,18 +65,30 @@ public class GlobalExceptionHandler {
             .toList();
         return ResponseEntity
             .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
-            .body(ErrorResponseDto.of(ErrorCode.INVALID_INPUT_VALUE, e,
-                Map.of("validationError", errors)));
+            .body(ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e,
+                Map.of("validationError", String.valueOf(errors))));
     }
 
-    @ExceptionHandler({
-        HttpMessageNotReadableException.class,
-        HttpMediaTypeNotSupportedException.class
-    })
-    public ResponseEntity<ErrorResponseDto> handleBadRequest(Exception e) {
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+        HttpMessageNotReadableException e) {
         return ResponseEntity
             .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
-            .body(ErrorResponseDto.of(ErrorCode.INVALID_INPUT_VALUE, e,
-                Map.of("reason", "잘못된 요청 형식 또는 Content-Type")));
+            .body(ErrorResponse.of(
+                ErrorCode.INVALID_INPUT_VALUE, e,
+                Map.of("reason", "잘못된 요청 형식")));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(
+        HttpMediaTypeNotSupportedException e) {
+        return ResponseEntity
+            .status(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getStatus())
+            .body(ErrorResponse.of(
+                ErrorCode.UNSUPPORTED_MEDIA_TYPE, e,
+                Map.of(
+                    "reason", "지원하지 않는 Content-Type",
+                    "supported", String.valueOf(e.getSupportedMediaTypes())
+                )));
     }
 }
