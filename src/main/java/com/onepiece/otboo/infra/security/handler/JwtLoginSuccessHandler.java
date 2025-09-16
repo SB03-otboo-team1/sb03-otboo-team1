@@ -47,8 +47,8 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         }
 
         User user = userRepository.findById(userDetails.getUserId())
-            .orElseThrow();
-        Profile profile = profileRepository.findByUserId(user.getId()).orElse(null);
+            .orElseThrow(UnAuthorizedException::new);
+        Profile profile = profileRepository.findByUserId(userDetails.getUserId()).orElse(null);
         UserDto userDto = userMapper.toDto(user, profile);
         JwtDto jwtDto = new JwtDto(accessToken, userDto);
 

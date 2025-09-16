@@ -17,13 +17,21 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(value = {NoHandlerFoundException.class,
-        HttpRequestMethodNotSupportedException.class})
-    public ResponseEntity<ErrorResponse> handleNoPageFoundException(Exception e) {
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(NoHandlerFoundException e) {
         return ResponseEntity
-            .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-            .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, e,
-                Map.of("reason", "No handler or unsupported method")));
+            .status(ErrorCode.NOT_FOUND.getStatus())
+            .body(ErrorResponse.of(ErrorCode.NOT_FOUND, e,
+                Map.of("reason", "요청 경로를 찾을 수 없음")));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(
+        HttpRequestMethodNotSupportedException e) {
+        return ResponseEntity
+            .status(ErrorCode.METHOD_NOT_ALLOWED.getStatus())
+            .body(ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED, e,
+                Map.of("reason", "허용되지 않은 HTTP 메서드")));
     }
 
     @ExceptionHandler
@@ -44,7 +52,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
             .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, e,
-                Map.of("reason", "Unexpected error")));
+                Map.of("reason", "예상치 못한 오류가 발생했습니다.")));
     }
 
     @ExceptionHandler

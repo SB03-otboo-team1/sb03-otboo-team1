@@ -5,10 +5,12 @@ import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
@@ -32,18 +34,35 @@ public class JwtLogoutHandler implements LogoutHandler {
     ) {
         String bearer = request.getHeader("Authorization");
         if (bearer == null || !bearer.startsWith(BEARER_PREFIX)) {
+            try {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                    "Authorization header missing or invalid");
+            } catch (IOException ignored) {
+            }
             return;
         }
         String token = bearer.substring(BEARER_PREFIX_LENGTH);
         if (!jwtProvider.validateAccessToken(token)) {
+            try {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+            } catch (IOException ignored) {
+            }
             return;
         }
         String email = jwtProvider.getEmailFromToken(token);
         if (email == null) {
+            try {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Email not found in token");
+            } catch (IOException ignored) {
+            }
             return;
         }
-        var userDetails = userDetailsService.loadUserByUsername(email);
-        UUID userId = userDetails.getUserId();
-        jwtRegistry.invalidateAllTokens(userId, Instant.now());
+
+        try {
+            var userDetails = userDetailsService.loadUserByUsername(email);
+            UUID userId = userDetails.getUserId();
+            jwtRegistry.invalidateAllTokens(userId, Instant.now());
+        } catch (UsernameNotFoundException ignored) {
+        }
     }
 }
