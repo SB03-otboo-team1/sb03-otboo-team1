@@ -60,13 +60,6 @@ public interface AuthApi {
         @ApiResponse(
             responseCode = "204",
             description = "로그아웃 성공"
-        ),
-        @ApiResponse(
-            responseCode = "401",
-            description = "로그아웃 실패",
-            content = @Content(
-                schema = @Schema(implementation = ErrorResponse.class)
-            )
         )
     })
     void signOut();

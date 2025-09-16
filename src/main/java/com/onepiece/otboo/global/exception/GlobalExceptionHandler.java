@@ -69,14 +69,26 @@ public class GlobalExceptionHandler {
                 Map.of("validationError", String.valueOf(errors))));
     }
 
-    @ExceptionHandler({
-        HttpMessageNotReadableException.class,
-        HttpMediaTypeNotSupportedException.class
-    })
-    public ResponseEntity<ErrorResponse> handleBadRequest(Exception e) {
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+        HttpMessageNotReadableException e) {
         return ResponseEntity
             .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
-            .body(ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e,
-                Map.of("reason", "잘못된 요청 형식 또는 Content-Type")));
+            .body(ErrorResponse.of(
+                ErrorCode.INVALID_INPUT_VALUE, e,
+                Map.of("reason", "잘못된 요청 형식")));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(
+        HttpMediaTypeNotSupportedException e) {
+        return ResponseEntity
+            .status(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getStatus())
+            .body(ErrorResponse.of(
+                ErrorCode.UNSUPPORTED_MEDIA_TYPE, e,
+                Map.of(
+                    "reason", "지원하지 않는 Content-Type",
+                    "supported", String.valueOf(e.getSupportedMediaTypes())
+                )));
     }
 }

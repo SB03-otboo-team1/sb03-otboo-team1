@@ -5,15 +5,17 @@ import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 
@@ -33,28 +35,19 @@ public class JwtLogoutHandler implements LogoutHandler {
         Authentication authentication
     ) {
         String bearer = request.getHeader("Authorization");
-        if (bearer == null || !bearer.startsWith(BEARER_PREFIX)) {
-            try {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                    "Authorization header missing or invalid");
-            } catch (IOException ignored) {
-            }
+        if (bearer == null
+            || !bearer.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX_LENGTH)) {
+            log.debug("로그아웃 무시: Authorization 헤더 없음 또는 잘못됨");
             return;
         }
-        String token = bearer.substring(BEARER_PREFIX_LENGTH);
+        String token = bearer.substring(BEARER_PREFIX_LENGTH).trim();
         if (!jwtProvider.validateAccessToken(token)) {
-            try {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
-            } catch (IOException ignored) {
-            }
+            log.debug("로그아웃 무시: 토큰이 유효하지 않거나 만료됨");
             return;
         }
         String email = jwtProvider.getEmailFromToken(token);
-        if (email == null) {
-            try {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Email not found in token");
-            } catch (IOException ignored) {
-            }
+        if (email == null || email.isBlank()) {
+            log.debug("로그아웃 무시: 토큰에 이메일 정보 없음");
             return;
         }
 
