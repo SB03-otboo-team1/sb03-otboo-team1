@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.weather.controller.api;
 
 
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
+import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "날씨 관리", description = "날씨 관련 API")
