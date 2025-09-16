@@ -43,7 +43,7 @@ public class AuthController implements AuthApi {
     public void signOut() {
     }
 
-    @PostMapping(path = "/refresh")
+    @PostMapping("/refresh")
     public ResponseEntity<JwtDto> refreshToken(
         @CookieValue("REFRESH_TOKEN") String refreshToken,
         HttpServletResponse response

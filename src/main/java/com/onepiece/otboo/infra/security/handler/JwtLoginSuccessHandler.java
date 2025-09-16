@@ -1,5 +1,13 @@
 package com.onepiece.otboo.infra.security.handler;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.TokenCreateFailedException;
@@ -12,15 +20,10 @@ import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -36,15 +39,22 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
         Authentication authentication) throws IOException {
         Object principal = authentication.getPrincipal();
+
         if (!(principal instanceof CustomUserDetails userDetails)) {
             throw new UnAuthorizedException();
         }
+
         String accessToken;
+        String refreshToken;
+
         try {
             accessToken = jwtProvider.generateAccessToken(userDetails);
+            refreshToken = jwtProvider.generateRefreshToken(userDetails);
         } catch (Exception e) {
             throw new TokenCreateFailedException(e);
         }
+
+        response.addCookie(jwtProvider.generateRefreshTokenCookie(refreshToken));
 
         User user = userRepository.findById(userDetails.getUserId())
             .orElseThrow(UnAuthorizedException::new);
