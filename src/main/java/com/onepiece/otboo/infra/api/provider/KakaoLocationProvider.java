@@ -67,6 +67,8 @@ public class KakaoLocationProvider implements LocationProvider {
 
             throw new IllegalStateException("법정동(region_type=B) 정보를 찾을 수 없음 - 위도, 경도: " +
                 longitude + "," + latitude);
+        } catch (InvalidAreaException | IllegalStateException e) {
+            throw e;
         } catch (Exception e) {
             log.error("[KakaoLocationProvider] Kakao API 통신 중 오류 발생 - message: {}", e.getMessage());
             throw new RuntimeException("Kakao API 통신 실패", e);
