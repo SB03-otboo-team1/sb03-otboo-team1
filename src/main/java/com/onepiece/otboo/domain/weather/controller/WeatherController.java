@@ -3,8 +3,6 @@ package com.onepiece.otboo.domain.weather.controller;
 import com.onepiece.otboo.domain.location.service.LocationService;
 import com.onepiece.otboo.domain.weather.controller.api.WeatherApi;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
-import com.onepiece.otboo.domain.weather.service.WeatherService;
-import com.onepiece.otboo.infra.api.provider.LocationProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
