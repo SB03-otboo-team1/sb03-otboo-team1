@@ -1,7 +1,8 @@
 package com.onepiece.otboo.domain.auth.service;
 
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
-import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
+import com.onepiece.otboo.domain.auth.exception.TokenExpiredException;
+import com.onepiece.otboo.domain.auth.exception.TokenForgedException;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
@@ -24,25 +25,50 @@ public class AuthService {
 
     @Transactional
     public JwtDto refreshToken(String refreshToken) {
-        if (!jwtProvider.validateRefreshToken(refreshToken)) {
-            throw new UnAuthorizedException();
-        }
-        String email = jwtProvider.getEmailFromToken(refreshToken);
-        if (email == null) {
-            throw new UnAuthorizedException();
-        }
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) {
-            throw new UnAuthorizedException();
-        }
+        validateRefreshTokenOrThrow(refreshToken);
+
+        String email = extractEmailOrThrow(refreshToken);
+        User user = findUserOrThrow(email);
         CustomUserDetails userDetails = customUserDetailsMapper.toCustomUserDetails(user);
+
         try {
             String newAccessToken = jwtProvider.generateAccessToken(userDetails);
             UserDto userDto = userMapper.toDto(user, null);
             jwtProvider.generateRefreshToken(userDetails);
             return new JwtDto(newAccessToken, userDto);
         } catch (Exception e) {
-            throw new UnAuthorizedException();
+            throw new TokenForgedException();
         }
+    }
+
+    private void validateRefreshTokenOrThrow(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new TokenForgedException();
+        }
+        boolean valid = jwtProvider.validateRefreshToken(refreshToken);
+        if (!valid) {
+            String email = jwtProvider.getEmailFromToken(refreshToken);
+            if (email == null) {
+                throw new TokenForgedException();
+            } else {
+                throw new TokenExpiredException();
+            }
+        }
+    }
+
+    private String extractEmailOrThrow(String refreshToken) {
+        String email = jwtProvider.getEmailFromToken(refreshToken);
+        if (email == null) {
+            throw new TokenForgedException();
+        }
+        return email;
+    }
+
+    private User findUserOrThrow(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            throw new TokenForgedException();
+        }
+        return user;
     }
 }
