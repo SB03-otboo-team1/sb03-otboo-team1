@@ -1,20 +1,18 @@
 package com.onepiece.otboo.domain.auth.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class SignInRequest {
-
+public record SignInRequest(
+    @Schema(description = "이메일")
     @NotBlank
     @Email
-    private String username;
+    String username,
 
+    @Schema(description = "비밀번호")
     @NotBlank
-    private String password;
+    String password
+) {
+
 }

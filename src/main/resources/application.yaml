@@ -18,6 +18,13 @@ spring:
       enabled: true      # H2 Console 사용 여부
       path: /h2-console  # H2 Console 접속 주소
 
+logging:
+  level:
+    root: info
+    com.onepiece.otboo: info
+    org.springframework: info
+    org.hibernate.SQL: warn
+
 otboo:
   jwt:
     access-token:
