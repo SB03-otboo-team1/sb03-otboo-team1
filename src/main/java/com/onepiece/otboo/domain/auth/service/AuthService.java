@@ -52,4 +52,28 @@ public class AuthService {
         UserDto userDto = userMapper.toDto(user, null);
         return new JwtDto(token, userDto);
     }
+
+    @Transactional
+    public JwtDto refreshToken(String refreshToken) {
+        if (!jwtProvider.validateRefreshToken(refreshToken)) {
+            throw new UnAuthorizedException();
+        }
+        String email = jwtProvider.getEmailFromToken(refreshToken);
+        if (email == null) {
+            throw new UnAuthorizedException();
+        }
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            throw new UnAuthorizedException();
+        }
+        CustomUserDetails userDetails = customUserDetailsMapper.toCustomUserDetails(user);
+        try {
+            String newAccessToken = jwtProvider.generateAccessToken(userDetails);
+            UserDto userDto = userMapper.toDto(user, null);
+            jwtProvider.generateRefreshToken(userDetails);
+            return new JwtDto(newAccessToken, userDto);
+        } catch (Exception e) {
+            throw new UnAuthorizedException();
+        }
+    }
 }

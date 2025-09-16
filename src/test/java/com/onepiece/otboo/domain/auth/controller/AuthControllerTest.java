@@ -8,12 +8,11 @@ import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.auth.service.AuthService;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
-import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.config.TestSecurityConfig;
+import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -30,10 +29,10 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-    @Mock
-    private UserMapper userMapper;
     @MockitoBean
     private AuthService authService;
+    @MockitoBean
+    private JwtProvider jwtProvider;
 
     @Test
     void 리프레시_토큰_재발급_성공() throws Exception {
@@ -42,6 +41,8 @@ class AuthControllerTest {
         UserDto userDto = Mockito.mock(UserDto.class);
         JwtDto jwtDto = new JwtDto(newAccessToken, userDto);
         given(authService.refreshToken(refreshToken)).willReturn(jwtDto);
+        given(jwtProvider.generateRefreshTokenCookie(refreshToken)).willReturn(
+            new Cookie("REFRESH_TOKEN", refreshToken));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                 .cookie(new Cookie("REFRESH_TOKEN", refreshToken)))
