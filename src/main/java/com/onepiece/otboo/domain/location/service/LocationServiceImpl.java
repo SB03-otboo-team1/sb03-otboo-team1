@@ -41,10 +41,10 @@ public class LocationServiceImpl implements LocationService {
             .toList();
 
         return new WeatherAPILocation(
-            latitude,
-            longitude,
-            location.getXCoordinate(),
-            location.getYCoordinate(),
+            savedLocation.getLatitude(),
+            savedLocation.getLongitude(),
+            savedLocation.getXCoordinate(),
+            savedLocation.getYCoordinate(),
             locationNames
         );
     }
