@@ -8,7 +8,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.location.entity.Location;
-import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
 import com.onepiece.otboo.infra.api.dto.KakaoLocationItem;
 import com.onepiece.otboo.infra.api.provider.LocationProvider;
@@ -27,7 +26,7 @@ class LocationServiceImplTest {
     private LocationProvider locationProvider;
 
     @Mock
-    private LocationRepository locationRepository;
+    private LocationPersistenceService persistenceService;
 
     @InjectMocks
     private LocationServiceImpl locationService;
@@ -56,7 +55,7 @@ class LocationServiceImplTest {
             .build();
 
         given(locationProvider.getLocation(longitude, latitude)).willReturn(item);
-        given(locationRepository.save(any(Location.class))).willReturn(location);
+        given(persistenceService.save(any(Location.class))).willReturn(location);
 
         // when
         WeatherAPILocation result = locationService.getLocation(longitude, latitude);
@@ -69,7 +68,7 @@ class LocationServiceImplTest {
         assertEquals(124, result.y());
         assertThat(result.locationNames()).contains("경기도", "시흥시", "은행동");
         verify(locationProvider).getLocation(longitude, latitude);
-        verify(locationRepository).save(any(Location.class));
+        verify(persistenceService).save(any(Location.class));
     }
 
     @Test
@@ -78,14 +77,14 @@ class LocationServiceImplTest {
         ArgumentCaptor<Location> captor = ArgumentCaptor.forClass(Location.class);
 
         given(locationProvider.getLocation(longitude, latitude)).willReturn(item);
-        given(locationRepository.save(any(Location.class)))
+        given(persistenceService.save(any(Location.class)))
             .willAnswer(invocation -> invocation.getArgument(0)); // save 대상 그대로 반환
 
         // when
         WeatherAPILocation result = locationService.getLocation(longitude, latitude);
 
         // then
-        verify(locationRepository).save(captor.capture());
+        verify(persistenceService).save(captor.capture());
         Location saved = captor.getValue();
         assertEquals(37.4375, saved.getLatitude());
         assertEquals(126.8055, saved.getLongitude());

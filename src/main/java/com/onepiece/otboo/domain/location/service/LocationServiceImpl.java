@@ -1,7 +1,6 @@
 package com.onepiece.otboo.domain.location.service;
 
 import com.onepiece.otboo.domain.location.entity.Location;
-import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
 import com.onepiece.otboo.infra.api.dto.KakaoLocationItem;
 import com.onepiece.otboo.infra.api.provider.LocationProvider;
@@ -20,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LocationServiceImpl implements LocationService {
 
     private final LocationProvider locationProvider;
-    private final LocationRepository locationRepository;
+    private final LocationPersistenceService persistenceService;
 
     @Override
     @Transactional
@@ -30,7 +29,7 @@ public class LocationServiceImpl implements LocationService {
 
         // 위치 정보 저장
         Location location = createLocationEntity(item, latitude, longitude);
-        Location savedLocation = locationRepository.save(location);
+        Location savedLocation = persistenceService.save(location);
 
         String locationString = savedLocation.getLocationNames();
         log.info("[LocationService] 위치 정보 조회 완료 - x: {}, y: {} locationNames: {}",
