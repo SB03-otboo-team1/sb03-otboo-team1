@@ -27,11 +27,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         String token = resolveToken(request);
-        if (StringUtils.hasText(token) && jwtProvider.validateAccessToken(token)) {
-            var authentication = jwtProvider.getAuthentication(token);
-            if (authentication != null) {
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            if (StringUtils.hasText(token) && jwtProvider.validateAccessToken(token)) {
+                var authentication = jwtProvider.getAuthentication(token);
+                if (authentication != null) {
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } else if (StringUtils.hasText(token)) {
+                // 토큰이 있었지만 무효라면 오염된 컨텍스트 제거
+                SecurityContextHolder.clearContext();
             }
+        } catch (Exception ex) {
+            log.debug("JWT 처리 실패: {}", ex.getMessage());
+            SecurityContextHolder.clearContext();
         }
         filterChain.doFilter(request, response);
     }
