@@ -1,10 +1,12 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  jpa:
+    show-sql: false
 
 logging:
   level:
     root: info
     com.onepiece.otboo: info
     org.springframework: info
-    org.hibernate.SQL: warn
+    org.hibernate.SQL: off

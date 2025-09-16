@@ -65,7 +65,7 @@ public class LoggingAspect {
             Object result = pjp.proceed();
             long endTime = System.currentTimeMillis();
             long executionTime = endTime - startTime;
-            log.info("[{}] {}#{} 실행 시간: {}ms (requestId: {})", layer, className, methodName,
+            log.debug("[{}] {}#{} 실행 시간: {}ms (requestId: {})", layer, className, methodName,
                 executionTime, requestId);
             if (executionTime > 1000) {
                 log.warn(
@@ -76,8 +76,8 @@ public class LoggingAspect {
         } catch (Throwable throwable) {
             long endTime = System.currentTimeMillis();
             long executionTime = endTime - startTime;
-            log.error("[{}] {}#{} 실행 실패 - 실행 시간: {}ms, 예외: {} (requestId: {})", layer, className,
-                methodName, executionTime, throwable.getMessage(), requestId);
+            log.error("[{}] {}#{} 실행 실패 - 실행 시간: {}ms (requestId: {})", layer, className,
+                methodName, executionTime, requestId, throwable);
             throw throwable;
         }
     }
@@ -87,12 +87,12 @@ public class LoggingAspect {
      */
     @Before("controllerLayer() || serviceLayer() || repositoryLayer()")
     public void logBefore(JoinPoint joinPoint) {
-        String layer = resolveLayer((ProceedingJoinPoint) joinPoint);
+        String layer = resolveLayer(joinPoint);
         String className = joinPoint.getSignature().getDeclaringTypeName();
         String methodName = joinPoint.getSignature().getName();
         Object[] args = joinPoint.getArgs();
         String requestId = ensureRequestId();
-        log.info("==> [{}] {}#{} 실행 시작 - requestId: {}, 매개변수: {}", layer, className, methodName,
+        log.debug("==> [{}] {}#{} 실행 시작 - requestId: {}, 매개변수: {}", layer, className, methodName,
             requestId, Arrays.toString(args));
     }
 
@@ -101,11 +101,11 @@ public class LoggingAspect {
      */
     @AfterReturning(pointcut = "controllerLayer() || serviceLayer() || repositoryLayer()", returning = "result")
     public void logAfterReturning(JoinPoint joinPoint, Object result) {
-        String layer = resolveLayer((ProceedingJoinPoint) joinPoint);
+        String layer = resolveLayer(joinPoint);
         String className = joinPoint.getSignature().getDeclaringTypeName();
         String methodName = joinPoint.getSignature().getName();
         String requestId = ensureRequestId();
-        log.info("<== [{}] {}#{} 실행 완료 - requestId: {}, 반환값: {}", layer, className, methodName,
+        log.debug("<== [{}] {}#{} 실행 완료 - requestId: {}, 반환값: {}", layer, className, methodName,
             requestId, result);
     }
 
@@ -114,7 +114,7 @@ public class LoggingAspect {
      */
     @AfterThrowing(pointcut = "controllerLayer() || serviceLayer() || repositoryLayer()", throwing = "exception")
     public void logAfterThrowing(JoinPoint joinPoint, Exception exception) {
-        String layer = resolveLayer((ProceedingJoinPoint) joinPoint);
+        String layer = resolveLayer(joinPoint);
         String className = joinPoint.getSignature().getDeclaringTypeName();
         String methodName = joinPoint.getSignature().getName();
         String requestId = ensureRequestId();
@@ -122,9 +122,11 @@ public class LoggingAspect {
             methodName, requestId, exception.getClass().getSimpleName(), exception.getMessage());
     }
 
-
     /**
      * 클래스명에 따라 계층(controller/service/repository) 문자열 반환
+     * <p>
+     * JoinPoint: 메서드 실행 정보만 제공, 실행 제어 불가. (@Before, @AfterReturning, @AfterThrowing)
+     * ProceedingJoinPoint: JoinPoint 확장, proceed()로 실제 메서드 실행 제어 가능. (@Around)
      */
     private String resolveLayer(ProceedingJoinPoint pjp) {
         String typeName = pjp.getSignature().getDeclaringTypeName();
@@ -140,6 +142,19 @@ public class LoggingAspect {
         return "unknown";
     }
 
+    private String resolveLayer(JoinPoint joinPoint) {
+        String typeName = joinPoint.getSignature().getDeclaringTypeName();
+        if (typeName.contains(".controller.")) {
+            return "controller";
+        }
+        if (typeName.contains(".service.")) {
+            return "service";
+        }
+        if (typeName.contains(".repository.")) {
+            return "repository";
+        }
+        return "unknown";
+    }
 
     /**
      * MDC에 requestId가 없으면 새로 생성하여 저장, 반환
