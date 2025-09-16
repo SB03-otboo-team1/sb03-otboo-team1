@@ -1,0 +1,70 @@
+package com.onepiece.otboo.domain.location.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
+import com.onepiece.otboo.domain.location.entity.Location;
+import com.onepiece.otboo.domain.location.repository.LocationRepository;
+import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
+import com.onepiece.otboo.infra.api.dto.KakaoLocationItem;
+import com.onepiece.otboo.infra.api.provider.LocationProvider;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class LocationServiceImplTest {
+
+    @Mock
+    private LocationProvider locationProvider;
+
+    @Mock
+    private LocationRepository locationRepository;
+
+    @InjectMocks
+    private LocationServiceImpl locationService;
+
+    @Test
+    void 위치_정보_조회_성공_테스트() {
+        // given
+        double longitude = 126.8054724084087;
+        double latitude = 37.43751196107601;
+
+        KakaoLocationItem item = new KakaoLocationItem(
+            "경기도",
+            "시흥시",
+            "은행동",
+            ""
+        );
+
+        Location location = Location.builder()
+            .latitude(latitude)
+            .longitude(longitude)
+            .xCoordinate(57)
+            .yCoordinate(124)
+            .locationNames("경기도,시흥시,은행동,")
+            .build();
+
+        given(locationProvider.getLocation(longitude, latitude)).willReturn(item);
+        given(locationRepository.save(any(Location.class))).willReturn(location);
+
+        // when
+        WeatherAPILocation result = locationService.getLocation(longitude, latitude);
+
+        // then
+        assertNotNull(result);
+        assertEquals(latitude, result.latitude());
+        assertEquals(longitude, result.longitude());
+        assertEquals(57, result.x());
+        assertEquals(124, result.y());
+        assertThat(result.locationNames()).contains("경기도", "시흥시", "은행동");
+        verify(locationProvider).getLocation(longitude, latitude);
+        verify(locationRepository).save(any(Location.class));
+    }
+}
