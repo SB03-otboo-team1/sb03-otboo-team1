@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.auth.service;
 
+import com.onepiece.otboo.domain.auth.dto.data.RefreshTokenData;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.TokenExpiredException;
 import com.onepiece.otboo.domain.auth.exception.TokenForgedException;
@@ -24,7 +25,7 @@ public class AuthService {
     private final UserMapper userMapper;
 
     @Transactional
-    public JwtDto refreshToken(String refreshToken) {
+    public RefreshTokenData refreshToken(String refreshToken) {
         validateRefreshTokenOrThrow(refreshToken);
 
         String email = extractEmailOrThrow(refreshToken);
@@ -34,8 +35,8 @@ public class AuthService {
         try {
             String newAccessToken = jwtProvider.generateAccessToken(userDetails);
             UserDto userDto = userMapper.toDto(user, null);
-            jwtProvider.generateRefreshToken(userDetails);
-            return new JwtDto(newAccessToken, userDto);
+            String newRefreshToken = jwtProvider.generateRefreshToken(userDetails);
+            return new RefreshTokenData(new JwtDto(newAccessToken, userDto), newRefreshToken);
         } catch (Exception e) {
             throw new TokenForgedException();
         }
