@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.auth.controller.api;
 
+import com.onepiece.otboo.domain.auth.dto.request.ResetPasswordRequest;
 import com.onepiece.otboo.domain.auth.dto.request.SignInRequest;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
@@ -93,4 +94,16 @@ public interface AuthApi {
         @CookieValue("REFRESH_TOKEN") String refreshToken,
         HttpServletResponse response
     );
+
+    @Operation(summary = "임시 비밀번호 발급", description = "이메일 주소로 임시 비밀번호를 발급합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "비밀번호 초기화 성공"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "비밀번호 초기화 실패(사용자 없음)",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
+    @PostMapping("/reset-password")
+    ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request);
 }
