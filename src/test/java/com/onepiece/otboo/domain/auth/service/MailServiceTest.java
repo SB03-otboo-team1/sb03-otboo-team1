@@ -15,9 +15,12 @@ class MailServiceTest {
     @Test
     void 이메일_발송_성공_시_true_반환() {
         ResetPasswordRequest request = new ResetPasswordRequest("test@example.com");
-        given(mailService.sendTemporaryPasswordEmail(request.email(), "tempPw")).willReturn(true);
+        var expirationTime = java.time.LocalDateTime.now().plusMinutes(3);
+        given(mailService.sendTemporaryPasswordEmail(request.email(), "tempPw",
+            expirationTime)).willReturn(true);
 
-        boolean result = mailService.sendTemporaryPasswordEmail(request.email(), "tempPw");
+        boolean result = mailService.sendTemporaryPasswordEmail(request.email(), "tempPw",
+            expirationTime);
 
         assertThat(result).isTrue();
     }
@@ -25,9 +28,12 @@ class MailServiceTest {
     @Test
     void 이메일_발송_실패_시_false_반환() {
         ResetPasswordRequest request = new ResetPasswordRequest("fail@example.com");
-        given(mailService.sendTemporaryPasswordEmail(request.email(), "tempPw")).willReturn(false);
+        var expirationTime = java.time.LocalDateTime.now().plusMinutes(3);
+        given(mailService.sendTemporaryPasswordEmail(request.email(), "tempPw",
+            expirationTime)).willReturn(false);
 
-        boolean result = mailService.sendTemporaryPasswordEmail(request.email(), "tempPw");
+        boolean result = mailService.sendTemporaryPasswordEmail(request.email(), "tempPw",
+            expirationTime);
 
         assertThat(result).isFalse();
     }
