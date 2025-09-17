@@ -34,3 +34,8 @@ otboo:
       secret: ${JWT_REFRESH_SECRET}
       expiration-ms: ${JWT_REFRESH_EXPIRATION_MS}
     max-active-jwt-count: 1
+
+api:
+  kakao:
+    rest-api-key: ${REST_API_KEY}
+

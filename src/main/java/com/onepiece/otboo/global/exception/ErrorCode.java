@@ -25,7 +25,11 @@ public enum ErrorCode {
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다.", "다시 로그인해 주세요."),
     TOKEN_ERROR(HttpStatus.UNAUTHORIZED, "토큰 처리 중 에러가 발생했습니다.", "다시 로그인해 주세요."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.", "다시 로그인해 주세요."),
-    ;
+
+
+    // LOCATION
+    INVALID_COORDINATE(HttpStatus.BAD_REQUEST, "유효하지 않은 좌표 값입니다.", "위도와 경도를 확인해주세요."),
+    INVALID_AREA(HttpStatus.BAD_REQUEST, "서비스 지역이 아닙니다.", "해당 위치는 서비스 대상 지역이 아닙니다.");
 
     private final HttpStatus status;
     private final String message;

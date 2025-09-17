@@ -58,7 +58,7 @@ public class SecurityConfig {
                     "/assets/**",
                     "/static/**",
                     "/swagger-ui/**", "/v3/api-docs/**",
-                    "/api/users",
+                    "/api/users", "/api/weathers/**",
                     "/api/auth/refresh" // TODO: refresh 엔드포인트 작업 시 제거
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()

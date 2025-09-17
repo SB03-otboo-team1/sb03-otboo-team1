@@ -11,6 +11,7 @@ jobs:
       JWT_ACCESS_EXPIRATION_MS: ${{ secrets.JWT_ACCESS_EXPIRATION_MS }}
       JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
       JWT_REFRESH_EXPIRATION_MS: ${{ secrets.JWT_REFRESH_EXPIRATION_MS }}
+      REST_API_KEY: ${{ secrets.REST_API_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
