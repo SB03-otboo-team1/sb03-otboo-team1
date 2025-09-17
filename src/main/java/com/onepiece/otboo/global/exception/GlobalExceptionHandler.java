@@ -1,5 +1,7 @@
 package com.onepiece.otboo.global.exception;
 
+import com.onepiece.otboo.domain.auth.exception.TokenExpiredException;
+import com.onepiece.otboo.domain.auth.exception.TokenForgedException;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +36,17 @@ public class GlobalExceptionHandler {
                 Map.of("reason", "허용되지 않은 HTTP 메서드")));
     }
 
+    @ExceptionHandler({TokenExpiredException.class, TokenForgedException.class})
+    public ResponseEntity<ErrorResponse> handleAuthTokenException(GlobalException e) {
+        return getErrorResponseResponseEntity(e);
+    }
+
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> handleCustomException(GlobalException e) {
+        return getErrorResponseResponseEntity(e);
+    }
+
+    private ResponseEntity<ErrorResponse> getErrorResponseResponseEntity(GlobalException e) {
         Map<String, String> details = e.getDetails().entrySet().stream()
             .collect(Collectors.toMap(
                 Map.Entry::getKey,
