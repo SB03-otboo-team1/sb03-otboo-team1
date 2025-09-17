@@ -4,6 +4,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.onepiece.otboo.domain.auth.dto.data.RefreshTokenData;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.auth.service.AuthService;
@@ -39,7 +40,8 @@ class AuthControllerTest {
         String newAccessToken = "new-access-token";
         UserDto userDto = Mockito.mock(UserDto.class);
         JwtDto jwtDto = new JwtDto(newAccessToken, userDto);
-        given(authService.refreshToken(refreshToken)).willReturn(jwtDto);
+        RefreshTokenData refreshTokenData = new RefreshTokenData(jwtDto, refreshToken);
+        given(authService.refreshToken(refreshToken)).willReturn(refreshTokenData);
         given(jwtProvider.generateRefreshTokenCookie(refreshToken)).willReturn(
             new Cookie("REFRESH_TOKEN", refreshToken));
 

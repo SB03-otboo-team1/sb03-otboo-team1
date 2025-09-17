@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
 import static org.mockito.BDDMockito.willThrow;
 
+import com.onepiece.otboo.domain.auth.dto.data.RefreshTokenData;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.TokenExpiredException;
 import com.onepiece.otboo.domain.auth.exception.TokenForgedException;
@@ -66,11 +67,12 @@ class AuthServiceTest {
         given(userMapper.toDto(user, null)).willReturn(userDto);
         given(jwtProvider.generateRefreshToken(userDetails)).willReturn("refresh-token");
 
-        JwtDto result = authService.refreshToken(validToken);
+        RefreshTokenData result = authService.refreshToken(validToken);
+        JwtDto jwtDto = result.jwtDto();
 
-        assertNotNull(result);
-        assertEquals("access-token", result.accessToken());
-        assertEquals(userDto, result.userDto());
+        assertNotNull(jwtDto);
+        assertEquals("access-token", jwtDto.accessToken());
+        assertEquals(userDto, jwtDto.userDto());
     }
 
     @Test
