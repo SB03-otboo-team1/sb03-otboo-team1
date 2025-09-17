@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
-import static org.mockito.BDDMockito.times;
 import static org.mockito.BDDMockito.verify;
 import static org.mockito.BDDMockito.willThrow;
 
@@ -103,9 +103,7 @@ class AuthServiceTest {
 
     @Test
     void null_리프레시_토큰_예외발생() {
-        String nullToken = null;
-
-        assertThrows(TokenForgedException.class, () -> authService.refreshToken(nullToken));
+        assertThrows(TokenForgedException.class, () -> authService.refreshToken(null));
     }
 
     @Test
@@ -147,6 +145,7 @@ class AuthServiceTest {
 
         authService.saveTemporaryPassword(user);
 
-        verify(user, times(2)).updateTemporaryPassword(any(), any());
+        verify(user).clearTemporaryPassword();
+        verify(user).updateTemporaryPassword(any(), any(), anyLong());
     }
 }

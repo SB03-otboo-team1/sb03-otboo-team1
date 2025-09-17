@@ -1,10 +1,12 @@
-package com.onepiece.otboo.domain.auth.service;
+package com.onepiece.otboo.infra.api.mail.service;
 
 import jakarta.mail.internet.MimeMessage;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +26,14 @@ public class MailService {
     private String senderEmail;
 
     public boolean sendTemporaryPasswordEmail(String email, String temporaryPassword,
-        LocalDateTime expirationTime) {
+        Instant expirationTime) {
         try {
             Path templatePath = Path.of("src/main/resources/templates/reset-password-email.html");
             String html = Files.readString(templatePath, StandardCharsets.UTF_8);
 
-            String formattedExpiration = expirationTime.format(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String formattedExpiration = LocalDateTime.ofInstant(expirationTime,
+                    ZoneId.systemDefault())
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
             html = html.replace("{{temporaryPassword}}", temporaryPassword)
                 .replace("{{expirationTime}}", formattedExpiration);

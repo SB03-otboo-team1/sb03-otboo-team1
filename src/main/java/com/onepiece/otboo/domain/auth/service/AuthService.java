@@ -12,7 +12,6 @@ import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.mapper.CustomUserDetailsMapper;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import java.security.SecureRandom;
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -86,11 +85,10 @@ public class AuthService {
 
     @Transactional
     public String saveTemporaryPassword(User user) {
-        clearTemporaryPassword(user);
+        user.clearTemporaryPassword();
         String rawTempPassword = generateTemporaryPassword();
-        String encodedTempPassword = passwordEncoder.encode(rawTempPassword);
-        user.updateTemporaryPassword(encodedTempPassword,
-            Instant.now().plusSeconds(temporaryPasswordValiditySeconds));
+        user.updateTemporaryPassword(rawTempPassword, passwordEncoder,
+            temporaryPasswordValiditySeconds);
         return rawTempPassword;
     }
 
@@ -104,10 +102,10 @@ public class AuthService {
     }
 
     public boolean isTemporaryPasswordValid(User user, String inputPassword) {
-        return user.isTemporaryPasswordValid(inputPassword);
+        return user.isTemporaryPasswordValid(inputPassword, passwordEncoder);
     }
 
     public void clearTemporaryPassword(User user) {
-        user.updateTemporaryPassword(null, null);
+        user.clearTemporaryPassword();
     }
 }
