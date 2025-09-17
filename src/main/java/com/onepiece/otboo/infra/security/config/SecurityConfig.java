@@ -58,7 +58,7 @@ public class SecurityConfig {
                     "/assets/**",
                     "/static/**",
                     "/swagger-ui/**", "/v3/api-docs/**",
-                    "/api/users"
+                    "/api/users", "/api/weathers/**"
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
