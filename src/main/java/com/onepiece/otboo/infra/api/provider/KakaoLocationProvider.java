@@ -16,7 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RequiredArgsConstructor
 public class KakaoLocationProvider implements LocationProvider {
 
-    private final WebClient kakaoWebClient;
+    private final WebClient kakaoApiClient;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -37,7 +37,7 @@ public class KakaoLocationProvider implements LocationProvider {
 
     private KakaoLocationItem parseItemFromApi(Double longitude, Double latitude) {
         try {
-            String response = kakaoWebClient.get()
+            String response = kakaoApiClient.get()
                 .uri(uriBuilder -> uriBuilder
                     .path("/v2/local/geo/coord2regioncode.json")
                     .queryParam("x", longitude)
