@@ -9,6 +9,7 @@ import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.auth.service.AuthService;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.infra.security.config.TestSecurityConfig;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import jakarta.servlet.http.Cookie;
@@ -72,5 +73,30 @@ class AuthControllerTest {
                 .cookie(new Cookie("REFRESH_TOKEN", forgedRefreshToken)))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.exceptionName").value("UnAuthorizedException"));
+    }
+
+
+    @Test
+    void 임시_비밀번호_발급_성공() throws Exception {
+        String email = "test@example.com";
+        String body = "{\"email\": \"" + email + "\"}";
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/reset-password")
+                .contentType("application/json")
+                .content(body))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void 임시_비밀번호_발급_실패() throws Exception {
+        String email = "notfound@example.com";
+        String body = "{\"email\": \"" + email + "\"}";
+        Mockito.doThrow(UserNotFoundException.byEmail(email)).when(authService)
+            .saveTemporaryPassword(email);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/reset-password")
+                .contentType("application/json")
+                .content(body))
+            .andExpect(status().isNotFound());
     }
 }

@@ -138,12 +138,11 @@ class AuthServiceTest {
     @Test
     void 임시_비밀번호_생성_및_저장_성공() {
         User user = mock(User.class);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
 
-        String rawTempPassword = authService.generateTemporaryPassword();
+        String rawTempPassword = authService.saveTemporaryPassword(email);
         assertNotNull(rawTempPassword);
         assertEquals(10, rawTempPassword.length());
-
-        authService.saveTemporaryPassword(user);
 
         verify(user).clearTemporaryPassword();
         verify(user).updateTemporaryPassword(any(), any(), anyLong());

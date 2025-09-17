@@ -6,6 +6,7 @@ import com.onepiece.otboo.domain.auth.exception.TokenExpiredException;
 import com.onepiece.otboo.domain.auth.exception.TokenForgedException;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
@@ -84,7 +85,9 @@ public class AuthService {
     }
 
     @Transactional
-    public String saveTemporaryPassword(User user) {
+    public String saveTemporaryPassword(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> UserNotFoundException.byEmail(email));
         user.clearTemporaryPassword();
         String rawTempPassword = generateTemporaryPassword();
         user.updateTemporaryPassword(rawTempPassword, passwordEncoder,
