@@ -3,6 +3,8 @@ package com.onepiece.otboo.domain.weather.controller;
 import com.onepiece.otboo.domain.location.service.LocationService;
 import com.onepiece.otboo.domain.weather.controller.api.WeatherApi;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
+import com.onepiece.otboo.domain.weather.dto.response.WeatherDto;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -35,5 +37,17 @@ public class WeatherController implements WeatherApi {
             result.x(), result.y(), result.locationNames());
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @Override
+    @GetMapping
+    public ResponseEntity<List<WeatherDto>> getWeather(
+        @RequestParam Double longitude,
+        @RequestParam Double latitude) {
+
+        log.info("[WeatherController] 날씨 정보 조회 요청 - 위도: {}, 경도: {}",
+            latitude, longitude);
+
+        return null;
     }
 }
