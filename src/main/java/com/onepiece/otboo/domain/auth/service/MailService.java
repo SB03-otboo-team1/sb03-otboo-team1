@@ -20,7 +20,7 @@ public class MailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${mail.sender-email}")
+    @Value("${spring.mail.sender-email}")
     private String senderEmail;
 
     public boolean sendTemporaryPasswordEmail(String email, String temporaryPassword,

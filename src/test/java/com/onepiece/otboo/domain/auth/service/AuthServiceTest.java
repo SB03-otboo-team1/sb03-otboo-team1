@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
+import static org.mockito.BDDMockito.verify;
 import static org.mockito.BDDMockito.willThrow;
 
 import com.onepiece.otboo.domain.auth.dto.data.RefreshTokenData;
@@ -19,6 +20,7 @@ import com.onepiece.otboo.infra.security.fixture.UserDetailsFixture;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.mapper.CustomUserDetailsMapper;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -109,7 +111,7 @@ class AuthServiceTest {
     void 리프레시_토큰_유저없음_예외발생() {
         given(jwtProvider.validateRefreshToken(validToken)).willReturn(true);
         given(jwtProvider.getEmailFromToken(validToken)).willReturn(email);
-        given(userRepository.findByEmail(email)).willReturn(java.util.Optional.empty());
+        given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 
         assertThrows(TokenForgedException.class, () -> authService.refreshToken(validToken));
     }
@@ -120,10 +122,25 @@ class AuthServiceTest {
         User user = mock(User.class);
         given(jwtProvider.validateRefreshToken(validToken)).willReturn(true);
         given(jwtProvider.getEmailFromToken(validToken)).willReturn(email);
-        given(userRepository.findByEmail(email)).willReturn(java.util.Optional.of(user));
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
         given(customUserDetailsMapper.toCustomUserDetails(user)).willReturn(userDetails);
         willThrow(new RuntimeException("fail")).given(jwtProvider).generateAccessToken(userDetails);
 
         assertThrows(TokenForgedException.class, () -> authService.refreshToken(validToken));
+    }
+
+    @Test
+    void 임시_비밀번호_생성_및_저장_성공() {
+        User user = mock(User.class);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        given(user.getEmail()).willReturn(email);
+
+        String rawTempPassword = authService.generateTemporaryPassword();
+        assertNotNull(rawTempPassword);
+        assertEquals(10, rawTempPassword.length());
+
+        authService.saveTemporaryPassword(user);
+
+        verify(user).updateTemporaryPassword(Mockito.anyString(), Mockito.any());
     }
 }

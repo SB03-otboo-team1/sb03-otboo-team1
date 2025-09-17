@@ -11,7 +11,11 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.mapper.CustomUserDetailsMapper;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import java.security.SecureRandom;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +27,13 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final CustomUserDetailsMapper customUserDetailsMapper;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+
+    @Value("${otboo.temporary-password.validity-seconds}")
+    private long temporaryPasswordValiditySeconds;
+
+    @Value("${otboo.temporary-password.charset}")
+    private String charset;
 
     @Transactional
     public RefreshTokenData refreshToken(String refreshToken) {
@@ -71,5 +82,32 @@ public class AuthService {
             throw new TokenForgedException();
         }
         return user;
+    }
+
+    @Transactional
+    public String saveTemporaryPassword(User user) {
+        clearTemporaryPassword(user);
+        String rawTempPassword = generateTemporaryPassword();
+        String encodedTempPassword = passwordEncoder.encode(rawTempPassword);
+        user.updateTemporaryPassword(encodedTempPassword,
+            Instant.now().plusSeconds(temporaryPasswordValiditySeconds));
+        return rawTempPassword;
+    }
+
+    public String generateTemporaryPassword() {
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            sb.append(charset.charAt(random.nextInt(charset.length())));
+        }
+        return sb.toString();
+    }
+
+    public boolean isTemporaryPasswordValid(User user, String inputPassword) {
+        return user.isTemporaryPasswordValid(inputPassword);
+    }
+
+    public void clearTemporaryPassword(User user) {
+        user.updateTemporaryPassword(null, null);
     }
 }
