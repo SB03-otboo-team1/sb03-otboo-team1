@@ -17,6 +17,7 @@ jobs:
       MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
       TEMP_PASSWORD_VALIDITY_SECONDS: ${{ secrets.TEMP_PASSWORD_VALIDITY_SECONDS }}
       TEMP_PASSWORD_CHARSET: ${{ secrets.TEMP_PASSWORD_CHARSET }}
+      TEMP_PASSWORD_SPECIAL_CHARSET: ${{ secrets.TEMP_PASSWORD_SPECIAL_CHARSET }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

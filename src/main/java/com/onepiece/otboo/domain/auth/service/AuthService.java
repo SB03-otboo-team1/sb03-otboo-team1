@@ -35,6 +35,9 @@ public class AuthService {
     @Value("${otboo.temporary-password.charset}")
     private String charset;
 
+    @Value("${otboo.temporary-password.special-charset}")
+    private String specialCharset;
+
     @Transactional
     public RefreshTokenData refreshToken(String refreshToken) {
         validateRefreshTokenOrThrow(refreshToken);
@@ -98,10 +101,21 @@ public class AuthService {
     public String generateTemporaryPassword() {
         SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 10; i++) {
+
+        sb.append(specialCharset.charAt(random.nextInt(specialCharset.length())));
+        for (int i = 0; i < 9; i++) {
             sb.append(charset.charAt(random.nextInt(charset.length())));
         }
-        return sb.toString();
+
+        char[] passwordArr = sb.toString().toCharArray();
+        for (int i = passwordArr.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            char tmp = passwordArr[i];
+            passwordArr[i] = passwordArr[j];
+            passwordArr[j] = tmp;
+        }
+
+        return new String(passwordArr);
     }
 
     public boolean isTemporaryPasswordValid(User user, String inputPassword) {

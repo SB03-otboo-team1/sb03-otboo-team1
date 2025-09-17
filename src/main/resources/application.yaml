@@ -51,6 +51,7 @@ otboo:
   temporary-password:
     validity-seconds: ${TEMP_PASSWORD_VALIDITY_SECONDS}
     charset: ${TEMP_PASSWORD_CHARSET}
+    special-charset: ${TEMP_PASSWORD_SPECIAL_CHARSET}
 
 api:
   kakao:
