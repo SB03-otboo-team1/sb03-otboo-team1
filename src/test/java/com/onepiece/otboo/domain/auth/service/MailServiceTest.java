@@ -2,15 +2,16 @@ package com.onepiece.otboo.domain.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import com.onepiece.otboo.domain.auth.dto.request.ResetPasswordRequest;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.ActiveProfiles;
 
+@ActiveProfiles("test")
 class MailServiceTest {
 
-    @MockitoBean
-    private MailService mailService;
+    private final MailService mailService = mock(MailService.class);
 
     @Test
     void 이메일_발송_성공_시_true_반환() {

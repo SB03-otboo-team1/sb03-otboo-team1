@@ -3,8 +3,10 @@ package com.onepiece.otboo.domain.auth.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
+import static org.mockito.BDDMockito.times;
 import static org.mockito.BDDMockito.verify;
 import static org.mockito.BDDMockito.willThrow;
 
@@ -28,7 +30,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +46,8 @@ class AuthServiceTest {
     private CustomUserDetailsMapper customUserDetailsMapper;
     @Mock
     private UserMapper userMapper;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private AuthService authService;
@@ -54,6 +60,8 @@ class AuthServiceTest {
     @BeforeEach
     void setup() {
         Mockito.reset(userRepository, jwtProvider, customUserDetailsMapper, userMapper);
+        ReflectionTestUtils.setField(authService, "charset", "abcdefghijklmnopqrstuvwxyz");
+        ReflectionTestUtils.setField(authService, "temporaryPasswordValiditySeconds", 60);
     }
 
     @Test
@@ -132,8 +140,6 @@ class AuthServiceTest {
     @Test
     void 임시_비밀번호_생성_및_저장_성공() {
         User user = mock(User.class);
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
-        given(user.getEmail()).willReturn(email);
 
         String rawTempPassword = authService.generateTemporaryPassword();
         assertNotNull(rawTempPassword);
@@ -141,6 +147,6 @@ class AuthServiceTest {
 
         authService.saveTemporaryPassword(user);
 
-        verify(user).updateTemporaryPassword(Mockito.anyString(), Mockito.any());
+        verify(user, times(2)).updateTemporaryPassword(any(), any());
     }
 }
