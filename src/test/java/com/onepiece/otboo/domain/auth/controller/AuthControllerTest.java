@@ -9,10 +9,15 @@ import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.auth.service.AuthService;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.infra.api.mail.service.MailService;
 import com.onepiece.otboo.infra.security.config.TestSecurityConfig;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import jakarta.servlet.http.Cookie;
+import java.time.Instant;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +39,10 @@ class AuthControllerTest {
     private AuthService authService;
     @MockitoBean
     private JwtProvider jwtProvider;
+    @MockitoBean
+    private MailService mailService;
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Test
     void 리프레시_토큰_재발급_성공() throws Exception {
@@ -80,6 +89,11 @@ class AuthControllerTest {
     void 임시_비밀번호_발급_성공() throws Exception {
         String email = "test@example.com";
         String body = "{\"email\": \"" + email + "\"}";
+        Mockito.when(authService.saveTemporaryPassword(email)).thenReturn("dummyTempPassword");
+        var mockUser = Mockito.mock(User.class);
+        Mockito.when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
+        Mockito.when(mockUser.getTemporaryPasswordExpirationTime())
+            .thenReturn(Instant.now().plusSeconds(600));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/reset-password")
                 .contentType("application/json")

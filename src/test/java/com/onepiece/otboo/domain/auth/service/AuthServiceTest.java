@@ -61,6 +61,7 @@ class AuthServiceTest {
     void setup() {
         Mockito.reset(userRepository, jwtProvider, customUserDetailsMapper, userMapper);
         ReflectionTestUtils.setField(authService, "charset", "abcdefghijklmnopqrstuvwxyz");
+        ReflectionTestUtils.setField(authService, "specialCharset", "!@#");
         ReflectionTestUtils.setField(authService, "temporaryPasswordValiditySeconds", 60);
     }
 
