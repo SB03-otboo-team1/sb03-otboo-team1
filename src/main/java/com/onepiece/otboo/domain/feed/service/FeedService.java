@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -40,6 +41,7 @@ public class FeedService {
                 .orElseThrow(() -> new GlobalException(ErrorCode.WEATHER_NOT_FOUND));
         }
 
+        List<UUID> clothes = r.clothesIds() == null ? List.of() : r.clothesIds();
         var dedup = new HashSet<>(r.clothesIds());
 
         // TODO: Clothes 모듈 연동 후 소유권 검증 로직 복구
