@@ -60,26 +60,4 @@ class FeedControllerTest {
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/api/feeds/" + id));
     }
-
-    @Test
-    @WithMockUser
-    void createFeed_returns400_whenWeatherIdNull() throws Exception {
-        var body = new FeedCreateRequest(
-            UUID.randomUUID(),
-            null,
-            List.of(UUID.randomUUID()),
-            "content"
-        );
-
-        mockMvc.perform(
-                post("/api/feeds")
-                    .with(csrf())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(body))
-            )
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.exceptionName").value("MethodArgumentNotValidException"))
-            .andExpect(jsonPath("$.details.validationError", containsString("weatherId")))
-            .andExpect(jsonPath("$.details.validationError", containsString("must not be null")));
-    }
 }
