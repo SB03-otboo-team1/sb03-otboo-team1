@@ -40,6 +40,7 @@ public interface FeedApi {
             responseCode = "400",
             description = "유효하지 않은 요청(필드 검증 실패/중복 등)",
             content = @Content(
+                mediaType = "application/json",
                 schema = @Schema(implementation = ErrorResponse.class
             ))
         ),
@@ -47,6 +48,7 @@ public interface FeedApi {
             responseCode = "403",
             description = "권한 부족/소유권 불일치",
             content = @Content(
+                mediaType = "application/json",
                 schema = @Schema(implementation = ErrorResponse.class
             ))
         ),
@@ -54,6 +56,7 @@ public interface FeedApi {
             responseCode = "404",
             description = "관련 자원(사용자/의상/날씨) 없음",
             content = @Content(
+                mediaType = "application/json",
                 schema = @Schema(implementation = ErrorResponse.class
             ))
         )
