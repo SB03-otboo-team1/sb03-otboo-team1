@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.onepiece.otboo.domain.location.service.LocationService;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
+import com.onepiece.otboo.domain.weather.service.WeatherService;
 import com.onepiece.otboo.global.config.JpaConfig;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,9 @@ class WeatherControllerTest {
 
     @MockitoBean
     private LocationService locationService;
+
+    @MockitoBean
+    private WeatherService weatherService;
 
     @Test
     void 위치_정보_조회_성공시_200을_반환한다() throws Exception {
