@@ -11,6 +11,7 @@ import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,7 +48,7 @@ class FollowServiceImplTest {
     private User follower;
     private User following;
     private Follow follow;
-
+    
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -68,6 +70,10 @@ class FollowServiceImplTest {
             .locked(false)
             .role(Role.USER)
             .build();
+
+        // 테스트용 id
+        ReflectionTestUtils.setField(follower, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(following, "id", UUID.randomUUID());
 
         follow = Follow.builder()
             .follower(follower)
@@ -102,15 +108,17 @@ class FollowServiceImplTest {
     @Test
     @DisplayName("이미 팔로우 했을 경우 예외 발생")
     void createFollow_alreadyExists_throwsException() {
-
         FollowRequest request = new FollowRequest(UUID.randomUUID(), UUID.randomUUID());
         given(userRepository.findById(request.getFollowerId())).willReturn(Optional.of(follower));
         given(userRepository.findById(request.getFollowingId())).willReturn(Optional.of(following));
         given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(true);
 
         assertThatThrownBy(() -> followService.createFollow(request))
-            .isInstanceOf(DuplicateFollowException.class);
+            .isInstanceOf(DuplicateFollowException.class)
+            .hasMessageContaining(ErrorCode.DUPLICATE_FOLLOW.getMessage());
+
     }
+
 
     @Test
     @DisplayName("팔로워 목록 조회 성공")

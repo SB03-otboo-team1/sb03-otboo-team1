@@ -34,14 +34,13 @@ public class FollowServiceImpl implements FollowService {
         User following = userRepository.findById(request.getFollowingId())
             .orElseThrow(() -> UserNotFoundException.byId(request.getFollowingId()));
 
-        if (followRepository.existsByFollowerAndFollowing(follower, following)) {
-            throw DuplicateFollowException.of(request.getFollowerId(), request.getFollowingId());
-        }
-
         Follow follow = Follow.builder()
             .follower(follower)
             .following(following)
             .build();
+
+        boolean alreadyExists = followRepository.existsByFollowerAndFollowing(follower, following);
+        follow.validateDuplicate(alreadyExists);
 
         Follow saved = followRepository.save(follow);
         return followMapper.toResponse(saved);
