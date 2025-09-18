@@ -116,4 +116,35 @@ class FollowRepositoryTest {
         boolean exists = followRepository.existsByFollowerAndFollowing(follower, following);
         assertThat(exists).isFalse();
     }
+
+    @Test
+    @DisplayName("특정 사용자의 팔로워 수를 조회할 수 있다")
+    void countByFollowing_success() {
+
+        User following = userRepository.save(createUser("target@test.com"));
+        User follower1 = userRepository.save(createUser("f1@test.com"));
+        User follower2 = userRepository.save(createUser("f2@test.com"));
+        followRepository.save(Follow.builder().follower(follower1).following(following).build());
+        followRepository.save(Follow.builder().follower(follower2).following(following).build());
+
+        long count = followRepository.countByFollowing(following);
+
+        assertThat(count).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("특정 사용자의 팔로잉 수를 조회할 수 있다")
+    void countByFollower_success() {
+
+        User follower = userRepository.save(createUser("f1@test.com"));
+        User following1 = userRepository.save(createUser("f2@test.com"));
+        User following2 = userRepository.save(createUser("f3@test.com"));
+        followRepository.save(Follow.builder().follower(follower).following(following1).build());
+        followRepository.save(Follow.builder().follower(follower).following(following2).build());
+
+        long count = followRepository.countByFollower(follower);
+
+        assertThat(count).isEqualTo(2);
+    }
+
 }
