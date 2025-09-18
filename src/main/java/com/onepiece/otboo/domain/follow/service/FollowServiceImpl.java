@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
@@ -74,5 +75,28 @@ public class FollowServiceImpl implements FollowService {
             .orElseThrow(() -> new IllegalArgumentException("Following not found"));
 
         followRepository.deleteByFollowerAndFollowing(follower, following);
+    }
+
+    @Override
+    public FollowSummaryResponse getFollowSummary(UUID userId, UUID viewerId) {
+        User targetUser = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        long followerCount = followRepository.countByFollowing(targetUser);
+        long followingCount = followRepository.countByFollower(targetUser);
+
+        boolean isFollowing = false;
+        if (viewerId != null) {
+            User viewer = userRepository.findById(viewerId)
+                .orElseThrow(() -> new IllegalArgumentException("Viewer not found"));
+            isFollowing = followRepository.existsByFollowerAndFollowing(viewer, targetUser);
+        }
+
+        return FollowSummaryResponse.builder()
+            .userId(userId)
+            .followerCount(followerCount)
+            .followingCount(followingCount)
+            .isFollowing(isFollowing)
+            .build();
     }
 }

@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.follow.service;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 
+import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,5 +16,7 @@ public interface FollowService {
     List<FollowResponse> getFollowings(UUID userId);
 
     void deleteFollow(FollowRequest request);
+
+    FollowSummaryResponse getFollowSummary(UUID userId, UUID viewerId);
 
 }
