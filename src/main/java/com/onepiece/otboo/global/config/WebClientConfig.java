@@ -4,6 +4,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,9 +63,11 @@ public class WebClientConfig {
         ExchangeFilterFunction appendFixedParams =
             ExchangeFilterFunction.ofRequestProcessor(req -> {
                 URI newUri = UriComponentsBuilder.fromUri(req.url())
+                    .replaceQueryParam("serviceKey")
+                    .replaceQueryParam("dataType")
                     .queryParam("serviceKey", key)
                     .queryParam("dataType", "JSON")
-                    .build(true)
+                    .build(false)
                     .toUri();
                 ClientRequest newReq = ClientRequest.from(req).url(newUri).build();
                 return Mono.just(newReq);
