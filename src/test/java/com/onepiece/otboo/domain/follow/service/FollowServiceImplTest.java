@@ -165,4 +165,68 @@ class FollowServiceImplTest {
 
         verify(followRepository).deleteByFollowerAndFollowing(follower, following);
     }
+
+    @Test
+    @DisplayName("팔로우 요약 조회 성공 - viewer가 팔로우 중일 때")
+    void getFollowSummary_success_isFollowingTrue() {
+        UUID targetUserId = UUID.randomUUID();
+        UUID viewerId = UUID.randomUUID();
+
+        User targetUser = following; // 대상 유저
+        User viewer = follower;      // 조회자
+
+        given(userRepository.findById(targetUserId)).willReturn(Optional.of(targetUser));
+        given(userRepository.findById(viewerId)).willReturn(Optional.of(viewer));
+
+        // 팔로워 수: 3명
+        given(followRepository.countByFollowing(targetUser)).willReturn(3L);
+        // 팔로잉 수: 2명
+        given(followRepository.countByFollower(targetUser)).willReturn(2L);
+        // viewer가 targetUser를 팔로우 중
+        given(followRepository.existsByFollowerAndFollowing(viewer, targetUser)).willReturn(true);
+
+        var response = followService.getFollowSummary(targetUserId, viewerId);
+
+        assertThat(response.getUserId()).isEqualTo(targetUserId);
+        assertThat(response.getFollowerCount()).isEqualTo(3L);
+        assertThat(response.getFollowingCount()).isEqualTo(2L);
+        assertThat(response.isFollowing()).isTrue();
+    }
+
+    @Test
+    @DisplayName("팔로우 요약 조회 성공 - viewer가 팔로우 중이 아닐 때")
+    void getFollowSummary_success_isFollowingFalse() {
+        UUID targetUserId = UUID.randomUUID();
+        UUID viewerId = UUID.randomUUID();
+
+        User targetUser = following;
+        User viewer = follower;
+
+        given(userRepository.findById(targetUserId)).willReturn(Optional.of(targetUser));
+        given(userRepository.findById(viewerId)).willReturn(Optional.of(viewer));
+
+        given(followRepository.countByFollowing(targetUser)).willReturn(1L);
+        given(followRepository.countByFollower(targetUser)).willReturn(0L);
+        given(followRepository.existsByFollowerAndFollowing(viewer, targetUser)).willReturn(false);
+
+        var response = followService.getFollowSummary(targetUserId, viewerId);
+
+        assertThat(response.getFollowerCount()).isEqualTo(1L);
+        assertThat(response.getFollowingCount()).isEqualTo(0L);
+        assertThat(response.isFollowing()).isFalse();
+    }
+
+    @Test
+    @DisplayName("팔로우 요약 조회 실패 - 대상 유저 없음")
+    void getFollowSummary_fail_userNotFound() {
+        UUID targetUserId = UUID.randomUUID();
+        UUID viewerId = UUID.randomUUID();
+
+        given(userRepository.findById(targetUserId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> followService.getFollowSummary(targetUserId, viewerId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("User not found");
+    }
+
 }
