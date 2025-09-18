@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public interface FeedApi {
         summary = "피드 등록",
         description = "작성자가 선택한 옷 조합과 내용으로 피드를 등록합니다."
     )
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
         @ApiResponse(
             responseCode = "201",
@@ -42,6 +44,13 @@ public interface FeedApi {
             content = @Content(
                 mediaType = "application/json",
                 schema = @Schema(implementation = ErrorResponse.class
+            ))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "인증 실패(미인증/만료/무효 토큰)",
+            content = @Content(
+            schema = @Schema(implementation = ErrorResponse.class
             ))
         ),
         @ApiResponse(
