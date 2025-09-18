@@ -13,8 +13,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.containsString;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -34,21 +39,21 @@ class FeedControllerTest {
     void createFeed_returns201_withLocationHeader() throws Exception {
         UUID id = UUID.randomUUID();
 
-        FeedResponse mocked = org.mockito.Mockito.mock(FeedResponse.class);
-        org.mockito.Mockito.when(mocked.id()).thenReturn(id);
-        org.mockito.Mockito.when(feedService.create(org.mockito.ArgumentMatchers.any(FeedCreateRequest.class)))
+        FeedResponse mocked = mock(FeedResponse.class);
+        when(mocked.id()).thenReturn(id);
+        when(feedService.create(any(FeedCreateRequest.class)))
             .thenReturn(mocked);
 
         var body = new FeedCreateRequest(
             UUID.randomUUID(),
             UUID.randomUUID(),
-            java.util.List.of(UUID.randomUUID()),
+            List.of(UUID.randomUUID()),
             "content"
         );
 
         mockMvc.perform(
                 post("/api/feeds")
-                    .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(body))
             )
@@ -62,13 +67,13 @@ class FeedControllerTest {
         var body = new FeedCreateRequest(
             UUID.randomUUID(),
             null,
-            java.util.List.of(UUID.randomUUID()),
+            List.of(UUID.randomUUID()),
             "content"
         );
 
         mockMvc.perform(
                 post("/api/feeds")
-                    .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(body))
             )
@@ -78,4 +83,3 @@ class FeedControllerTest {
             .andExpect(jsonPath("$.details.validationError", containsString("must not be null")));
     }
 }
-
