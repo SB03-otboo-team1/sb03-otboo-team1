@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.feed.controller;
 
+import com.onepiece.otboo.domain.feed.controller.api.FeedApi;
 import com.onepiece.otboo.domain.feed.dto.request.FeedCreateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.domain.feed.service.FeedService;
@@ -13,7 +14,7 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/feeds")
 @RequiredArgsConstructor
-public class FeedController {
+public class FeedController implements FeedApi {
     private final FeedService feedService;
 
     @PostMapping
