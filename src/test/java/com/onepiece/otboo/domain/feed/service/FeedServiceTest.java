@@ -47,7 +47,7 @@ class FeedServiceTest {
     }
 
     @Test
-    void create_success_withWeather_and_dedupApplied() {
+    void 피드_등록_성공시_날씨가_연결되고_중복된_의상ID가_제거된다() {
         // given
         var author = mock(User.class);
         when(userRepository.findById(authorId)).thenReturn(Optional.of(author));
@@ -65,8 +65,10 @@ class FeedServiceTest {
             "hello"
         );
 
+        // when
         FeedResponse res = feedService.create(req);
 
+        // then
         assertThat(res).isNotNull();
 
         verify(feedRepository).save(feedCaptor.capture());
@@ -83,7 +85,8 @@ class FeedServiceTest {
     }
 
     @Test
-    void create_success_withoutWeather() {
+    void 피드_등록_성공시_날씨가_없어도_저장된다() {
+        // given
         when(userRepository.findById(authorId)).thenReturn(Optional.of(mock(User.class)));
         when(feedRepository.save(any(Feed.class))).thenAnswer(inv -> inv.getArgument(0));
         when(feedMapper.toResponse(any(Feed.class))).thenReturn(mock(FeedResponse.class));
@@ -95,18 +98,22 @@ class FeedServiceTest {
             "no weather"
         );
 
+        // when
         FeedResponse res = feedService.create(req);
 
+        // then
         assertThat(res).isNotNull();
         verify(weatherRepository, never()).findById(any());
         verify(feedRepository).save(any(Feed.class));
     }
 
     @Test
-    void create_fail_authorNotFound() {
+    void 피드_등록시_작성자를_찾지_못하면_실패한다() {
+        //given
         when(userRepository.findById(authorId)).thenReturn(Optional.empty());
         var req = new FeedCreateRequest(authorId, null, List.of(c1), "x");
 
+        // when & then
         assertThatThrownBy(() -> feedService.create(req))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("author not found");
@@ -116,12 +123,14 @@ class FeedServiceTest {
     }
 
     @Test
-    void create_fail_weatherNotFound() {
+    void 피드_등록시_날씨를_찾지_못하면_실패한다() {
+        // given
         when(userRepository.findById(authorId)).thenReturn(Optional.of(mock(User.class)));
         when(weatherRepository.findById(weatherId)).thenReturn(Optional.empty());
 
         var req = new FeedCreateRequest(authorId, weatherId, List.of(c1), "x");
 
+        // when & then
         assertThatThrownBy(() -> feedService.create(req))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("weather not found");
