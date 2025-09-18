@@ -10,6 +10,8 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
+import com.onepiece.otboo.global.exception.ErrorCode;
+import com.onepiece.otboo.global.exception.GlobalException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -110,30 +112,34 @@ class FeedServiceTest {
     @Test
     void 피드_등록시_작성자를_찾지_못하면_실패한다() {
         //given
+        var authorId = UUID.randomUUID();
         when(userRepository.findById(authorId)).thenReturn(Optional.empty());
-        var req = new FeedCreateRequest(authorId, null, List.of(c1), "x");
+        var req = new FeedCreateRequest(authorId, null, List.of(UUID.randomUUID()), "x");
 
         // when & then
         assertThatThrownBy(() -> feedService.create(req))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("author not found");
+            .isInstanceOf(GlobalException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.USER_NOT_FOUND);
 
-        verify(feedRepository, never()).save(any());
-        verify(feedMapper, never()).toResponse(any());
+        verifyNoInteractions(feedRepository, feedMapper, weatherRepository);
     }
 
     @Test
     void 피드_등록시_날씨를_찾지_못하면_실패한다() {
         // given
+        var authorId = UUID.randomUUID();
+        var weatherId = UUID.randomUUID();
         when(userRepository.findById(authorId)).thenReturn(Optional.of(mock(User.class)));
         when(weatherRepository.findById(weatherId)).thenReturn(Optional.empty());
 
-        var req = new FeedCreateRequest(authorId, weatherId, List.of(c1), "x");
+        var req = new FeedCreateRequest(authorId, weatherId, List.of(UUID.randomUUID()), "x");
 
         // when & then
         assertThatThrownBy(() -> feedService.create(req))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("weather not found");
+            .isInstanceOf(GlobalException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.WEATHER_NOT_FOUND);
 
         verify(feedRepository, never()).save(any());
         verify(feedMapper, never()).toResponse(any());
