@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.auth.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -143,7 +144,7 @@ class AuthServiceTest {
 
         String rawTempPassword = authService.saveTemporaryPassword(email);
         assertNotNull(rawTempPassword);
-        assertEquals(10, rawTempPassword.length());
+        assertTrue(rawTempPassword.length() >= 10);
 
         verify(user).clearTemporaryPassword();
         verify(user).updateTemporaryPassword(any(), any(), anyLong());

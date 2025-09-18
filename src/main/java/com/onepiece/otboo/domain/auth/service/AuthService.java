@@ -99,11 +99,18 @@ public class AuthService {
     }
 
     public String generateTemporaryPassword() {
+        if (charset == null || charset.isBlank()) {
+            throw new IllegalArgumentException("temporary-password.charset 설정이 필요합니다.");
+        }
+        if (specialCharset == null || specialCharset.isBlank()) {
+            throw new IllegalArgumentException("temporary-password.special-charset 설정이 필요합니다.");
+        }
+
         SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder();
 
         sb.append(specialCharset.charAt(random.nextInt(specialCharset.length())));
-        for (int i = 0; i < 9; i++) {
+        for (int i = 1; i < 12; i++) {
             sb.append(charset.charAt(random.nextInt(charset.length())));
         }
 

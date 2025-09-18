@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 
 @Tag(name = "인증 관리", description = "인증 관련 API")
 public interface AuthApi {
@@ -61,7 +60,6 @@ public interface AuthApi {
     )
     void signIn(@ModelAttribute SignInRequest signInRequest);
 
-
     @Operation(summary = "로그아웃", description = "로그아웃합니다.")
     @ApiResponse(
         responseCode = "204",
@@ -89,7 +87,6 @@ public interface AuthApi {
         required = true,
         schema = @Schema(type = "string")
     )
-    @PostMapping("/refresh")
     ResponseEntity<JwtDto> refreshToken(
         @CookieValue("REFRESH_TOKEN") String refreshToken,
         HttpServletResponse response
@@ -104,6 +101,11 @@ public interface AuthApi {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
         )
     })
-    @PostMapping("/reset-password")
-    ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request);
+    @RequestBody(
+        required = true,
+        content = @Content(
+            schema = @Schema(implementation = ResetPasswordRequest.class)
+        )
+    )
+    ResponseEntity<Void> resetPassword(ResetPasswordRequest request);
 }
