@@ -8,9 +8,10 @@ import com.onepiece.otboo.domain.feed.mapper.FeedMapper;
 import com.onepiece.otboo.domain.feed.repository.FeedRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
-import com.onepiece.otboo.domain.weather.dto.response.WeatherSummaryDto;
 import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
+import com.onepiece.otboo.global.exception.ErrorCode;
+import com.onepiece.otboo.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,19 +33,11 @@ public class FeedService {
     @Transactional
     public FeedResponse create(FeedCreateRequest r) {
         User authorEntity = userRepository.findById(r.authorId())
-            .orElseThrow(() -> new IllegalArgumentException("author not found"));
+            .orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_FOUND));
 
-        WeatherSummaryDto weatherDto = null;
         if (r.weatherId() != null) {
             Weather weather = weatherRepository.findById(r.weatherId())
-                .orElseThrow(() -> new IllegalArgumentException("weather not found"));
-
-            weatherDto = new WeatherSummaryDto(
-                weather.getId(),
-                weather.getSkyStatus(),
-                null,
-                null
-            );
+                .orElseThrow(() -> new GlobalException(ErrorCode.WEATHER_NOT_FOUND));
         }
 
         var dedup = new HashSet<>(r.clothesIds());
