@@ -27,7 +27,7 @@ public interface FeedMapper {
     @Mapping(target = "likedByMe", source = "likedByMe")
     FeedResponse toResponse(Feed feed,
                             AuthorDto author,
-                            com.onepiece.otboo.domain.weather.dto.response.WeatherSummaryDto weather,
+                            WeatherSummaryDto weather,
                             List<OotdDto> ootds,
                             boolean likedByMe);
 
