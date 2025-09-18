@@ -61,8 +61,8 @@ public class LocationServiceImpl implements LocationService {
         Point point = LatLonToXYConverter.latLonToXY(latitude, longitude);
 
         return Location.builder()
-            .latitude(roundTo4(latitude))
-            .longitude(roundTo4(longitude))
+            .latitude((latitude))
+            .longitude((longitude))
             .locationNames(locationNames)
             .xCoordinate(point.x)
             .yCoordinate(point.y)

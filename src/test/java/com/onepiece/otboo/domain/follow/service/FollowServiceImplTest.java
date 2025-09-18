@@ -3,11 +3,13 @@ package com.onepiece.otboo.domain.follow.service;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
+import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -107,8 +109,7 @@ class FollowServiceImplTest {
         given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(true);
 
         assertThatThrownBy(() -> followService.createFollow(request))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Already following");
+            .isInstanceOf(DuplicateFollowException.class);
     }
 
     @Test
@@ -225,8 +226,7 @@ class FollowServiceImplTest {
         given(userRepository.findById(targetUserId)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> followService.getFollowSummary(targetUserId, viewerId))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("User not found");
+            .isInstanceOf(UserNotFoundException.class);
     }
 
 }

@@ -4,9 +4,11 @@ import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
+import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
 import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,16 +30,14 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public FollowResponse createFollow(FollowRequest request) {
         User follower = userRepository.findById(request.getFollowerId())
-            .orElseThrow(() -> new IllegalArgumentException("Follower not found"));
+            .orElseThrow(() -> UserNotFoundException.byId(request.getFollowerId()));
         User following = userRepository.findById(request.getFollowingId())
-            .orElseThrow(() -> new IllegalArgumentException("Following not found"));
+            .orElseThrow(() -> UserNotFoundException.byId(request.getFollowingId()));
 
-        // 이미 팔로우 했는지 검증
         if (followRepository.existsByFollowerAndFollowing(follower, following)) {
-            throw new IllegalArgumentException("Already following this user");
+            throw DuplicateFollowException.of(request.getFollowerId(), request.getFollowingId());
         }
 
-        // 빌더 활용
         Follow follow = Follow.builder()
             .follower(follower)
             .following(following)
@@ -50,7 +50,7 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public List<FollowResponse> getFollowers(UUID userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         return followRepository.findByFollowing(user).stream()
             .map(followMapper::toResponse)
@@ -60,7 +60,7 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public List<FollowResponse> getFollowings(UUID userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         return followRepository.findByFollower(user).stream()
             .map(followMapper::toResponse)
@@ -70,9 +70,9 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public void deleteFollow(FollowRequest request) {
         User follower = userRepository.findById(request.getFollowerId())
-            .orElseThrow(() -> new IllegalArgumentException("Follower not found"));
+            .orElseThrow(() -> UserNotFoundException.byId(request.getFollowerId()));
         User following = userRepository.findById(request.getFollowingId())
-            .orElseThrow(() -> new IllegalArgumentException("Following not found"));
+            .orElseThrow(() -> UserNotFoundException.byId(request.getFollowingId()));
 
         followRepository.deleteByFollowerAndFollowing(follower, following);
     }
@@ -80,7 +80,7 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public FollowSummaryResponse getFollowSummary(UUID userId, UUID viewerId) {
         User targetUser = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         long followerCount = followRepository.countByFollowing(targetUser);
         long followingCount = followRepository.countByFollower(targetUser);
@@ -88,7 +88,7 @@ public class FollowServiceImpl implements FollowService {
         boolean isFollowing = false;
         if (viewerId != null) {
             User viewer = userRepository.findById(viewerId)
-                .orElseThrow(() -> new IllegalArgumentException("Viewer not found"));
+                .orElseThrow(() -> UserNotFoundException.byId(viewerId));
             isFollowing = followRepository.existsByFollowerAndFollowing(viewer, targetUser);
         }
 
