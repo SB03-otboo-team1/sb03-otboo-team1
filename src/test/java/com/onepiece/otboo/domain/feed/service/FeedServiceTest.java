@@ -144,4 +144,47 @@ class FeedServiceTest {
         verify(feedRepository, never()).save(any());
         verify(feedMapper, never()).toResponse(any());
     }
+    @Test
+    void 피드_삭제_소유자_요청시_정상삭제() {
+        UUID feedId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+
+        Feed feed = mock(Feed.class);
+        when(feedRepository.findById(feedId)).thenReturn(Optional.of(feed));
+        when(feed.getAuthorId()).thenReturn(ownerId);
+
+        feedService.delete(feedId, ownerId);
+
+        ArgumentCaptor<Feed> captor = ArgumentCaptor.forClass(Feed.class);
+        verify(feedRepository).delete(captor.capture());
+    }
+
+    @Test
+    void 피드_삭제_타인소유_피드_삭제시_실패() {
+        // given
+        UUID feedId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
+
+        Feed feed = mock(Feed.class);
+        when(feedRepository.findById(feedId)).thenReturn(Optional.of(feed));
+        when(feed.getAuthorId()).thenReturn(ownerId);
+
+        // when & then
+        assertThatExceptionOfType(GlobalException.class)
+            .isThrownBy(() -> feedService.delete(feedId, requesterId))
+            .matches(ex -> ((GlobalException) ex).getErrorCode() == ErrorCode.FEED_FORBIDDEN);
+    }
+
+    @Test
+    void 피드_삭제_존재하지_않는_피드_삭제시_실패() {
+        // given
+        UUID feedId = UUID.randomUUID();
+        when(feedRepository.findById(feedId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatExceptionOfType(GlobalException.class)
+            .isThrownBy(() -> feedService.delete(feedId, UUID.randomUUID()))
+            .matches(ex -> ((GlobalException) ex).getErrorCode() == ErrorCode.FEED_NOT_FOUND);
+    }
 }
