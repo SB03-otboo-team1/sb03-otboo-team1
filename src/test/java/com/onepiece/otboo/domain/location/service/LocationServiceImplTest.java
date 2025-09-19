@@ -70,4 +70,25 @@ class LocationServiceImplTest {
         verify(locationProvider).getLocation(longitude, latitude);
         verify(persistenceService).save(any(Location.class));
     }
+
+    @Test
+    void 위도_경도_반올림_적용_테스트() {
+        // given
+        ArgumentCaptor<Location> captor = ArgumentCaptor.forClass(Location.class);
+
+        given(locationProvider.getLocation(longitude, latitude)).willReturn(item);
+        given(persistenceService.save(any(Location.class)))
+            .willAnswer(invocation -> invocation.getArgument(0)); // save 대상 그대로 반환
+
+        // when
+        WeatherAPILocation result = locationService.getLocation(longitude, latitude);
+
+        // then
+        verify(persistenceService).save(captor.capture());
+        Location saved = captor.getValue();
+        assertEquals(37.4375, saved.getLatitude());
+        assertEquals(126.8055, saved.getLongitude());
+        assertEquals("경기도,시흥시,은행동,", saved.getLocationNames());
+        assertThat(result.locationNames()).contains("경기도", "시흥시", "은행동");
+    }
 }

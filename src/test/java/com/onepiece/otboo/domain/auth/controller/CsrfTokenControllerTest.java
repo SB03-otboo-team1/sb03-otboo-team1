@@ -5,6 +5,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.onepiece.otboo.domain.auth.service.AuthService;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.infra.api.mail.service.MailService;
+import com.onepiece.otboo.infra.security.auth.CustomAuthenticationProvider;
 import com.onepiece.otboo.infra.security.config.SecurityConfig;
 import com.onepiece.otboo.infra.security.handler.JwtLoginFailureHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLoginSuccessHandler;
@@ -37,6 +40,12 @@ class CsrfTokenControllerTest {
     private JwtLoginFailureHandler jwtLoginFailureHandler;
     @MockitoBean
     private JwtLogoutHandler jwtLogoutHandler;
+    @MockitoBean
+    private MailService mailService;
+    @MockitoBean
+    private UserRepository userRepository;
+    @MockitoBean
+    private CustomAuthenticationProvider customAuthenticationProvider;
 
     @Test
     void CSRF_토큰_발급_엔드포인트는_204와_쿠키를_반환한다() throws Exception {
