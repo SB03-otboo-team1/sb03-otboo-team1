@@ -34,7 +34,7 @@ public class LocationFixture {
     }
 
     private static String randomLocationNames() {
-        String[] names = {"서울특별시 중구", "부산광역시 해운대구", "대구광역시 수성구", "광주광역시 동구", "제주시"};
+        String[] names = {"서울특별시,중구", "부산광역시,해운대구", "대구광역시,수성구", "광주광역시,동구", "제주시"};
         return names[random.nextInt(names.length)];
     }
 }
