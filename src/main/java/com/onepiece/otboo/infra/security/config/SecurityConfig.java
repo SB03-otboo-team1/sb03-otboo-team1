@@ -4,6 +4,8 @@ import com.onepiece.otboo.infra.security.auth.CustomAuthenticationProvider;
 import com.onepiece.otboo.infra.security.handler.JwtLoginFailureHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLoginSuccessHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLogoutHandler;
+import com.onepiece.otboo.infra.security.handler.RestAccessDeniedHandler;
+import com.onepiece.otboo.infra.security.handler.RestAuthenticationEntryPoint;
 import com.onepiece.otboo.infra.security.handler.SpaCsrfTokenRequestHandler;
 import com.onepiece.otboo.infra.security.jwt.JwtAuthenticationFilter;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
@@ -37,7 +39,9 @@ public class SecurityConfig {
         JwtLoginFailureHandler jwtLoginFailureHandler,
         JwtLogoutHandler jwtLogoutHandler,
         CustomAuthenticationProvider customAuthenticationProvider,
-        SecurityProperties securityProperties
+        SecurityProperties securityProperties,
+        RestAuthenticationEntryPoint restAuthenticationEntryPoint,
+        RestAccessDeniedHandler restAccessDeniedHandler
     ) throws Exception {
 
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtTokenProvider);
@@ -49,6 +53,10 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
             )
             .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                .accessDeniedHandler(restAccessDeniedHandler)
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/h2-console/**",
                     "/",

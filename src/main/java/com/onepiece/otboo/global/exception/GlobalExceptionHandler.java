@@ -3,11 +3,13 @@ package com.onepiece.otboo.global.exception;
 import com.onepiece.otboo.domain.auth.exception.TokenExpiredException;
 import com.onepiece.otboo.domain.auth.exception.TokenForgedException;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
+import com.onepiece.otboo.infra.security.exception.SecurityForbiddenException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -39,6 +41,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({TokenExpiredException.class, TokenForgedException.class})
     public ResponseEntity<ErrorResponse> handleAuthTokenException(GlobalException e) {
         return getErrorResponseResponseEntity(e);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(
+        AuthorizationDeniedException e
+    ) {
+        return getErrorResponseResponseEntity(new SecurityForbiddenException(e));
     }
 
     @ExceptionHandler
