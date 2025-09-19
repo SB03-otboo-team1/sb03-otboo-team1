@@ -3,8 +3,12 @@ package com.onepiece.otboo.domain.weather.batch.writer;
 import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
 import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
@@ -27,7 +31,7 @@ public class WeatherDataWriter implements ItemWriter<List<Weather>> {
             .filter(Objects::nonNull)
             .flatMap(List::stream)
             .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+            .toList();
 
         if (flat.isEmpty()) {
             log.warn("[WeatherDataWriter] 날씨 데이터가 비어있습니다.");

@@ -3,7 +3,6 @@ package com.onepiece.otboo.domain.weather.batch.config;
 import static com.onepiece.otboo.domain.location.entity.QLocation.location;
 
 import com.onepiece.otboo.domain.location.entity.Location;
-import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import com.onepiece.otboo.domain.weather.batch.processor.Weather5DayProcessor;
 import com.onepiece.otboo.domain.weather.batch.reader.QuerydslPagingItemReader;
 import com.onepiece.otboo.domain.weather.batch.writer.WeatherDataWriter;
@@ -20,9 +19,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.support.IteratorItemReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +31,6 @@ public class WeatherBatchConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    private final LocationRepository locationRepository;
     private final WeatherRepository weatherRepository;
     private final Weather5DayProcessor weather5DayProcessor;
 
