@@ -2,8 +2,10 @@ package com.onepiece.otboo.domain.follow.controller;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +25,7 @@ public class FollowController {
     @PostMapping
     public ResponseEntity<FollowResponse> createFollow(@RequestBody FollowRequest request) {
         FollowResponse response = followService.createFollow(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -51,5 +53,16 @@ public class FollowController {
     public ResponseEntity<Void> deleteFollow(@RequestBody FollowRequest request) {
         followService.deleteFollow(request);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 팔로우 요약 정보 조회
+     */
+    @GetMapping("/summary/{userId}")
+    public ResponseEntity<FollowSummaryResponse> getFollowSummary(
+        @PathVariable UUID userId,
+        @RequestParam(required = false) UUID viewerId) {
+        FollowSummaryResponse summary = followService.getFollowSummary(userId, viewerId);
+        return ResponseEntity.ok(summary);
     }
 }
