@@ -149,6 +149,10 @@ tasks.named('jacocoTestReport') {
     dependsOn tasks.named('compileIntegrationTestJava')
 }
 
+tasks.named('check') {
+    dependsOn tasks.named('integrationTest')
+}
+
 tasks.named('test', Test) {
     useJUnitPlatform()
     finalizedBy 'jacocoTestReport'
@@ -164,21 +168,13 @@ tasks.register('integrationTest', Test) {
     finalizedBy 'jacocoIntegrationTestReport'
 }
 
-tasks.register('allTests', Test) {
-    description = '일반 테스트와 통합 테스트 모두 실행'
-    group = 'verification'
-    useJUnitPlatform()
-    dependsOn 'test', 'integrationTest'
-    finalizedBy 'jacocoMergedReport'
-}
-
 jacocoTestReport {
     dependsOn 'test'
     reports {
         xml.required = true
         html.required = true
-        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/unitTest/jacoco.xml')
-        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/unitTest/html')
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacoco.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/test/html')
     }
     classDirectories.setFrom(
             files(sourceSets.main.output.classesDirs).asFileTree.matching {
@@ -199,7 +195,11 @@ tasks.register('jacocoIntegrationTestReport', JacocoReport) {
         html.outputLocation = layout.buildDirectory.dir('reports/jacoco/integrationTest/html')
     }
     sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
-    classDirectories.setFrom(sourceSets.main.output)
+    classDirectories.setFrom(
+            files(sourceSets.main.output.classesDirs).asFileTree.matching {
+                exclude '**/seeder/**'
+            }
+    )
     executionData.setFrom(layout.buildDirectory.file('jacoco/integrationTest.exec'))
 }
 
@@ -214,7 +214,11 @@ tasks.register('jacocoMergedReport', JacocoReport) {
         html.outputLocation = layout.buildDirectory.dir('reports/jacoco/merged/html')
     }
     sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
-    classDirectories.setFrom(sourceSets.main.output)
+    classDirectories.setFrom(
+            files(sourceSets.main.output.classesDirs).asFileTree.matching {
+                exclude '**/seeder/**'
+            }
+    )
     executionData.setFrom(fileTree(layout.buildDirectory.dir("jacoco")).matching {
         include 'test.exec', 'integrationTest.exec'
     })
