@@ -3,8 +3,12 @@ package com.onepiece.otboo.domain.auth.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
+import static org.mockito.BDDMockito.verify;
 import static org.mockito.BDDMockito.willThrow;
 
 import com.onepiece.otboo.domain.auth.dto.data.RefreshTokenData;
@@ -19,6 +23,7 @@ import com.onepiece.otboo.infra.security.fixture.UserDetailsFixture;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.mapper.CustomUserDetailsMapper;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +31,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +47,8 @@ class AuthServiceTest {
     private CustomUserDetailsMapper customUserDetailsMapper;
     @Mock
     private UserMapper userMapper;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private AuthService authService;
@@ -52,6 +61,9 @@ class AuthServiceTest {
     @BeforeEach
     void setup() {
         Mockito.reset(userRepository, jwtProvider, customUserDetailsMapper, userMapper);
+        ReflectionTestUtils.setField(authService, "charset", "abcdefghijklmnopqrstuvwxyz");
+        ReflectionTestUtils.setField(authService, "specialCharset", "!@#");
+        ReflectionTestUtils.setField(authService, "temporaryPasswordValiditySeconds", 60);
     }
 
     @Test
@@ -93,9 +105,7 @@ class AuthServiceTest {
 
     @Test
     void null_리프레시_토큰_예외발생() {
-        String nullToken = null;
-
-        assertThrows(TokenForgedException.class, () -> authService.refreshToken(nullToken));
+        assertThrows(TokenForgedException.class, () -> authService.refreshToken(null));
     }
 
     @Test
@@ -109,7 +119,7 @@ class AuthServiceTest {
     void 리프레시_토큰_유저없음_예외발생() {
         given(jwtProvider.validateRefreshToken(validToken)).willReturn(true);
         given(jwtProvider.getEmailFromToken(validToken)).willReturn(email);
-        given(userRepository.findByEmail(email)).willReturn(java.util.Optional.empty());
+        given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 
         assertThrows(TokenForgedException.class, () -> authService.refreshToken(validToken));
     }
@@ -120,10 +130,23 @@ class AuthServiceTest {
         User user = mock(User.class);
         given(jwtProvider.validateRefreshToken(validToken)).willReturn(true);
         given(jwtProvider.getEmailFromToken(validToken)).willReturn(email);
-        given(userRepository.findByEmail(email)).willReturn(java.util.Optional.of(user));
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
         given(customUserDetailsMapper.toCustomUserDetails(user)).willReturn(userDetails);
         willThrow(new RuntimeException("fail")).given(jwtProvider).generateAccessToken(userDetails);
 
         assertThrows(TokenForgedException.class, () -> authService.refreshToken(validToken));
+    }
+
+    @Test
+    void 임시_비밀번호_생성_및_저장_성공() {
+        User user = mock(User.class);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+
+        String rawTempPassword = authService.saveTemporaryPassword(email);
+        assertNotNull(rawTempPassword);
+        assertTrue(rawTempPassword.length() >= 10);
+
+        verify(user).clearTemporaryPassword();
+        verify(user).updateTemporaryPassword(any(), any(), anyLong());
     }
 }

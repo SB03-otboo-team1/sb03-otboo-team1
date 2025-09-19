@@ -1,5 +1,6 @@
 package com.onepiece.otboo.infra.security.config;
 
+import com.onepiece.otboo.infra.security.auth.CustomAuthenticationProvider;
 import com.onepiece.otboo.infra.security.handler.JwtLoginFailureHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLoginSuccessHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLogoutHandler;
@@ -34,7 +35,8 @@ public class SecurityConfig {
         JwtProvider jwtTokenProvider,
         JwtLoginSuccessHandler jwtLoginSuccessHandler,
         JwtLoginFailureHandler jwtLoginFailureHandler,
-        JwtLogoutHandler jwtLogoutHandler
+        JwtLogoutHandler jwtLogoutHandler,
+        CustomAuthenticationProvider customAuthenticationProvider
     ) throws Exception {
 
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtTokenProvider);
@@ -62,10 +64,12 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf-token").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/sign-in").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .authenticationProvider(customAuthenticationProvider)
             .formLogin(login -> login
                 .loginProcessingUrl("/api/auth/sign-in")
                 .successHandler(jwtLoginSuccessHandler)

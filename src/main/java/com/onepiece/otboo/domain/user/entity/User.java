@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Builder
 @Getter
@@ -55,16 +56,22 @@ public class User extends BaseUpdatableEntity {
         this.temporaryPasswordExpirationTime = null;
     }
 
-    public void updateTemporaryPassword(String tempPassword, Instant expirationTime) {
-        this.temporaryPassword = tempPassword;
-        this.temporaryPasswordExpirationTime = expirationTime;
+    public void updateTemporaryPassword(String rawPassword, PasswordEncoder encoder,
+        long validitySeconds) {
+        this.temporaryPassword = encoder.encode(rawPassword);
+        this.temporaryPasswordExpirationTime = Instant.now().plusSeconds(validitySeconds);
     }
 
-    public boolean isTemporaryPasswordValid(String inputPassword) {
+    public void clearTemporaryPassword() {
+        this.temporaryPassword = null;
+        this.temporaryPasswordExpirationTime = null;
+    }
+
+    public boolean isTemporaryPasswordValid(String inputPassword, PasswordEncoder encoder) {
         if (this.temporaryPassword == null || this.temporaryPasswordExpirationTime == null) {
             return false;
         }
-        return this.temporaryPassword.equals(inputPassword)
+        return encoder.matches(inputPassword, this.temporaryPassword)
             && Instant.now().isBefore(this.temporaryPasswordExpirationTime);
     }
 
