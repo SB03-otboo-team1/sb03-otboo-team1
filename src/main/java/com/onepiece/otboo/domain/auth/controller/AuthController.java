@@ -1,10 +1,14 @@
 package com.onepiece.otboo.domain.auth.controller;
 
-
 import com.onepiece.otboo.domain.auth.controller.api.AuthApi;
+import com.onepiece.otboo.domain.auth.dto.request.ResetPasswordRequest;
 import com.onepiece.otboo.domain.auth.dto.request.SignInRequest;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
 import com.onepiece.otboo.domain.auth.service.AuthService;
+import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.infra.api.mail.service.MailService;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,6 +19,7 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController implements AuthApi {
+
+    private final MailService mailService;
+    private final UserRepository userRepository;
 
     private final AuthService authService;
     private final JwtProvider jwtProvider;
@@ -53,5 +61,23 @@ public class AuthController implements AuthApi {
             refreshTokenData.newRefreshToken());
         response.addCookie(refreshCookie);
         return ResponseEntity.ok(refreshTokenData.jwtDto());
+    }
+
+    @Override
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            String tempPassword = authService.saveTemporaryPassword(request.email());
+            User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> UserNotFoundException.byEmail(request.email()));
+            mailService.sendTemporaryPasswordEmail(
+                request.email(),
+                tempPassword,
+                user.getTemporaryPasswordExpirationTime()
+            );
+            return ResponseEntity.noContent().build();
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
