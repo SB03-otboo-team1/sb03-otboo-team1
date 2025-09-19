@@ -14,10 +14,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -44,7 +48,17 @@ public class SecurityConfig {
         RestAccessDeniedHandler restAccessDeniedHandler
     ) throws Exception {
 
+        AuthenticationManager authenticationManager = http.getSharedObject(
+                AuthenticationManagerBuilder.class)
+            .authenticationProvider(customAuthenticationProvider)
+            .build();
+
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtTokenProvider);
+        UsernamePasswordAuthenticationFilter loginFilter = usernamePasswordAuthenticationFilter(
+            authenticationManager,
+            jwtLoginSuccessHandler,
+            jwtLoginFailureHandler
+        );
 
         http
             .csrf(csrf -> csrf
@@ -57,6 +71,8 @@ public class SecurityConfig {
                 .authenticationEntryPoint(restAuthenticationEntryPoint)
                 .accessDeniedHandler(restAccessDeniedHandler)
             )
+            .sessionManagement(
+                session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/h2-console/**",
                     "/",
@@ -75,12 +91,10 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-            .authenticationProvider(customAuthenticationProvider)
-            .formLogin(login -> login
-                .loginProcessingUrl("/api/auth/sign-in")
-                .successHandler(jwtLoginSuccessHandler)
-                .failureHandler(jwtLoginFailureHandler)
-            )
+            .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
+            .authenticationManager(authenticationManager)
+            .httpBasic(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
             .logout(logout -> logout
                 .logoutUrl("/api/auth/sign-out")
                 .addLogoutHandler(jwtLogoutHandler)
@@ -89,6 +103,21 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    private UsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter(
+        AuthenticationManager authenticationManager,
+        JwtLoginSuccessHandler successHandler,
+        JwtLoginFailureHandler failureHandler
+    ) {
+        UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter();
+        filter.setFilterProcessesUrl("/api/auth/sign-in");
+        filter.setUsernameParameter("email");
+        filter.setAuthenticationManager(authenticationManager);
+        filter.setAuthenticationSuccessHandler(successHandler);
+        filter.setAuthenticationFailureHandler(failureHandler);
+        filter.setAllowSessionCreation(false);
+        return filter;
     }
 
     @Bean
