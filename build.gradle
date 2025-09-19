@@ -181,7 +181,7 @@ jacocoTestReport {
                 exclude '**/seeder/**'
             }
     )
-    executionData.setFrom(layout.buildDirectory.file('/jacoco/test.exec'))
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
 }
 
 tasks.register('jacocoIntegrationTestReport', JacocoReport) {
