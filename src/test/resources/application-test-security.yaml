@@ -7,3 +7,11 @@ logging:
     com.onepiece.otboo: debug
     org.hibernate.SQL: debug
     org.springframework.security: trace
+
+otboo:
+  security:
+    csrf:
+      ignored-paths:
+        - /h2-console/**
+        - /api/users/**
+        - /api/auth/**

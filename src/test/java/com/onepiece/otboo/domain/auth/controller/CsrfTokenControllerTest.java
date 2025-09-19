@@ -9,6 +9,7 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.api.mail.service.MailService;
 import com.onepiece.otboo.infra.security.auth.CustomAuthenticationProvider;
 import com.onepiece.otboo.infra.security.config.SecurityConfig;
+import com.onepiece.otboo.infra.security.config.TestPropertiesScanConfig;
 import com.onepiece.otboo.infra.security.handler.JwtLoginFailureHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLoginSuccessHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLogoutHandler;
@@ -24,7 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 @ActiveProfiles("test-security")
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, TestPropertiesScanConfig.class})
 @WebMvcTest(AuthController.class)
 class CsrfTokenControllerTest {
 
@@ -48,7 +49,7 @@ class CsrfTokenControllerTest {
     private CustomAuthenticationProvider customAuthenticationProvider;
 
     @Test
-    void CSRF_토큰_발급_엔드포인트는_204와_쿠키를_반환한다() throws Exception {
+    void CSRF_토큰_발급_엔드포인트는_204를_쿠키와_반환한다() throws Exception {
         ResultActions result = mockMvc.perform(get("/api/auth/csrf-token"));
         result.andExpect(status().isNoContent());
         Cookie cookie = result.andReturn().getResponse().getCookie("XSRF-TOKEN");

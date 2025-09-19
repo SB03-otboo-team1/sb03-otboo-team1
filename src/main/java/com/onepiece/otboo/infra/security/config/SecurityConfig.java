@@ -36,21 +36,19 @@ public class SecurityConfig {
         JwtLoginSuccessHandler jwtLoginSuccessHandler,
         JwtLoginFailureHandler jwtLoginFailureHandler,
         JwtLogoutHandler jwtLogoutHandler,
-        CustomAuthenticationProvider customAuthenticationProvider
+        CustomAuthenticationProvider customAuthenticationProvider,
+        SecurityProperties securityProperties
     ) throws Exception {
 
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtTokenProvider);
 
         http
-            // H2 콘솔 & 회원 API는 CSRF 검사 제외 (개발용)
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/h2-console/**", "/api/users/**")
+                .ignoringRequestMatchers(securityProperties.csrf().ignoredRequestMatchers())
                 .csrfTokenRepository(csrfRepo())
                 .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
             )
-
             .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
-
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/h2-console/**",
                     "/",
@@ -97,5 +95,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

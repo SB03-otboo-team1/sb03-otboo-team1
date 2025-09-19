@@ -52,6 +52,12 @@ otboo:
     validity-seconds: ${TEMP_PASSWORD_VALIDITY_SECONDS}
     charset: ${TEMP_PASSWORD_CHARSET}
     special-charset: ${TEMP_PASSWORD_SPECIAL_CHARSET}
+  security:
+    csrf:
+      ignored-paths:
+        - /h2-console/**
+        - /api/users/**
+        - /api/auth/**
 
 api:
   kakao:
