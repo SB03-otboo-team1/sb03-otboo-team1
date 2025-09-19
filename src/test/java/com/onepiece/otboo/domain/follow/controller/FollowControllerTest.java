@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.follow.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +62,7 @@ class FollowControllerTest {
         mockMvc.perform(post("/api/follows")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk())
+            .andExpect(status().isCreated())
             .andExpect(jsonPath("$.followerId").value(followerId.toString()))
             .andExpect(jsonPath("$.followingId").value(followingId.toString()));
     }
@@ -119,4 +120,30 @@ class FollowControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isNoContent());
     }
+    @Test
+    @DisplayName("팔로우 요약 조회 성공")
+    void getFollowSummary_success() throws Exception {
+
+        UUID userId = UUID.randomUUID();
+        UUID viewerId = UUID.randomUUID();
+
+        FollowSummaryResponse response = FollowSummaryResponse.builder()
+            .userId(userId)
+            .followerCount(5)
+            .followingCount(3)
+            .isFollowing(true)
+            .build();
+
+        given(followService.getFollowSummary(eq(userId), eq(viewerId))).willReturn(response);
+
+        mockMvc.perform(get("/api/follows/summary/{userId}", userId)
+                .param("viewerId", viewerId.toString())
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.userId").value(userId.toString()))
+            .andExpect(jsonPath("$.followerCount").value(5))
+            .andExpect(jsonPath("$.followingCount").value(3))
+            .andExpect(jsonPath("$.isFollowing").value(true));
+    }
+
 }
