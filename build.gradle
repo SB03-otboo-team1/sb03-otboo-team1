@@ -29,7 +29,7 @@ configurations {
     }
 }
 
-def querydslGeneratedDir = "$buildDir/generated/querydsl"
+def querydslGeneratedDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
 
 sourceSets {
     main {
@@ -54,13 +54,13 @@ tasks.named('processIntegrationTestResources') {
 
 // QueryDSL 설정
 tasks.named('compileJava') {
-    options.annotationProcessorGeneratedSourcesDirectory = file(querydslGeneratedDir)
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
 }
 tasks.named('compileTestJava') {
-    options.annotationProcessorGeneratedSourcesDirectory = file(querydslGeneratedDir)
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
 }
 tasks.named('compileIntegrationTestJava') {
-    options.annotationProcessorGeneratedSourcesDirectory = file(querydslGeneratedDir)
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
 }
 
 clean {
@@ -185,7 +185,7 @@ jacocoTestReport {
                 exclude '**/seeder/**'
             }
     )
-    executionData.setFrom(file("$buildDir/jacoco/test.exec"))
+    executionData.setFrom(layout.buildDirectory.file('/jacoco/test.exec'))
 }
 
 tasks.register('jacocoIntegrationTestReport', JacocoReport) {
@@ -200,7 +200,7 @@ tasks.register('jacocoIntegrationTestReport', JacocoReport) {
     }
     sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
     classDirectories.setFrom(sourceSets.main.output)
-    executionData.setFrom(file("$buildDir/jacoco/integrationTest.exec"))
+    executionData.setFrom(layout.buildDirectory.file('jacoco/integrationTest.exec'))
 }
 
 tasks.register('jacocoMergedReport', JacocoReport) {
@@ -215,7 +215,7 @@ tasks.register('jacocoMergedReport', JacocoReport) {
     }
     sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
     classDirectories.setFrom(sourceSets.main.output)
-    executionData.setFrom(fileTree("$buildDir/jacoco").matching {
+    executionData.setFrom(fileTree(layout.buildDirectory.dir("jacoco")).matching {
         include 'test.exec', 'integrationTest.exec'
     })
 }
