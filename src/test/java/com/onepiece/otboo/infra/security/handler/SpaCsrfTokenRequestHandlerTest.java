@@ -1,19 +1,13 @@
 package com.onepiece.otboo.infra.security.handler;
 
-import com.onepiece.otboo.infra.security.config.SecurityConfig;
-import com.onepiece.otboo.infra.security.config.TestPropertiesScanConfig;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
-import org.springframework.test.context.ActiveProfiles;
 
-@ActiveProfiles("test-security")
-@Import({SecurityConfig.class, TestPropertiesScanConfig.class})
 class SpaCsrfTokenRequestHandlerTest {
 
     @Test
