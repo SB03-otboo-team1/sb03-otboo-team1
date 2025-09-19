@@ -17,6 +17,20 @@ spring:
     console:
       enabled: true      # H2 Console 사용 여부
       path: /h2-console  # H2 Console 접속 주소
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    sender-email: ${MAIL_SENDER_EMAIL}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          starttls:
+            enable: true
 
 logging:
   level:
@@ -34,6 +48,10 @@ otboo:
       secret: ${JWT_REFRESH_SECRET}
       expiration-ms: ${JWT_REFRESH_EXPIRATION_MS}
     max-active-jwt-count: 1
+  temporary-password:
+    validity-seconds: ${TEMP_PASSWORD_VALIDITY_SECONDS}
+    charset: ${TEMP_PASSWORD_CHARSET}
+    special-charset: ${TEMP_PASSWORD_SPECIAL_CHARSET}
 
 api:
   kakao:
