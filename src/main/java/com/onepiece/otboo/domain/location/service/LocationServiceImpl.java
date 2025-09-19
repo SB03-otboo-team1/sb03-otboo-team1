@@ -25,11 +25,17 @@ public class LocationServiceImpl implements LocationService {
     @Transactional
     public WeatherAPILocation getLocation(double longitude, double latitude) {
 
-        KakaoLocationItem item = locationProvider.getLocation(longitude, latitude);
+        double roundedLat = roundTo4(latitude);
+        double roundedLon = roundTo4(longitude);
 
-        // 위치 정보 저장
-        Location location = createLocationEntity(item, latitude, longitude);
-        Location savedLocation = persistenceService.save(location);
+        // 저장된 위치가 있는지 먼저 조회
+        Location savedLocation = persistenceService.findByLatitudeAndLongitude(roundedLat,
+            roundedLon).orElseGet(() -> {
+            KakaoLocationItem item = locationProvider.getLocation(longitude, latitude);
+            // 위치 정보 저장
+            Location location = createLocationEntity(item, roundedLat, roundedLon);
+            return persistenceService.save(location);
+        });
 
         String locationString = savedLocation.getLocationNames();
         log.info("[LocationService] 위치 정보 조회 완료 - x: {}, y: {} locationNames: {}",
@@ -40,8 +46,8 @@ public class LocationServiceImpl implements LocationService {
             .toList();
 
         return new WeatherAPILocation(
-            savedLocation.getLatitude(),
-            savedLocation.getLongitude(),
+            latitude,
+            longitude,
             savedLocation.getXCoordinate(),
             savedLocation.getYCoordinate(),
             locationNames
@@ -67,5 +73,9 @@ public class LocationServiceImpl implements LocationService {
             .xCoordinate(point.x)
             .yCoordinate(point.y)
             .build();
+    }
+
+    private double roundTo4(double value) {
+        return Math.round(value * 10000d) / 10000d;
     }
 }
