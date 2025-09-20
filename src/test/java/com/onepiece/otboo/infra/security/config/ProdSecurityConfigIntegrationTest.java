@@ -50,4 +50,10 @@ class ProdSecurityConfigIntegrationTest {
         mockMvc.perform(get("/h2-console"))
             .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void prod_프로필에서_swagger_인증_실패시_401() throws Exception {
+        mockMvc.perform(get("/swagger-ui/index.html"))
+            .andExpect(status().isUnauthorized());
+    }
 }

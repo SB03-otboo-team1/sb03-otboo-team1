@@ -35,11 +35,11 @@ public class SwaggerSecurityConfig {
     @Order(SecurityChainOrder.SWAGGER)
     SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http) throws Exception {
         SwaggerBasicAuthProperties basic = securityProperties.swagger().basic();
+        http.securityMatcher(SecurityAuthorizeRequestHelper.swaggerPatterns());
 
         if (basic.enabled()) {
             basic.validateEnabledState();
             http
-                .securityMatcher(SecurityAuthorizeRequestHelper.swaggerPatterns())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(
                     session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
