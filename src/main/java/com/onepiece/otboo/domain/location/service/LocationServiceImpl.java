@@ -2,7 +2,7 @@ package com.onepiece.otboo.domain.location.service;
 
 import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
-import com.onepiece.otboo.global.util.DoubleRoundingConverter;
+import com.onepiece.otboo.global.util.NumberConverter;
 import com.onepiece.otboo.infra.api.dto.KakaoLocationItem;
 import com.onepiece.otboo.infra.api.provider.LocationProvider;
 import com.onepiece.otboo.infra.converter.LatLonToXYConverter;
@@ -26,8 +26,8 @@ public class LocationServiceImpl implements LocationService {
     @Transactional
     public WeatherAPILocation getLocation(double longitude, double latitude) {
 
-        double roundedLat = DoubleRoundingConverter.roundTo4(latitude);
-        double roundedLon = DoubleRoundingConverter.roundTo4(longitude);
+        double roundedLat = NumberConverter.round(latitude, 4);
+        double roundedLon = NumberConverter.round(longitude, 4);
 
         // 저장된 위치가 있는지 먼저 조회
         Location savedLocation = persistenceService.findByLatitudeAndLongitude(roundedLat,

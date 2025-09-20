@@ -8,7 +8,7 @@ import com.onepiece.otboo.domain.weather.dto.response.WeatherDto;
 import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.mapper.WeatherMapper;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
-import com.onepiece.otboo.global.util.DoubleRoundingConverter;
+import com.onepiece.otboo.global.util.NumberConverter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -39,8 +39,8 @@ public class WeatherServiceImpl implements WeatherService {
             throw new InvalidCoordinateException();
         }
 
-        double roundedLat = DoubleRoundingConverter.roundTo4(latitude);
-        double roundedLon = DoubleRoundingConverter.roundTo4(longitude);
+        double roundedLat = NumberConverter.round(latitude, 4);
+        double roundedLon = NumberConverter.round(longitude, 4);
 
         Location location = locationRepository.findByLatitudeAndLongitude(roundedLat, roundedLon)
             .or(() -> locationRepository.findNearest(roundedLat, roundedLon))
