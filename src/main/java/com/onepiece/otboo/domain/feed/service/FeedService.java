@@ -69,4 +69,16 @@ public class FeedService {
 
         return feedMapper.toResponse(saved);
     }
+
+    @Transactional
+    public void delete(UUID feedId, UUID requesterId) {
+        Feed feed = feedRepository.findById(feedId)
+            .orElseThrow(() -> new GlobalException(ErrorCode.FEED_NOT_FOUND)); // 404
+
+        if (!feed.getAuthorId().equals(requesterId)) {
+            throw new GlobalException(ErrorCode.FEED_FORBIDDEN); // 403
+        }
+
+        feedRepository.delete(feed); // or deleteById(feedId)
+    }
 }
