@@ -92,7 +92,7 @@ public class SecurityFilterChainFactory {
     ) {
         UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter();
         filter.setFilterProcessesUrl("/api/auth/sign-in");
-        filter.setUsernameParameter("email");
+        filter.setUsernameParameter("username");
         filter.setAuthenticationManager(authenticationManager);
         filter.setAuthenticationSuccessHandler(jwtLoginSuccessHandler);
         filter.setAuthenticationFailureHandler(jwtLoginFailureHandler);

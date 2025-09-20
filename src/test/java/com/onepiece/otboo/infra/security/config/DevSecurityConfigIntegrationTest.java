@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,17 +41,17 @@ class DevSecurityConfigIntegrationTest {
 
     @Test
     void 보안_필터_체인_빈이_등록된다() {
-        assertThat(applicationContext.getBean(SecurityFilterChain.class)).isNotNull();
+        Map<String, SecurityFilterChain> chains = applicationContext.getBeansOfType(
+            SecurityFilterChain.class);
+        assertThat(chains).hasSizeGreaterThanOrEqualTo(2);
     }
 
     @Test
     void dev_프로필에서는_h2_console에_접근할_수_있다() throws Exception {
-        MvcResult result = mockMvc.perform(get("/h2-console"))
-            .andExpect(mvc -> assertThat(mvc.getResponse().getStatus())
-                .isNotIn(HttpStatus.UNAUTHORIZED.value(), HttpStatus.FORBIDDEN.value()))
+        MvcResult result = mockMvc.perform(get("/h2-console/"))
             .andReturn();
 
-        assertThat(result.getResolvedException())
-            .isInstanceOf(NoResourceFoundException.class);
+        assertThat(result.getResponse().getStatus())
+            .isNotIn(HttpStatus.UNAUTHORIZED.value(), HttpStatus.FORBIDDEN.value());
     }
 }
