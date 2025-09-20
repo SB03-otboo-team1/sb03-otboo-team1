@@ -15,3 +15,8 @@ otboo:
         - /h2-console/**
         - /api/users/**
         - /api/auth/**
+    swagger:
+      basic:
+        enabled: false
+        username: test-swagger
+        password: test-password

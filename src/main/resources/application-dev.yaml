@@ -25,3 +25,8 @@ otboo:
   security:
     csrf:
       ignored-paths:
+    swagger:
+      basic:
+        enabled: false
+        username: ${SWAGGER_BASIC_USERNAME}
+        password: ${SWAGGER_BASIC_PASSWORD}

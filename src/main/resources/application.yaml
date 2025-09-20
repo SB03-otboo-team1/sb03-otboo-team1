@@ -55,6 +55,11 @@ otboo:
   security:
     csrf:
       ignored-paths:
+    swagger:
+      basic:
+        enabled: true
+        username: ${SWAGGER_BASIC_USERNAME}
+        password: ${SWAGGER_BASIC_PASSWORD}
 
 api:
   kakao:
