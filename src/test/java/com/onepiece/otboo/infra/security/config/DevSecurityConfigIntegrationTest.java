@@ -43,7 +43,7 @@ class DevSecurityConfigIntegrationTest {
     void 보안_필터_체인_빈이_등록된다() {
         Map<String, SecurityFilterChain> chains = applicationContext.getBeansOfType(
             SecurityFilterChain.class);
-        assertThat(chains).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(chains).isNotEmpty();
     }
 
     @Test

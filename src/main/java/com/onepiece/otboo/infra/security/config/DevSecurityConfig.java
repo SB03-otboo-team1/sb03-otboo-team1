@@ -23,11 +23,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class DevSecurityConfig {
 
-
     private final SecurityFilterChainFactory securityFilterChainFactory;
 
     @Bean
-    @Order(0)
+    @Order(SecurityChainOrder.H2_CONSOLE)
     public SecurityFilterChain h2ConsoleSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .securityMatcher("/h2-console/**")
@@ -47,11 +46,16 @@ public class DevSecurityConfig {
     }
 
     @Bean
-    @Order(1)
+    @Order(SecurityChainOrder.APPLICATION)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher(request -> !request.getRequestURI().startsWith("/h2-console"));
-        return securityFilterChainFactory.build(http,
-            SecurityAuthorizeRequestHelper::permitCommonPublicEndpoints);
+        return securityFilterChainFactory.build(
+            http,
+            auth -> SecurityAuthorizeRequestHelper.permitEndpoints(
+                auth,
+                SecurityAuthorizeRequestHelper.commonPublicEndpoints()
+            )
+        );
     }
 
     @PostConstruct

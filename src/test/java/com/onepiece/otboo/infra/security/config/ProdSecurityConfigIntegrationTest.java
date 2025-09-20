@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,9 @@ class ProdSecurityConfigIntegrationTest {
 
     @Test
     void 보안_필터_체인_빈이_등록된다() {
-        assertThat(applicationContext.getBean(SecurityFilterChain.class)).isNotNull();
+        Map<String, SecurityFilterChain> chains = applicationContext.getBeansOfType(
+            SecurityFilterChain.class);
+        assertThat(chains).isNotEmpty();
     }
 
     @Test
