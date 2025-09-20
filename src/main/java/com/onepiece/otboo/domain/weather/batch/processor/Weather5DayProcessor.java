@@ -5,6 +5,7 @@ import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.enums.PrecipitationType;
 import com.onepiece.otboo.domain.weather.enums.SkyStatus;
 import com.onepiece.otboo.domain.weather.enums.WindSpeedWord;
+import com.onepiece.otboo.global.util.DoubleRoundingConverter;
 import com.onepiece.otboo.infra.api.dto.KmaItem;
 import com.onepiece.otboo.infra.api.provider.WeatherProvider;
 import java.time.Instant;
@@ -126,8 +127,11 @@ public class Weather5DayProcessor implements ItemProcessor<Location, List<Weathe
             Double reh = toDouble(m.get("REH"));
             Double rehPrev = lookupSameOrNearest(rehByKey, prevDateKey, timeKey);
 
-            Double deltaTmp = (tmpPrev != null) ? round1(tmp - tmpPrev) : 0.0;
-            Double deltaReh = (reh != null && rehPrev != null) ? round1(reh - rehPrev) : 0.0;
+            Double deltaTmp =
+                (tmpPrev != null) ? DoubleRoundingConverter.roundTo1(tmp - tmpPrev) : 0.0;
+            Double deltaReh =
+                (reh != null && rehPrev != null) ? DoubleRoundingConverter.roundTo1(reh - rehPrev)
+                    : 0.0;
 
             // TMX/TMN 보강(해당 시각 버킷에 없으면 날짜별 값으로 대체)
             Double tmx = toDouble(m.get("TMX"));
@@ -351,9 +355,5 @@ public class Weather5DayProcessor implements ItemProcessor<Location, List<Weathe
             }
         }
         return null;
-    }
-
-    private Double round1(double v) {
-        return Math.round(v * 10.0) / 10.0;
     }
 }

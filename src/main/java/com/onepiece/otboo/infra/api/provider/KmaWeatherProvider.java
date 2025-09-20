@@ -31,7 +31,7 @@ public class KmaWeatherProvider implements WeatherProvider {
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter DATE = DateTimeFormatter.BASIC_ISO_DATE; // yyyyMMdd
-    private static final int[] BASE_TIMES = {2300, 2000, 1700, 1400, 1100, 800, 500, 200};
+    private static final String[] BASE_TIMES = {"2300", "2000", "1700"};
     private static final int NUM_ROWS = 1000;
 
     @Override
@@ -39,11 +39,18 @@ public class KmaWeatherProvider implements WeatherProvider {
         BaseDt latestBase = resolveLatestBaseToday(); // 오늘 기준으로 잡기
         List<KmaItem> acc = new ArrayList<>();
 
-        // 1) 오늘 최신 base(최대 3회 시도)
-        for (int i = 0; i < 3; i++) {
-            BaseDt tb = latestBase.minusHours(3L * i);
+        int startIdx = indexOf(BASE_TIMES, latestBase.time());
+        if (startIdx < 0) {
+            // latestBase가 허용목록에 없다면, 가장 가까운 이전 허용 base를 선택
+            startIdx = nearestAllowedIndex(latestBase.time());
+        }
+        for (int i = startIdx; i < BASE_TIMES.length; i++) {
+            BaseDt tb = new BaseDt(latestBase.date(), BASE_TIMES[i]);
             List<KmaItem> items = callVillageOnce(x, y, tb.date(), tb.time());
-            if (!items.isEmpty()) { acc.addAll(items); break; }
+            if (!items.isEmpty()) {
+                acc.addAll(items);
+                break;
+            }
         }
         if (acc.isEmpty()) {
             log.warn("[KMA] no data for today base nx={}, ny={}", x, y);
@@ -61,7 +68,10 @@ public class KmaWeatherProvider implements WeatherProvider {
             for (int bt : prevCandidates) {
                 String baseTime = String.format("%04d", bt);
                 List<KmaItem> prev = callVillageOnce(x, y, prevDate, baseTime);
-                if (!prev.isEmpty()) { acc.addAll(prev); break; }
+                if (!prev.isEmpty()) {
+                    acc.addAll(prev);
+                    break;
+                }
             }
         }
 
@@ -71,16 +81,41 @@ public class KmaWeatherProvider implements WeatherProvider {
         return new ArrayList<>(dedup.values());
     }
 
+    private int indexOf(String[] arr, String v) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i].equals(v)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int nearestAllowedIndex(String time) {
+        // time은 "HHmm". time 이하 중 가장 큰 허용 base 반환 (없으면 0)
+        for (int i = 0; i < BASE_TIMES.length; i++) {
+            if (time.compareTo(BASE_TIMES[i]) == 0) {
+                return i;
+            }
+            if (time.compareTo(BASE_TIMES[i]) > 0) {
+                return i; // 23/20/17 내에서 가장 가까운 과거
+            }
+        }
+        return BASE_TIMES.length - 1; // 기본값: 1700
+    }
+
     private Map<String, KmaItem> getStringKmaItemMap(List<KmaItem> acc) {
         Map<String, KmaItem> dedup = new LinkedHashMap<>();
         for (KmaItem it : acc) {
             String key = it.category() + "|" + it.fcstDate() + "|" + it.fcstTime();
             KmaItem ex = dedup.get(key);
-            if (ex == null) dedup.put(key, it);
-            else {
+            if (ex == null) {
+                dedup.put(key, it);
+            } else {
                 String oldBase = ex.baseDate() + ex.baseTime();
                 String newBase = it.baseDate() + it.baseTime();
-                if (oldBase.compareTo(newBase) < 0) dedup.put(key, it);
+                if (oldBase.compareTo(newBase) < 0) {
+                    dedup.put(key, it);
+                }
             }
         }
         return dedup;
@@ -91,9 +126,11 @@ public class KmaWeatherProvider implements WeatherProvider {
         ZonedDateTime now = ZonedDateTime.now(KST);
         LocalDate d = now.toLocalDate();
         LocalTime t = now.toLocalTime();
-        for (int bt : BASE_TIMES) {
-            LocalTime cand = LocalTime.of(bt / 100, 0);
-            if (!t.isBefore(cand)) return new BaseDt(d, String.format("%04d", bt));
+        for (String bt : BASE_TIMES) {
+            LocalTime cand = LocalTime.of(Integer.parseInt(bt) / 100, 0);
+            if (!t.isBefore(cand)) {
+                return new BaseDt(d, bt);
+            }
         }
         return new BaseDt(d.minusDays(1), "2300");
     }
@@ -127,7 +164,7 @@ public class KmaWeatherProvider implements WeatherProvider {
                 return List.of();
             }
             String code = root.response.header.resultCode;
-            String msg  = root.response.header.resultMsg;
+            String msg = root.response.header.resultMsg;
             if (!"00".equals(code)) {
                 log.warn("KMA resultCode={} msg={} nx={},ny={},base={}{}",
                     code, msg, nx, ny, baseDate.format(DATE), baseTime);
@@ -154,28 +191,33 @@ public class KmaWeatherProvider implements WeatherProvider {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class Root {
+
         public Resp response;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class Resp {
+
         public Header header;
         public Body body;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class Header {
+
         public String resultCode;
         public String resultMsg;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class Body {
+
         public Items items;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class Items {
+
         public List<KmaItem> item;
     }
 }
