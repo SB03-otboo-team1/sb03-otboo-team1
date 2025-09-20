@@ -1,6 +1,6 @@
 package com.onepiece.otboo;
 
-import com.onepiece.otboo.infra.security.config.TestSecurityConfig;
+import com.onepiece.otboo.infra.security.testconfig.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;

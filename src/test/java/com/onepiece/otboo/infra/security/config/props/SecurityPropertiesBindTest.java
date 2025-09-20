@@ -1,4 +1,4 @@
-package com.onepiece.otboo.infra.security.config;
+package com.onepiece.otboo.infra.security.config.props;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

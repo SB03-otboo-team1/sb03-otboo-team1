@@ -1,6 +1,7 @@
-package com.onepiece.otboo.infra.security.config;
+package com.onepiece.otboo.infra.security.config.factory;
 
 import com.onepiece.otboo.infra.security.auth.CustomAuthenticationProvider;
+import com.onepiece.otboo.infra.security.config.props.SecurityProperties;
 import com.onepiece.otboo.infra.security.handler.JwtLoginFailureHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLoginSuccessHandler;
 import com.onepiece.otboo.infra.security.handler.JwtLogoutHandler;

@@ -1,4 +1,4 @@
-package com.onepiece.otboo.infra.security.config;
+package com.onepiece.otboo.infra.security.config.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;

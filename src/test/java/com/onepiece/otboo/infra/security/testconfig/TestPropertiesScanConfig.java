@@ -1,5 +1,6 @@
-package com.onepiece.otboo.infra.security.config;
+package com.onepiece.otboo.infra.security.testconfig;
 
+import com.onepiece.otboo.infra.security.config.props.SecurityProperties;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

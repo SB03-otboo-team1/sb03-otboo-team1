@@ -1,11 +1,11 @@
-package com.onepiece.otboo.infra.security.config;
+package com.onepiece.otboo.infra.security.config.helper;
 
 import com.onepiece.otboo.infra.security.dto.data.Endpoint;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 
-final class SecurityAuthorizeRequestHelper {
+public final class SecurityAuthorizeRequestHelper {
 
     private static final Endpoint[] COMMON_PUBLIC_ENDPOINTS = {
         new Endpoint(null, "/"),
@@ -19,7 +19,8 @@ final class SecurityAuthorizeRequestHelper {
         new Endpoint(HttpMethod.GET, "/api/auth/csrf-token"),
         new Endpoint(HttpMethod.POST, "/api/auth/refresh"),
         new Endpoint(HttpMethod.POST, "/api/auth/reset-password"),
-        new Endpoint(HttpMethod.POST, "/api/auth/sign-in")
+        new Endpoint(HttpMethod.POST, "/api/auth/sign-in"),
+        new Endpoint(HttpMethod.POST, "/api/users")
     };
 
     private static final Endpoint[] SWAGGER_ENDPOINTS = {
@@ -27,15 +28,15 @@ final class SecurityAuthorizeRequestHelper {
         new Endpoint(null, "/v3/api-docs/**")
     };
 
-    static Endpoint[] commonPublicEndpoints() {
+    public static Endpoint[] commonPublicEndpoints() {
         return COMMON_PUBLIC_ENDPOINTS.clone();
     }
 
-    static Endpoint[] swaggerEndpoints() {
+    public static Endpoint[] swaggerEndpoints() {
         return SWAGGER_ENDPOINTS.clone();
     }
 
-    static String[] swaggerPatterns() {
+    public static String[] swaggerPatterns() {
         String[] patterns = new String[SWAGGER_ENDPOINTS.length];
         for (int i = 0; i < SWAGGER_ENDPOINTS.length; i++) {
             patterns[i] = SWAGGER_ENDPOINTS[i].pattern();
@@ -43,7 +44,7 @@ final class SecurityAuthorizeRequestHelper {
         return patterns;
     }
 
-    static void permitEndpoints(
+    public static void permitEndpoints(
         AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry,
         Endpoint... endpoints
     ) {

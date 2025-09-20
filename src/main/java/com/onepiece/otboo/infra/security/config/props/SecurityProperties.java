@@ -1,7 +1,5 @@
-package com.onepiece.otboo.infra.security.config;
+package com.onepiece.otboo.infra.security.config.props;
 
-import com.onepiece.otboo.infra.security.config.props.CsrfProperties;
-import com.onepiece.otboo.infra.security.config.props.SwaggerProperties;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
