@@ -4,14 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.feed.dto.request.FeedCreateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.domain.feed.service.FeedService;
+import com.onepiece.otboo.global.exception.ErrorCode;
+import com.onepiece.otboo.global.exception.GlobalException;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.hamcrest.Matchers.containsString;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,11 +26,12 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = FeedController.class)
 class FeedControllerTest {
+
+    private static final String BASE_URL = "/api/feeds";
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
@@ -36,7 +41,7 @@ class FeedControllerTest {
 
     @Test
     @WithMockUser
-    void createFeed_returns201_withLocationHeader() throws Exception {
+    void 피드_등록_정상요청시_201응답_및_위치헤더포함() throws Exception {
         UUID id = UUID.randomUUID();
 
         FeedResponse mocked = mock(FeedResponse.class);
@@ -59,5 +64,49 @@ class FeedControllerTest {
             )
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/api/feeds/" + id));
+    }
+
+    @Test
+    @WithMockUser(username = "d290f1ee-6c54-4b01-90e6-d701748f0851") // 컨트롤러가 auth.getName()을 UUID로 파싱
+    void 피드_삭제_정상권한_요청시_204응답() throws Exception {
+        UUID feedId = UUID.randomUUID();
+
+        mockMvc.perform(delete(BASE_URL + "/{id}", feedId).with(csrf()))
+            .andExpect(status().isNoContent());
+
+        Mockito.verify(feedService).delete(
+            eq(feedId),
+            eq(UUID.fromString("d290f1ee-6c54-4b01-90e6-d701748f0851"))
+        );
+    }
+
+    @Test
+    @WithMockUser(username = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+    void 피드_삭제_권한없음_요청시_403응답() throws Exception {
+        UUID feedId = UUID.randomUUID();
+        Mockito.doThrow(new GlobalException(ErrorCode.FEED_FORBIDDEN))
+            .when(feedService).delete(eq(feedId), any(UUID.class));
+
+        mockMvc.perform(delete(BASE_URL + "/{id}", feedId).with(csrf()))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+    void 피드_삭제_존재하지않는피드_요청시_404응답() throws Exception {
+        UUID feedId = UUID.randomUUID();
+        Mockito.doThrow(new GlobalException(ErrorCode.FEED_NOT_FOUND))
+            .when(feedService).delete(eq(feedId), any(UUID.class));
+
+        mockMvc.perform(delete(BASE_URL + "/{id}", feedId).with(csrf()))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+        void 피드_삭제_미인증사용자_요청시_401응답() throws Exception {
+        UUID feedId = UUID.randomUUID();
+
+        mockMvc.perform(delete(BASE_URL + "/{id}", feedId).with(csrf()))
+            .andExpect(status().isUnauthorized());
     }
 }

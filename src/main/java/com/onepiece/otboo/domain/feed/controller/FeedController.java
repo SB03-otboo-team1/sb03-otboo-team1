@@ -7,9 +7,12 @@ import com.onepiece.otboo.domain.feed.service.FeedService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/feeds")
@@ -23,4 +26,13 @@ public class FeedController implements FeedApi {
         return ResponseEntity.created(URI.create("/api/feeds/" + res.id())).body(res);
     }
 
+
+    @Override
+    public ResponseEntity<Void> deleteFeed(@PathVariable UUID feedId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID requesterId = UUID.fromString(auth.getName());
+
+        feedService.delete(feedId, requesterId);
+        return ResponseEntity.noContent().build(); // 204
+    }
 }

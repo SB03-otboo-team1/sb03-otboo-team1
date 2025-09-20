@@ -13,8 +13,12 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.UUID;
 
 @Tag(name = "피드 관리", description = "피드 관련 API")
 public interface FeedApi {
@@ -72,4 +76,35 @@ public interface FeedApi {
     })
     @PostMapping(consumes = "application/json", produces = "application/json")
     ResponseEntity<FeedResponse> createFeed(@Valid @RequestBody FeedCreateRequest feedCreateRequest);
+
+    @Operation(
+        summary = "피드 삭제",
+        description = "본인 소유의 피드를 삭제합니다."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204",
+            description = "피드 삭제 성공"
+        ),
+        @ApiResponse(responseCode = "401",
+            description = "인증 실패",
+            content = @Content(
+                schema = @Schema(implementation = ErrorResponse.class
+                ))
+        ),
+        @ApiResponse(responseCode = "403",
+            description = "권한 부족/소유권 불일치",
+            content = @Content(
+                schema = @Schema(implementation = ErrorResponse.class
+                ))
+        ),
+        @ApiResponse(responseCode = "404",
+            description = "존재하지 않는 피드",
+            content = @Content(
+                schema = @Schema(implementation = ErrorResponse.class
+                ))
+        )
+    })
+    @DeleteMapping(value = "/{feedId}")
+    ResponseEntity<Void> deleteFeed(@PathVariable UUID feedId);
 }
