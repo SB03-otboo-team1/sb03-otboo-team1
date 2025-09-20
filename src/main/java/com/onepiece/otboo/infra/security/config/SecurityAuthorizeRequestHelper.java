@@ -16,9 +16,7 @@ final class SecurityAuthorizeRequestHelper {
         "/assets/**",
         "/static/**",
         "/swagger-ui/**",
-        "/v3/api-docs/**",
-        "/api/users",
-        "/api/weathers/**"
+        "/v3/api-docs/**"
     };
 
     private SecurityAuthorizeRequestHelper() {

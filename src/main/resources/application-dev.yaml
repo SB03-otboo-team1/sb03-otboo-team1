@@ -20,3 +20,8 @@ logging:
     # Spring Cache 관련 디버그 로그 활성화 (캐시 Hit/Miss 추적)
     org.springframework.cache: debug
     org.springframework.cache.interceptor: trace
+
+otboo:
+  security:
+    csrf:
+      ignored-paths:

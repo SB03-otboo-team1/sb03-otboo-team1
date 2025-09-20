@@ -25,7 +25,10 @@ public class ProdSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return securityFilterChainFactory.build(
             http,
-            SecurityAuthorizeRequestHelper::permitCommonPublicEndpoints
+            registry -> {
+                registry.requestMatchers("/h2-console/**").denyAll();
+                SecurityAuthorizeRequestHelper.permitCommonPublicEndpoints(registry);
+            }
         );
     }
 

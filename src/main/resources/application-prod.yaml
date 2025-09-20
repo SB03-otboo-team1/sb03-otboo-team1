@@ -1,6 +1,9 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  h2:
+    console:
+      enabled: false
   jpa:
     show-sql: false
 
