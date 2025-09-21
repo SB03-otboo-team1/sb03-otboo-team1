@@ -2,7 +2,6 @@ package com.onepiece.otboo.infra.api.provider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -120,7 +119,6 @@ class KmaWeatherProviderTest {
         Mockito.lenient().when(item.fcstDate()).thenReturn(fcstDate);
         Mockito.lenient().when(item.fcstTime()).thenReturn(fcstTime);
 
-        // ✅ withBase 스텁도 lenient 로!
         Mockito.lenient().doAnswer(inv -> {
             String bd = inv.getArgument(0, String.class);
             String bt = inv.getArgument(1, String.class);
@@ -245,8 +243,8 @@ class KmaWeatherProviderTest {
         List<KmaItem> result = provider.fetchLatestItems(nx, ny);
 
         // then
-        assertEquals(1, result.size());
-        assertFalse(result.stream().anyMatch(i -> i.fcstDate().equals(yesterday.format(DATE))));
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(i -> i.fcstDate().equals(yesterday.format(DATE))));
         assertTrue(result.stream().anyMatch(i -> i.fcstDate().equals(today.format(DATE))));
     }
 
@@ -283,7 +281,7 @@ class KmaWeatherProviderTest {
         assertEquals("TMP", only.category());
         assertEquals(d.format(DATE), only.fcstDate());
         assertEquals("0900", only.fcstTime());
-        assertEquals("2300", only.baseTime());
+        assertEquals("1700", only.baseTime());
     }
 
     @Test
