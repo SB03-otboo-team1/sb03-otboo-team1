@@ -17,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,43 +47,59 @@ public class WeatherServiceImpl implements WeatherService {
             .or(() -> locationRepository.findNearest(roundedLat, roundedLon))
             .orElseThrow(() -> new IllegalArgumentException("근처 좌표를 찾을 수 없습니다."));
 
-        // 2) KST 기준 현재 시각의 "가까운 정시"를 목표 시각으로 사용
+        // KST 기준 현재 시각의 "가까운 정시"
         ZonedDateTime nowKst = ZonedDateTime.now(KST);
         ZonedDateTime baseHourKst = roundToNearestHour(nowKst);
-        LocalTime targetTimeOfDay = baseHourKst.toLocalTime(); // 매일 동일 시각을 타깃
+        LocalTime targetTimeOfDay = baseHourKst.toLocalTime();
 
-        // 3) 오늘~+4일 루프를 돌며 매일 1건(가장 가까운) 선택
-        List<WeatherDto> out = new ArrayList<>(5);
+        // 타깃 시각(KST) 5개
+        List<ZonedDateTime> targetsKst = new ArrayList<>(5);
         for (int i = 0; i < 5; i++) {
-            LocalDate day = nowKst.toLocalDate().plusDays(i);
-            // 그 날짜의 타깃 시각(KST)
-            ZonedDateTime targetKst = ZonedDateTime.of(day, targetTimeOfDay, KST);
+            targetsKst.add(ZonedDateTime.of(nowKst.toLocalDate().plusDays(i), targetTimeOfDay, KST));
+        }
+
+        // 범위 한 번만 조회 (±2h 커버)
+        Instant from = targetsKst.stream().map(t -> t.minusHours(2).toInstant()).min(Instant::compareTo).orElseThrow();
+        Instant to   = targetsKst.stream().map(t -> t.plusHours(2).toInstant()).max(Instant::compareTo).orElseThrow();
+
+        List<Weather> all = weatherRepository.findRange(location.getId(), from, to);
+        if (all.isEmpty()) {
+            return List.of(); // 전부 비어 있으면 바로 반환
+        }
+
+        // KST 날짜 기준으로 미리 그룹핑 (필터 반복 줄임)
+        Map<LocalDate, List<Weather>> byDay = all.stream()
+            .collect(java.util.stream.Collectors.groupingBy(w -> w.getForecastAt().atZone(KST).toLocalDate()));
+
+        List<WeatherDto> result = new ArrayList<>(5);
+        for (ZonedDateTime targetKst : targetsKst) {
+            LocalDate day = targetKst.toLocalDate();
             Instant targetUtc = targetKst.toInstant();
 
-            // 후보 범위: ±2시간
-            Instant from = targetKst.minusHours(2).toInstant();
-            Instant to = targetKst.plusHours(2).toInstant();
+            Weather picked = byDay.getOrDefault(day, List.of()).stream()
+                .min(Comparator.comparingLong(w -> Math.abs(w.getForecastAt().toEpochMilli() - targetUtc.toEpochMilli())))
+                .orElse(null);
 
-            // 3-1) 우선 좁은 윈도우에서 후보를 뽑음
-            List<Weather> candidates = weatherRepository.findRange(location.getId(), from, to);
-
-            // 3-2) 비어 있으면 당일 00~24시(KST)에서 후보를 전체 재탐색
-            if (candidates.isEmpty()) {
+            // (선택) 하루 범위 fallback: 그룹에 없으면 그날 00~24(KST) 전체에서 1건 검색
+            if (picked == null) {
                 ZonedDateTime dayStartKst = day.atStartOfDay(KST);
                 Instant dayStart = dayStartKst.toInstant();
-                Instant dayEnd = dayStartKst.plusDays(1).minusNanos(1).toInstant();
-                candidates = weatherRepository.findRange(location.getId(), dayStart, dayEnd);
+                Instant dayEnd   = dayStartKst.plusDays(1).minusNanos(1).toInstant();
+
+                List<Weather> dayAll = weatherRepository.findRange(location.getId(), dayStart, dayEnd);
+                picked = dayAll.stream()
+                    .min(Comparator.comparingLong(w -> Math.abs(w.getForecastAt().toEpochMilli() - targetUtc.toEpochMilli())))
+                    .orElse(null);
             }
 
-            // 3-3) 가장 가까운 1건 선택
-            Weather picked = pickNearestByAbsDiff(candidates, targetUtc);
             if (picked != null) {
-                out.add(toDtoKst(picked)); // DTO 변환(KST로 표시)
+                result.add(toDtoKst(picked));
             }
         }
 
-        return out;
+        return result;
     }
+
 
     private boolean validLatLon(double longitude, double latitude) {
         return longitude >= -180 && longitude <= 180 && latitude >= -90 && latitude <= 90;
@@ -93,13 +110,6 @@ public class WeatherServiceImpl implements WeatherService {
             return zdt.plusHours(1).withMinute(0).withSecond(0).withNano(0);
         }
         return zdt.withMinute(0).withSecond(0).withNano(0);
-    }
-
-    private Weather pickNearestByAbsDiff(List<Weather> list, Instant targetUtc) {
-        return list.stream()
-            .min(Comparator.comparingLong(
-                w -> Math.abs(w.getForecastAt().toEpochMilli() - targetUtc.toEpochMilli())))
-            .orElse(null);
     }
 
     private WeatherDto toDtoKst(Weather w) {
