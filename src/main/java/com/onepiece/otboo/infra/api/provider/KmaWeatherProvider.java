@@ -2,6 +2,7 @@ package com.onepiece.otboo.infra.api.provider;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onepiece.otboo.global.util.ArrayUtil;
 import com.onepiece.otboo.infra.api.dto.BaseDt;
 import com.onepiece.otboo.infra.api.dto.KmaItem;
 import java.time.LocalDate;
@@ -39,7 +40,7 @@ public class KmaWeatherProvider implements WeatherProvider {
         BaseDt latestBase = resolveLatestBaseToday(); // 오늘 기준으로 잡기
         List<KmaItem> acc = new ArrayList<>();
 
-        int startIdx = indexOf(BASE_TIMES, latestBase.time());
+        int startIdx = ArrayUtil.indexOf(BASE_TIMES, latestBase.time());
         if (startIdx < 0) {
             // latestBase가 허용목록에 없다면, 가장 가까운 이전 허용 base를 선택
             startIdx = nearestAllowedIndex(latestBase.time());
@@ -79,15 +80,6 @@ public class KmaWeatherProvider implements WeatherProvider {
         Map<String, KmaItem> dedup = getStringKmaItemMap(acc);
 
         return new ArrayList<>(dedup.values());
-    }
-
-    private int indexOf(String[] arr, String v) {
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i].equals(v)) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     private int nearestAllowedIndex(String time) {
