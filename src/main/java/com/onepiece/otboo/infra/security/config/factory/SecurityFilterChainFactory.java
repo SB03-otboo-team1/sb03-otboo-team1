@@ -26,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.web.cors.CorsConfiguration;
 
 @Component
 @Profile({"dev", "prod", "test-security"})
@@ -57,6 +58,14 @@ public class SecurityFilterChainFactory {
         );
 
         http
+            .cors(cors -> cors.configurationSource(request -> {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(securityProperties.cors().allowedOrigins());
+                config.setAllowedMethods(securityProperties.cors().allowedMethods());
+                config.setAllowedHeaders(securityProperties.cors().allowedHeaders());
+                config.setAllowCredentials(securityProperties.cors().allowCredentials());
+                return config;
+            }))
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers(securityProperties.csrf().ignoredRequestMatchers())
                 .csrfTokenRepository(cookieCsrfTokenRepository)
