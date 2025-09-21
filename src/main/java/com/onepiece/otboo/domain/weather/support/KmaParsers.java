@@ -75,7 +75,7 @@ public class KmaParsers {
         }
 
         // 없으면 Extremes에서 대체
-        return ex.tmnByDate().get(date);
+        return ex.tmxByDate().get(date);
     }
 
     public static Double resolveTmn(Map<String, KmaItem> bucket, Extremes ex, String date) {
