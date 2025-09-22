@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.weather.config;
+package com.onepiece.otboo.domain.weather.config.batch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
