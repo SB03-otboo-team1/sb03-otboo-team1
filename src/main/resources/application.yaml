@@ -76,3 +76,11 @@ api:
   weather:
     service-api-key: ${SERVICE_API_KEY}
 
+
+aws:
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
+  region: ap-northeast-2
+  s3:
+    bucket: clothes-images-onepiece
+    region: ap-northeast-2
