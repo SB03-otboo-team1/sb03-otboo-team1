@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.weather.batch.config;
+package com.onepiece.otboo.domain.weather.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,7 +21,9 @@ import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
+@ActiveProfiles("dev")
 @SpringBatchTest
 @SpringBootTest
 class WeatherBatchConfigTest {
@@ -42,7 +44,8 @@ class WeatherBatchConfigTest {
 
     @BeforeEach
     void setUp() {
-        weatherRepository.deleteAll();;
+        weatherRepository.deleteAll();
+        ;
         locationRepository.deleteAll();
 
         jobLauncherTestUtils.setJob(collectWeatherJob);
