@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.user.controller.api;
 
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "프로필 관리", description = "프로필 관련 API")
@@ -39,4 +41,24 @@ public interface UserApi {
         )
     })
     ResponseEntity<UserDto> create(@Valid @RequestBody UserCreateRequest userCreateRequest);
+
+    @Operation(
+        summary = "권한 수정",
+        description = "권한 수정 API",
+        security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", description = "권한 변경 성공"
+        ),
+        @ApiResponse(
+            responseCode = "404", description = "권한 변경 실패(사용자 없음)",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    ResponseEntity<Void> changeRole(@PathVariable("id") String userId,
+        @RequestBody UserRoleUpdateRequest request);
 }

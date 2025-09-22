@@ -3,16 +3,19 @@ package com.onepiece.otboo.domain.user.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.BDDMockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.global.config.JpaConfig;
 import java.time.Instant;
@@ -20,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -140,5 +144,34 @@ class UserControllerTest {
             // then
             result.andExpect(status().isBadRequest());
         }
+    }
+
+    @Test
+    void 권한변경_성공시_200반환() throws Exception {
+        String userId = String.valueOf(UUID.randomUUID());
+        String role = "ADMIN";
+        UserRoleUpdateRequest req = new UserRoleUpdateRequest(role);
+        Mockito.doNothing().when(userService).changeRole(any(UUID.class), any());
+
+        ResultActions result = mockMvc.perform(patch("/api/users/" + userId + "/role")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(req)));
+
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    void 존재하지않는사용자_권한변경시_404반환() throws Exception {
+        String userId = String.valueOf(UUID.randomUUID());
+        String role = "USER";
+        UserRoleUpdateRequest req = new UserRoleUpdateRequest(role);
+        Mockito.doThrow(new UserNotFoundException()).when(userService)
+            .changeRole(any(UUID.class), any());
+
+        ResultActions result = mockMvc.perform(patch("/api/users/" + userId + "/role")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(req)));
+
+        result.andExpect(status().isNotFound());
     }
 }

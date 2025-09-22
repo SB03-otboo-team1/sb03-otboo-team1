@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,11 @@ public interface AuthApi {
     })
     ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken);
 
-    @Operation(summary = "로그인", description = "이메일과 비밀번호를 입력하여 로그인합니다.")
+    @Operation(
+        summary = "로그인",
+        description = "이메일과 비밀번호를 입력하여 로그인합니다.",
+        security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
     @ApiResponses({
         @ApiResponse(
             responseCode = "200",
@@ -60,14 +65,22 @@ public interface AuthApi {
     )
     void signIn(@ModelAttribute SignInRequest signInRequest);
 
-    @Operation(summary = "로그아웃", description = "로그아웃합니다.")
+    @Operation(
+        summary = "로그아웃",
+        description = "로그아웃합니다.",
+        security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
     @ApiResponse(
         responseCode = "204",
         description = "로그아웃 성공"
     )
     void signOut();
 
-    @Operation(summary = "토큰 재발급", description = "쿠키(REFRESH_TOKEN)에 저장된 리프레시 토큰으로 리프레시 토큰과 엑세스 토큰을 재발급합니다.")
+    @Operation(
+        summary = "토큰 재발급",
+        description = "쿠키(REFRESH_TOKEN)에 저장된 리프레시 토큰으로 리프레시 토큰과 엑세스 토큰을 재발급합니다.",
+        security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
     @ApiResponses({
         @ApiResponse(
             responseCode = "200",
@@ -92,7 +105,11 @@ public interface AuthApi {
         HttpServletResponse response
     );
 
-    @Operation(summary = "임시 비밀번호 발급", description = "이메일 주소로 임시 비밀번호를 발급합니다.")
+    @Operation(
+        summary = "임시 비밀번호 발급",
+        description = "이메일 주소로 임시 비밀번호를 발급합니다.",
+        security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "비밀번호 초기화 성공"),
         @ApiResponse(

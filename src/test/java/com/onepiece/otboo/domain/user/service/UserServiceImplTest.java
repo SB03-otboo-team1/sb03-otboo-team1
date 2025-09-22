@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.verify;
 
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
@@ -18,10 +18,12 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -132,6 +134,36 @@ class UserServiceImplTest {
         // then
         assertThat(thrown)
             .isInstanceOf(DuplicateEmailException.class);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void 권한변경_성공시_역할이_변경된다() {
+        // given
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.save(user)).willReturn(user);
+
+        // when
+        userService.changeRole(userId, Role.ADMIN);
+
+        // then
+        assertThat(user.getRole()).isEqualTo(Role.ADMIN);
+        verify(userRepository).findById(userId);
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void 존재하지않는사용자_권한변경시_예외발생() {
+        // given
+        UUID notExistId = UUID.randomUUID();
+        given(userRepository.findById(notExistId)).willReturn(Optional.empty());
+
+        // when
+        Throwable thrown = catchThrowable(() -> userService.changeRole(notExistId, Role.ADMIN));
+
+        // then
+        assertThat(thrown).isInstanceOf(UserNotFoundException.class);
+        verify(userRepository).findById(notExistId);
         verify(userRepository, never()).save(any());
     }
 }

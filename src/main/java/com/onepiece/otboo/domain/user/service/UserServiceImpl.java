@@ -8,10 +8,12 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -66,5 +68,15 @@ public class UserServiceImpl implements UserService {
             .build();
 
         return profileRepository.save(profile);
+    }
+
+    @Override
+    @Transactional
+    public void changeRole(UUID userId, Role role) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
+        user.updateRole(role);
+        userRepository.save(user);
+        log.info("[UserService] 사용자 권한 변경 - userId: {}, role: {}", userId, role);
     }
 }
