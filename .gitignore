@@ -29,6 +29,7 @@ bin/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+*.json
 
 ### NetBeans ###
 /nbproject/private/
