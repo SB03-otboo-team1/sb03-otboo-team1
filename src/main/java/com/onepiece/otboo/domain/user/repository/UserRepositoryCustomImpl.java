@@ -11,7 +11,6 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.Instant;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +26,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
     @Override
     public List<UserDto> findUsers(UserGetRequest userGetRequest) {
         String cursor = userGetRequest.cursor();
-        String nextAfter = userGetRequest.idAfter();
-        String sortBy = userGetRequest.sortBy();
-        String sortDirection = userGetRequest.sortDirection();
+        UUID nextAfter = userGetRequest.idAfter();
         Role roleEqual = userGetRequest.roleEqual();
         Boolean locked = userGetRequest.locked();
         String emailLike = userGetRequest.emailLike();
@@ -38,38 +35,37 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
         BooleanBuilder where = getWhere(emailLike, roleEqual, locked);
 
         if (cursor != null && nextAfter != null) {
-            UUID nextId = UUID.fromString(nextAfter);
-            try {
-                if ("createdAt".equals(sortBy)) {
-                    Instant cursorCreatedAt = Instant.parse(cursor);
-                    if ("ASCENDING".equals(sortDirection)) {
-                        where.and(user.createdAt.gt(cursorCreatedAt)
-                            .or(user.createdAt.eq(cursorCreatedAt).and(user.id.gt(nextId)))
-                        );
+            boolean asc = userGetRequest.isAscending();
+            switch (userGetRequest.sortByEnum()) {
+                case CREATED_AT -> {
+                    Instant cAt = UserGetRequest.parseCreatedAtStrict(cursor);
+                    if (asc) {
+                        where.and(user.createdAt.gt(cAt)
+                            .or(user.createdAt.eq(cAt).and(user.id.gt(nextAfter))));
                     } else {
-                        where.and(user.createdAt.lt(cursorCreatedAt)
-                            .or(user.createdAt.eq(cursorCreatedAt).and(user.id.lt(nextId)))
-                        );
-                    }
-                } else {
-                    if ("ASCENDING".equals(sortDirection)) {
-                        where.and(user.email.gt(cursor)
-                            .or(user.email.eq(cursor).and(user.id.gt(nextId)))
-                        );
-                    } else {
-                        where.and(user.email.lt(cursor)
-                            .or(user.email.eq(cursor).and(user.id.lt(nextId)))
-                        );
+                        where.and(user.createdAt.lt(cAt)
+                            .or(user.createdAt.eq(cAt).and(user.id.lt(nextAfter))));
                     }
                 }
-            } catch (DateTimeParseException e) {
-                log.warn("[UserRepository] Invalid cursor format: {}", cursor);
-                throw e;
+                case EMAIL -> {
+                    if (asc) {
+                        where.and(user.email.gt(cursor)
+                            .or(user.email.eq(cursor).and(user.id.gt(nextAfter))));
+                    } else {
+                        where.and(user.email.lt(cursor)
+                            .or(user.email.eq(cursor).and(user.id.lt(nextAfter))));
+                    }
+                }
             }
         }
 
-        OrderSpecifier<?> primary = orderPrimary(sortBy, sortDirection);
-        OrderSpecifier<?> tieBreaker = tieBreaker(sortDirection);
+        OrderSpecifier<?> primary = switch (userGetRequest.sortByEnum()) {
+            case CREATED_AT ->
+                (userGetRequest.isAscending() ? user.createdAt.asc() : user.createdAt.desc());
+            case EMAIL -> (userGetRequest.isAscending() ? user.email.asc() : user.email.desc());
+        };
+        OrderSpecifier<?> tieBreaker = (userGetRequest.isAscending() ? user.id.asc()
+            : user.id.desc());
 
         return queryFactory.select(Projections.constructor(UserDto.class,
                 user.id, user.createdAt, user.email, profile.nickname, user.role, user.provider,
@@ -107,16 +103,5 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
             where.and(user.locked.eq(locked));
         }
         return where;
-    }
-
-    private OrderSpecifier<?> orderPrimary(String sortBy, String sortDirection) {
-        if ("createdAt".equals(sortBy)) {
-            return "ASC".equals(sortDirection) ? user.createdAt.asc() : user.createdAt.desc();
-        }
-        return "ASC".equals(sortDirection) ? user.email.asc() : user.email.desc();
-    }
-
-    private OrderSpecifier<?> tieBreaker(String sortDirection) {
-        return "ASC".equals(sortDirection) ? user.id.asc() : user.id.desc();
     }
 }

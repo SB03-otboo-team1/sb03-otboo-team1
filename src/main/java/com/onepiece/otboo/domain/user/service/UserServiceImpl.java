@@ -15,7 +15,6 @@ import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -78,17 +77,21 @@ public class UserServiceImpl implements UserService {
         // cursor
         boolean hasNext = users.size() > limit;
 
-        String nextCursor;
-        String nextIdAfter;
+        String nextCursor = null;
+        String nextIdAfter = null;
 
         if (hasNext) {
             users = users.subList(0, limit);
             UserDto lastUser = users.get(limit - 1);
-            nextCursor = lastUser.createdAt().toString();
+            switch (userGetRequest.sortByEnum()) {
+                case CREATED_AT -> {
+                    nextCursor = lastUser.createdAt().toString();
+                }
+                case EMAIL -> {
+                    nextCursor = lastUser.email();
+                }
+            }
             nextIdAfter = lastUser.id().toString();
-        } else {
-            nextCursor = null;
-            nextIdAfter = null;
         }
 
         long totalCount = userRepository.countUsers(emailLike, roleEqual, locked);
