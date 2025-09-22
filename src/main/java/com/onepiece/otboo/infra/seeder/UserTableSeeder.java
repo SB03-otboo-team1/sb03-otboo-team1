@@ -21,7 +21,7 @@ public class UserTableSeeder implements DataSeeder {
 
     @Override
     public void seed() {
-        if (userRepository.count() > 0) {
+        if (userRepository.count() > 1) {
             return;
         }
         int count = 0;

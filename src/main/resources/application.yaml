@@ -69,6 +69,9 @@ otboo:
         enabled: true
         username: ${SWAGGER_BASIC_USERNAME}
         password: ${SWAGGER_BASIC_PASSWORD}
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
 
 api:
   kakao:
