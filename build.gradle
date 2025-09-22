@@ -3,27 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
-}
-
-test {
-    finalizedBy jacocoTestReport
-}
-
-jacocoTestReport {
-    dependsOn test
-    reports {
-        xml.required = true
-        html.required = true
-    }
-    afterEvaluate {
-        classDirectories.setFrom(
-                files(classDirectories.files.collect {
-                    fileTree(dir: it, exclude: [
-                            '**/seeder/**'
-                    ])
-                })
-        )
-    }
+    id 'idea'
 }
 
 group = 'com.onepiece'
@@ -40,6 +20,58 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    // integrationTest에서 test 의존성 확장
+    integrationTestImplementation {
+        extendsFrom testImplementation
+    }
+    integrationTestRuntimeOnly {
+        extendsFrom testRuntimeOnly
+    }
+}
+
+def querydslGeneratedDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
+
+sourceSets {
+    main {
+        java.srcDir querydslGeneratedDir
+    }
+    test {
+        java.srcDir querydslGeneratedDir
+    }
+    integrationTest {
+        java.srcDir querydslGeneratedDir
+        java.srcDir 'src/integrationTest/java'
+        resources.srcDir 'src/integrationTest/resources'
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += output + compileClasspath + configurations.testRuntimeClasspath
+    }
+}
+
+// integrationTest 리소스 중복 파일 허용 설정 기본 값 INHERIT
+tasks.named('processIntegrationTestResources') {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// QueryDSL 설정
+tasks.named('compileJava') {
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
+}
+tasks.named('compileTestJava') {
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
+}
+tasks.named('compileIntegrationTestJava') {
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
+}
+
+clean {
+    delete querydslGeneratedDir
+}
+
+idea {
+    module {
+        testSources.from(sourceSets.integrationTest.java.srcDirs)
+        testResources.from(sourceSets.integrationTest.resources.srcDirs)
+    }
 }
 
 repositories {
@@ -47,6 +79,7 @@ repositories {
 }
 
 dependencies {
+    // ======================== Main ========================
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -57,12 +90,13 @@ dependencies {
     // Auth
     implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
 
-    // Swagger UI 활성화
+    // Swagger UI 제공
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 
-    // Lombok과 MapStruct를 동시에 사용하는 경우 Lombok이 제대로 동작하지 않는 문제. MapStruct 위에 배치한다.
+    // Lombok과 MapStruct를 동시에 사용할 때 Lombok이 선행 실행되도록 순서 유지
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
     // MapStruct
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
@@ -76,11 +110,11 @@ dependencies {
     // Querydsl 설정
     // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
-    annotationProcessor "jakarta.persistence:jakarta.persistence-api:3.1.0"
+    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api:2.1.1'
 
-    // DB
+    // Database
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'com.h2database:h2'
 
@@ -94,29 +128,98 @@ dependencies {
     // Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
-    // Test
+    // ======================== Test ========================
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+    // Lombok
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.batch:spring-batch-test'
+
+    // =================== Integration test ===================
+    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+    integrationTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
+jacoco {
+    toolVersion = '0.8.13'
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('compileIntegrationTestJava')
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('integrationTest')
+}
+
+tasks.named('test', Test) {
     useJUnitPlatform()
+    finalizedBy 'jacocoTestReport'
 }
 
-// QueryDSL 설정
-def querydslDir = "$buildDir/generated/querydsl"
-
-sourceSets {
-    main.java.srcDirs += [querydslDir]
+tasks.register('integrationTest', Test) {
+    description = '통합 테스트 실행'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    shouldRunAfter 'test'
+    useJUnitPlatform()
+    finalizedBy 'jacocoIntegrationTestReport'
 }
 
-tasks.withType(JavaCompile) {
-    options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
+jacocoTestReport {
+    dependsOn 'test'
+    reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacoco.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/test/html')
+    }
+    classDirectories.setFrom(
+            files(sourceSets.main.output.classesDirs).asFileTree.matching {
+                exclude '**/seeder/**'
+            }
+    )
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
 }
 
-clean {
-    delete file(querydslDir)
+tasks.register('jacocoIntegrationTestReport', JacocoReport) {
+    group = 'verification'
+    description = '통합 테스트 JaCoCo 리포트 생성'
+    dependsOn 'integrationTest'
+    reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/integrationTest/jacoco.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/integrationTest/html')
+    }
+    sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom(
+            files(sourceSets.main.output.classesDirs).asFileTree.matching {
+                exclude '**/seeder/**'
+            }
+    )
+    executionData.setFrom(layout.buildDirectory.file('jacoco/integrationTest.exec'))
+}
+
+tasks.register('jacocoMergedReport', JacocoReport) {
+    group = 'verification'
+    description = '일반 테스트와 통합 테스트의 커버리지 병합 JaCoCo 리포트 생성'
+    dependsOn 'test', 'integrationTest'
+    reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/merged/jacoco.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/merged/html')
+    }
+    sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom(
+            files(sourceSets.main.output.classesDirs).asFileTree.matching {
+                exclude '**/seeder/**'
+            }
+    )
+    executionData.setFrom(fileTree(layout.buildDirectory.dir("jacoco")).matching {
+        include 'test.exec', 'integrationTest.exec'
+    })
 }
