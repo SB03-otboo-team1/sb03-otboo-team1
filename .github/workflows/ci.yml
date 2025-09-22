@@ -33,9 +33,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests with coverage
-        run: ./gradlew clean test jacocoTestReport
+        run: ./gradlew clean test jacocoMergedReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/jacoco/merged/jacoco.xml
