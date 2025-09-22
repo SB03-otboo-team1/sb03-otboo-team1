@@ -6,21 +6,21 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class JwtLoginFailureHandler implements AuthenticationFailureHandler {
+public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final SecurityErrorResponseHandler responseHandler;
 
     @Override
-    public void onAuthenticationFailure(
+    public void commence(
         HttpServletRequest request,
         HttpServletResponse response,
-        AuthenticationException exception
+        AuthenticationException authException
     ) throws IOException {
-        responseHandler.handle(response, new SecurityUnauthorizedException(exception));
+        responseHandler.handle(response, new SecurityUnauthorizedException(authException));
     }
 }

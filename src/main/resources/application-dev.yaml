@@ -20,3 +20,26 @@ logging:
     # Spring Cache 관련 디버그 로그 활성화 (캐시 Hit/Miss 추적)
     org.springframework.cache: debug
     org.springframework.cache.interceptor: trace
+    org.springframework.web.cors: debug
+
+otboo:
+  security:
+    cors:
+      allowed-origins:
+        - "http://localhost:8080"
+        - "http://localhost:5173"
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      allowed-headers:
+        - "*"
+      allow-credentials: true
+    csrf:
+      ignored-paths:
+    swagger:
+      basic:
+        enabled: false
+        username: ${SWAGGER_BASIC_USERNAME}
+        password: ${SWAGGER_BASIC_PASSWORD}

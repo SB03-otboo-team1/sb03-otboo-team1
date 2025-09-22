@@ -1,6 +1,9 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  h2:
+    console:
+      enabled: false
   jpa:
     show-sql: false
 
@@ -10,3 +13,19 @@ logging:
     com.onepiece.otboo: info
     org.springframework: info
     org.hibernate.SQL: off
+otboo:
+  security:
+    cors:
+      allowed-origins:
+        - "https://prod.otboo.com"
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      allow-credentials: true
+    swagger:
+      basic:
+        enabled: true
+        username: ${SWAGGER_BASIC_USERNAME}
+        password: ${SWAGGER_BASIC_PASSWORD}

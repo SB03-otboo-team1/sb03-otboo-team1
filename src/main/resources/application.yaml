@@ -38,7 +38,6 @@ logging:
     com.onepiece.otboo: info
     org.springframework: info
     org.hibernate.SQL: warn
-
 otboo:
   jwt:
     access-token:
@@ -52,6 +51,24 @@ otboo:
     validity-seconds: ${TEMP_PASSWORD_VALIDITY_SECONDS}
     charset: ${TEMP_PASSWORD_CHARSET}
     special-charset: ${TEMP_PASSWORD_SPECIAL_CHARSET}
+  security:
+    cors:
+      allowed-origins:
+        - "http://localhost:80"
+        - "http://localhost:8080"
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      allow-credentials: true
+    csrf:
+      ignored-paths:
+    swagger:
+      basic:
+        enabled: true
+        username: ${SWAGGER_BASIC_USERNAME}
+        password: ${SWAGGER_BASIC_PASSWORD}
 
 api:
   kakao:
