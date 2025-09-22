@@ -2,6 +2,7 @@ package com.onepiece.otboo.infra.api.provider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -29,11 +30,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
+@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
 class KmaWeatherProviderTest {
 
@@ -243,8 +246,8 @@ class KmaWeatherProviderTest {
         List<KmaItem> result = provider.fetchLatestItems(nx, ny);
 
         // then
-        assertEquals(2, result.size());
-        assertTrue(result.stream().anyMatch(i -> i.fcstDate().equals(yesterday.format(DATE))));
+        assertEquals(1, result.size());
+        assertFalse(result.stream().anyMatch(i -> i.fcstDate().equals(yesterday.format(DATE))));
         assertTrue(result.stream().anyMatch(i -> i.fcstDate().equals(today.format(DATE))));
     }
 
@@ -281,7 +284,7 @@ class KmaWeatherProviderTest {
         assertEquals("TMP", only.category());
         assertEquals(d.format(DATE), only.fcstDate());
         assertEquals("0900", only.fcstTime());
-        assertEquals("1700", only.baseTime());
+        assertEquals("2300", only.baseTime());
     }
 
     @Test
