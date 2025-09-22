@@ -56,3 +56,6 @@ otboo:
 api:
   kakao:
     rest-api-key: ${REST_API_KEY}
+  weather:
+    service-api-key: ${SERVICE_API_KEY}
+
