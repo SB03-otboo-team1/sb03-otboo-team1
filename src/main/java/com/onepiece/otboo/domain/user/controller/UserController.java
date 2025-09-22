@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.user.controller;
 
 import com.onepiece.otboo.domain.user.controller.api.UserApi;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Role;
@@ -53,5 +54,24 @@ public class UserController implements UserApi {
 
         log.info("[UserController] 권한 변경 성공 - userId: {}, role: {}", userId, request.role());
         return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @PatchMapping("/{userId}/lock")
+    public ResponseEntity<UserDto> updateUserLock(@PathVariable("userId") String userId,
+        @Valid @RequestBody UserLockUpdateRequest request) {
+        log.info("[UserController] 계정 잠금 상태 변경 요청 - userId: {}, locked: {}", userId,
+            request.locked());
+
+        UserDto result;
+        if (request.locked()) {
+            result = userService.lockUser(UUID.fromString(userId));
+            log.info("[UserController] 계정 잠금 성공 - userId: {}", userId);
+        } else {
+            result = userService.unlockUser(UUID.fromString(userId));
+            log.info("[UserController] 계정 잠금 해제 성공 - userId: {}", userId);
+        }
+
+        return ResponseEntity.ok(result);
     }
 }

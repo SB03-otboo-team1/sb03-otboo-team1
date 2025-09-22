@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.user.controller.api;
 
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
@@ -61,4 +62,28 @@ public interface UserApi {
     })
     ResponseEntity<Void> changeRole(@PathVariable("id") String userId,
         @RequestBody UserRoleUpdateRequest request);
+
+    @Operation(
+        summary = "계정 잠금 상태 변경",
+        description = "[어드민 기능] 계정 잠금 상태를 변경합니다.",
+        security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", description = "계정 잠금 상태 변경 성공",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = UserDto.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404", description = "계정 잠금 상태 변경 실패(사용자 없음)",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    ResponseEntity<UserDto> updateUserLock(@PathVariable("userId") String userId,
+        @Valid @RequestBody UserLockUpdateRequest request);
 }

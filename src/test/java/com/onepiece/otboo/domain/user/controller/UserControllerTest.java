@@ -11,11 +11,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
+import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.global.config.JpaConfig;
 import java.time.Instant;
@@ -173,5 +175,79 @@ class UserControllerTest {
             .content(objectMapper.writeValueAsString(req)));
 
         result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 계정잠금_성공시_200과_잠금상태반환() throws Exception {
+        var user = UserFixture.createUser();
+        UUID userId = UUID.randomUUID();
+        UserDto lockedDto = UserDto.builder()
+            .id(userId)
+            .createdAt(Instant.now())
+            .email(user.getEmail())
+            .name("test")
+            .role(user.getRole())
+            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .locked(true)
+            .build();
+        given(userService.lockUser(any(UUID.class))).willReturn(lockedDto);
+        String body = objectMapper.writeValueAsString(new UserLockUpdateRequest(true));
+
+        mockMvc.perform(patch("/api/users/" + userId + "/lock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.locked").value(true));
+
+        verify(userService).lockUser(userId);
+    }
+
+    @Test
+    void 계정잠금해제_성공시_200과_해제상태반환() throws Exception {
+        UUID userId = UUID.randomUUID();
+        var user = UserFixture.createUser();
+        UserDto unlockedDto = UserDto.builder()
+            .id(userId)
+            .createdAt(Instant.now())
+            .email(user.getEmail())
+            .name("test")
+            .role(user.getRole())
+            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .locked(false)
+            .build();
+        given(userService.unlockUser(any(UUID.class))).willReturn(unlockedDto);
+        String body = objectMapper.writeValueAsString(new UserLockUpdateRequest(false));
+
+        mockMvc.perform(patch("/api/users/" + userId + "/lock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.locked").value(false));
+
+        verify(userService).unlockUser(userId);
+    }
+
+    @Test
+    void 존재하지않는사용자_계정잠금시_404반환() throws Exception {
+        UUID userId = UUID.randomUUID();
+        given(userService.lockUser(any(UUID.class))).willThrow(new UserNotFoundException());
+        String body = objectMapper.writeValueAsString(new UserLockUpdateRequest(true));
+
+        mockMvc.perform(patch("/api/users/" + userId + "/lock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 존재하지않는사용자_계정잠금해제시_404반환() throws Exception {
+        UUID userId = UUID.randomUUID();
+        given(userService.unlockUser(any(UUID.class))).willThrow(new UserNotFoundException());
+        String body = objectMapper.writeValueAsString(new UserLockUpdateRequest(false));
+
+        mockMvc.perform(patch("/api/users/" + userId + "/lock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isNotFound());
     }
 }

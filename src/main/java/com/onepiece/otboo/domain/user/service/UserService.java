@@ -10,4 +10,8 @@ public interface UserService {
     UserDto create(UserCreateRequest userCreateRequest);
 
     void changeRole(UUID userId, Role role);
+
+    UserDto lockUser(UUID userId);
+
+    UserDto unlockUser(UUID userId);
 }
