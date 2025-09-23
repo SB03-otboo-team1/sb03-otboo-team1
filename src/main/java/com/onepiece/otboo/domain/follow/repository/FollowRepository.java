@@ -1,15 +1,12 @@
 package com.onepiece.otboo.domain.follow.repository;
 
-import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.user.entity.User;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
-public interface FollowRepository extends JpaRepository<Follow, UUID> {
+public interface FollowRepository extends JpaRepository<Follow, UUID>, FollowRepositoryCustom {
 
     boolean existsByFollowerAndFollowing(User follower, User following);
 
@@ -22,13 +19,5 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
     long countByFollowing(User following);
 
     long countByFollower(User follower);
-
-    @Query("SELECT new com.onepiece.otboo.domain.follow.dto.response.FollowingResponse(" +
-        "f.id, u.id, p.nickname, p.profileImageUrl, f.createdAt) " +
-        "FROM Follow f " +
-        "JOIN f.following u " +
-        "JOIN Profile p ON p.user = u " +
-        "WHERE f.follower = :user")
-    List<FollowingResponse> findFollowingsWithProfile(@Param("user") User user);
 
 }
