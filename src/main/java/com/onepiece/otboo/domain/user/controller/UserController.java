@@ -1,5 +1,7 @@
 package com.onepiece.otboo.domain.user.controller;
 
+import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
+import com.onepiece.otboo.domain.profile.service.ProfileService;
 import com.onepiece.otboo.domain.user.controller.api.UserApi;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
@@ -7,13 +9,15 @@ import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import jakarta.validation.Valid;
-import java.util.Locale;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController implements UserApi {
 
     private final UserService userService;
+    private final ProfileService profileService;
 
     @Override
     @PostMapping
@@ -54,6 +59,20 @@ public class UserController implements UserApi {
 
         log.info("[UserController] 계정 목록 조회 성공 - {}개의 데이터, 다음 페이지 존재 여부: {}",
             result.data().size(), result.hasNext());
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @Override
+    @PreAuthorize("#userId == principal.userId or hasRole('ADMIN')")
+    @GetMapping("/{userId}/profiles")
+    public ResponseEntity<ProfileDto> getUserProfile(@PathVariable UUID userId) {
+
+        log.info("[UserController] 프로필 조회 요청 - userId: {}", userId);
+
+        ProfileDto result = profileService.getUserProfile(userId);
+
+        log.info("[UserController] 프로필 조회 완료 - userId: {} nickname: {}", userId, result.name());
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }

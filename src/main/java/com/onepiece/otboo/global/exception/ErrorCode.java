@@ -40,7 +40,10 @@ public enum ErrorCode {
 
     // LOCATION
     INVALID_COORDINATE(HttpStatus.BAD_REQUEST, "유효하지 않은 좌표 값입니다.", "위도와 경도를 확인해주세요."),
-    INVALID_AREA(HttpStatus.BAD_REQUEST, "서비스 지역이 아닙니다.", "해당 위치는 서비스 대상 지역이 아닙니다.");
+    INVALID_AREA(HttpStatus.BAD_REQUEST, "서비스 지역이 아닙니다.", "해당 위치는 서비스 대상 지역이 아닙니다."),
+
+    /// PROFILE
+    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 확인 실패", "해당 유저의 프로필을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

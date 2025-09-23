@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.profile.dto.response;
 
-import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.profile.enums.Gender;
+import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -10,7 +10,7 @@ public record ProfileDto(
     String name,
     Gender gender,
     LocalDate birthDate,
-    Location location,
+    WeatherAPILocation location,
     Integer temperatureSensitivity,
     String profileImageUrl
 ) {
