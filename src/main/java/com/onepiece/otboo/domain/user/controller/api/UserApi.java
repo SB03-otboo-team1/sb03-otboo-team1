@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -112,6 +113,6 @@ public interface UserApi {
             )
         )
     })
-    ResponseEntity<UserDto> updateUserLock(@PathVariable("userId") String userId,
+    ResponseEntity<UserDto> updateUserLock(@PathVariable("userId") UUID userId,
         @Valid @RequestBody UserLockUpdateRequest request);
 }

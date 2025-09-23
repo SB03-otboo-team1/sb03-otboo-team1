@@ -81,17 +81,17 @@ public class UserController implements UserApi {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{userId}/lock")
-    public ResponseEntity<UserDto> updateUserLock(@PathVariable("userId") String userId,
+    public ResponseEntity<UserDto> updateUserLock(@PathVariable("userId") UUID userId,
         @Valid @RequestBody UserLockUpdateRequest request) {
         log.info("[UserController] 계정 잠금 상태 변경 요청 - userId: {}, locked: {}", userId,
             request.locked());
 
         UserDto result;
         if (request.locked()) {
-            result = userService.lockUser(UUID.fromString(userId));
+            result = userService.lockUser(userId);
             log.info("[UserController] 계정 잠금 성공 - userId: {}", userId);
         } else {
-            result = userService.unlockUser(UUID.fromString(userId));
+            result = userService.unlockUser(userId);
             log.info("[UserController] 계정 잠금 해제 성공 - userId: {}", userId);
         }
 
