@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
@@ -142,24 +143,21 @@ class FollowServiceImplTest {
     }
 
     @Test
-    @DisplayName("팔로잉 목록 조회 성공")
+    @DisplayName("팔로잉 목록 조회 성공 (프로필 포함)")
     void getFollowings_success() {
-
         UUID userId = UUID.randomUUID();
         given(userRepository.findById(userId)).willReturn(Optional.of(follower));
-        given(followRepository.findByFollower(follower)).willReturn(List.of(follow));
-        given(followMapper.toResponse(follow)).willReturn(
-            FollowResponse.builder()
-                .id(UUID.randomUUID())
-                .followerId(follower.getId())
-                .followingId(following.getId())
-                .createdAt(Instant.now())
-                .build()
-        );
 
-        List<FollowResponse> responses = followService.getFollowings(userId);
+        FollowingResponse followingResponse = new FollowingResponse(
+            UUID.randomUUID(), following.getId(), "팔로잉닉네임", "profile.png", Instant.now()
+        );
+        given(followRepository.findFollowingsWithProfile(follower))
+            .willReturn(List.of(followingResponse));
+
+        List<FollowingResponse> responses = followService.getFollowings(userId);
 
         assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).getNickname()).isEqualTo("팔로잉닉네임");
     }
 
     @Test
