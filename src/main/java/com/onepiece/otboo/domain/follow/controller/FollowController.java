@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.follow.controller;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -38,11 +39,11 @@ public class FollowController {
     }
 
     /**
-     * 팔로잉 목록 조회
+     * 팔로잉 목록 조회 (프로필 포함)
      */
     @GetMapping("/followings/{userId}")
-    public ResponseEntity<List<FollowResponse>> getFollowings(@PathVariable UUID userId) {
-        List<FollowResponse> responses = followService.getFollowings(userId);
+    public ResponseEntity<List<FollowingResponse>> getFollowings(@PathVariable UUID userId) {
+        List<FollowingResponse> responses = followService.getFollowings(userId);
         return ResponseEntity.ok(responses);
     }
 
