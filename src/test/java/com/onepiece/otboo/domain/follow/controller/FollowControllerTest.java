@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -91,18 +92,23 @@ class FollowControllerTest {
     void getFollowings_success() throws Exception {
 
         UUID userId = UUID.randomUUID();
-        FollowResponse response = new FollowResponse(
-            UUID.randomUUID(),
-            userId,
-            UUID.randomUUID(),
-            Instant.now()
-        );
+        UUID followingId = UUID.randomUUID();
+
+        FollowingResponse response = FollowingResponse.builder()
+            .id(UUID.randomUUID())
+            .followingId(followingId)
+            .nickname("test-nickname")
+            .profileImage("test-image-url")
+            .createdAt(Instant.now())
+            .build();
 
         given(followService.getFollowings(eq(userId))).willReturn(List.of(response));
 
         mockMvc.perform(get("/api/follows/followings/{userId}", userId))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].followerId").value(userId.toString()));
+            .andExpect(jsonPath("$[0].followingId").value(followingId.toString()))
+            .andExpect(jsonPath("$[0].nickname").value("test-nickname"))
+            .andExpect(jsonPath("$[0].profileImage").value("test-image-url"));
     }
 
     @Test
