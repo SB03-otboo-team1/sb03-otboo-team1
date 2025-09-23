@@ -1,6 +1,10 @@
 package com.onepiece.otboo.domain.follow.repository;
 
+import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
+import com.onepiece.otboo.domain.profile.entity.Profile;
+import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
@@ -28,6 +32,9 @@ class FollowRepositoryTest {
     @Autowired
     private com.onepiece.otboo.domain.user.repository.UserRepository userRepository;
 
+    @Autowired
+    private ProfileRepository profileRepository;
+
     private User createUser(String email) {
         return User.builder()
             .provider(Provider.LOCAL)
@@ -36,6 +43,14 @@ class FollowRepositoryTest {
             .password("password123")
             .locked(false)
             .role(Role.USER)
+            .build();
+    }
+
+    private Profile createProfile(User user, String nickname) {
+        return Profile.builder()
+            .user(user)
+            .nickname(nickname)
+            .profileImageUrl("default.png")
             .build();
     }
 
@@ -136,5 +151,43 @@ class FollowRepositoryTest {
         long count = followRepository.countByFollower(follower);
 
         assertThat(count).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("팔로잉 목록 조회 - 커서 기반")
+    void findFollowingsWithProfileCursor_success() {
+        User follower = userRepository.save(createUser("f1@test.com"));
+        User following = userRepository.save(createUser("f2@test.com"));
+        profileRepository.save(createProfile(following, "팔로잉닉네임"));
+
+        followRepository.save(Follow.builder()
+            .follower(follower)
+            .following(following)
+            .build());
+
+        List<FollowingResponse> responses = followRepository
+            .findFollowingsWithProfileCursor(follower, null, null, 10, null, "createdAt", "ASC");
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).getNickname()).isEqualTo("팔로잉닉네임");
+    }
+
+    @Test
+    @DisplayName("팔로워 목록 조회 - 커서 기반")
+    void findFollowersWithProfileCursor_success() {
+        User follower = userRepository.save(createUser("f1@test.com"));
+        User following = userRepository.save(createUser("f2@test.com"));
+        profileRepository.save(createProfile(follower, "팔로워닉네임"));
+
+        followRepository.save(Follow.builder()
+            .follower(follower)
+            .following(following)
+            .build());
+
+        List<FollowResponse> responses = followRepository
+            .findFollowersWithProfileCursor(following, null, null, 10, null, "createdAt", "ASC");
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).getNickname()).isEqualTo("팔로워닉네임");
     }
 }
