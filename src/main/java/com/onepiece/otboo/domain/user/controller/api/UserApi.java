@@ -89,7 +89,7 @@ public interface UserApi {
             )
         )
     })
-    ResponseEntity<Void> changeRole(@PathVariable("userId") String userId,
+    ResponseEntity<Void> changeRole(@PathVariable("userId") UUID userId,
         @Valid @RequestBody UserRoleUpdateRequest request);
 
     @Operation(
