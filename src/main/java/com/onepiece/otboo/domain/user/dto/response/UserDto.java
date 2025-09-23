@@ -18,4 +18,8 @@ public record UserDto(
     boolean locked
 ) {
 
+    public UserDto(UUID id, Instant createdAt, String email, String name, Role role,
+        Provider provider, boolean locked) {
+        this(id, createdAt, email, name, role, List.of(provider), locked);
+    }
 }

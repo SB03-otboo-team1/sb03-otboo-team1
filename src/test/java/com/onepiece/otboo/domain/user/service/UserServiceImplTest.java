@@ -3,7 +3,10 @@ package com.onepiece.otboo.domain.user.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -13,19 +16,24 @@ import static org.mockito.Mockito.verify;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
+import com.onepiece.otboo.domain.user.fixture.UserDtoFixture;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -57,6 +65,7 @@ class UserServiceImplTest {
     private UserDto userDto;
     private UUID userId;
     private UUID profileId;
+    private List<UserDto> dummyUsers;
 
     @BeforeEach
     void setUp() {
@@ -89,6 +98,8 @@ class UserServiceImplTest {
             .linkedOAuthProviders(List.of(Provider.LOCAL))
             .locked(false)
             .build();
+
+        dummyUsers = UserDtoFixture.createDummyUsers();
     }
 
     @Test
@@ -133,5 +144,74 @@ class UserServiceImplTest {
         assertThat(thrown)
             .isInstanceOf(DuplicateEmailException.class);
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void 다음_페이지가_없는_계정_목록_조회_테스트() {
+
+        // given
+        UserGetRequest request = UserGetRequest.builder()
+            .limit(10)
+            .sortBy("email")
+            .sortDirection("ASCENDING")
+            .build();
+
+        given(userRepository.findUsers(request)).willReturn(dummyUsers);
+        given(userRepository.countUsers(request.emailLike(), request.roleEqual(), request.locked()))
+            .willReturn(5L);
+
+        // when
+        CursorPageResponseDto<UserDto> result = userService.getUsers(request);
+
+        // then
+        assertEquals(5, result.data().size());
+        assertFalse(result.hasNext());
+        assertNull(result.nextCursor());
+        assertNull(result.nextIdAfter());
+        assertEquals(5, result.totalCount());
+        assertEquals("email", result.sortBy());
+        assertEquals("ASCENDING", result.sortDirection());
+        verify(userRepository).findUsers(request);
+        verify(userRepository).countUsers(request.emailLike(), request.roleEqual(),
+            request.locked());
+    }
+
+    @ParameterizedTest(name = "sortBy = {0}, sortDirection = {1}")
+    @CsvSource({
+        "email,ASCENDING",
+        "createdAt,DESCENDING"
+    })
+    void 다음_페이지가_있는_계정_목록_조회_테스트(String sortBy, String sortDirection) {
+
+        // given
+        UserGetRequest request = UserGetRequest.builder()
+            .limit(2)
+            .sortBy(sortBy)
+            .sortDirection(sortDirection)
+            .build();
+
+        given(userRepository.findUsers(request)).willReturn(dummyUsers);
+        given(userRepository.countUsers(request.emailLike(), request.roleEqual(), request.locked()))
+            .willReturn(5L);
+
+        // when
+        CursorPageResponseDto<UserDto> result = userService.getUsers(request);
+
+        // then
+        assertEquals(2, result.data().size());
+        assertTrue(result.hasNext());
+        assertEquals(5, result.totalCount());
+        assertEquals(sortBy, result.sortBy());
+        assertEquals(sortDirection, result.sortDirection());
+        UserDto lastUser = result.data().get(1);
+        assertEquals(lastUser.id().toString(), result.nextIdAfter());
+        if ("email".equals(sortBy)) {
+            assertEquals(lastUser.email(), result.nextCursor());
+        } else {
+            assertEquals(lastUser.createdAt().toString(), result.nextCursor());
+        }
+        verify(userRepository).findUsers(request);
+        verify(userRepository).countUsers(request.emailLike(), request.roleEqual(),
+            request.locked());
     }
 }
