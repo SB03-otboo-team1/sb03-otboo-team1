@@ -9,6 +9,7 @@ import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.mapper.WeatherMapper;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
 import com.onepiece.otboo.global.util.NumberConverter;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -29,6 +30,7 @@ public class WeatherServiceImpl implements WeatherService {
     private final LocationRepository locationRepository;
     private final WeatherRepository weatherRepository;
     private final WeatherMapper weatherMapper;
+    private final Clock clock;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
@@ -55,7 +57,7 @@ public class WeatherServiceImpl implements WeatherService {
         // 타깃 시각(KST) 5개
         List<ZonedDateTime> targetsKst = new ArrayList<>(5);
         for (int i = 0; i < 5; i++) {
-            targetsKst.add(ZonedDateTime.of(nowKst.toLocalDate().plusDays(i), targetTimeOfDay, KST));
+            targetsKst.add(ZonedDateTime.of(baseHourKst.toLocalDate().plusDays(i), targetTimeOfDay, KST));
         }
 
         // 범위 한 번만 조회 (±2h 커버)

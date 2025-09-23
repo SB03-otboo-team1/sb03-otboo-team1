@@ -1,11 +1,14 @@
 package com.onepiece.otboo.domain.user.controller.api;
 
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,6 +17,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -42,6 +46,29 @@ public interface UserApi {
         )
     })
     ResponseEntity<UserDto> create(@Valid @RequestBody UserCreateRequest userCreateRequest);
+
+    @Operation(
+        summary = "계정 목록 조회"
+        , description = "계정 목록 조회 API"
+        , security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", description = "계정 목록 조회 성공",
+            content = @Content(
+                mediaType = "*/*",
+                array = @ArraySchema(schema = @Schema(implementation = CursorPageResponseDto.class))
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400", description = "계정 목록 조회 실패",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(@Valid @ModelAttribute UserGetRequest request);
 
     @Operation(
         summary = "권한 수정",
