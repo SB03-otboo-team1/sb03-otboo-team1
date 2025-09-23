@@ -14,6 +14,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.profile.entity.Profile;
+import com.onepiece.otboo.domain.profile.exception.ProfileNotFoundException;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
@@ -22,13 +23,16 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.fixture.UserDtoFixture;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +41,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -213,5 +223,101 @@ class UserServiceImplTest {
         verify(userRepository).findUsers(request);
         verify(userRepository).countUsers(request.emailLike(), request.roleEqual(),
             request.locked());
+    }
+
+    @Test
+    void USER_권한을_가진_사용자가_권한_수정_요청시_AccessDeniedException이_발생한다() {
+
+        // given
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken("user@test.com", "pwd1234@",
+                List.of(new SimpleGrantedAuthority("ROLE_USER")))
+        );
+
+        UserServiceImpl proxy = secured(userService);
+        UUID userId = UUID.randomUUID();
+
+        // when
+        Throwable thrown = catchThrowable(() -> proxy.updateUserRole(userId, Role.ADMIN));
+
+        // then
+        assertThat(thrown)
+            .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void ADMIN_권한을_가진_사용자가_권한_수정_요청시_정상적으로_수정된다() {
+
+        // given
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken("admin@test.com", "pwd1234@",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
+        );
+
+        UserServiceImpl proxy = secured(userService);
+
+        given(userRepository.findById(any())).willReturn(Optional.of(user));
+        given(profileRepository.findByUserId(any())).willReturn(Optional.of(profile));
+        given(userRepository.save(any())).willReturn(user);
+        given(userMapper.toDto(any(User.class), any(Profile.class))).willReturn(userDto);
+
+        // when
+        UserDto result = proxy.updateUserRole(userId, Role.ADMIN);
+
+        // then
+        assertNotNull(result);
+        assertEquals(userId, result.id());
+    }
+
+    private UserServiceImpl secured(UserServiceImpl target) {
+        AuthorizationManagerBeforeMethodInterceptor interceptor =
+            AuthorizationManagerBeforeMethodInterceptor.preAuthorize();
+
+        ProxyFactory pf = new ProxyFactory(target);
+        pf.setProxyTargetClass(true);
+        pf.addAdvice(interceptor);
+        return (UserServiceImpl) pf.getProxy();
+    }
+
+    @Test
+    void 존재하지_않는_사용자에_대해_권한_수정_요청시_404가_발생한다() {
+
+        // given
+        UUID notExistId = UUID.randomUUID();
+
+        given(userRepository.findById(any())).willReturn(Optional.empty());
+
+        // when
+        Throwable thrown = catchThrowable(() -> userService.updateUserRole(notExistId, Role.ADMIN));
+
+        // then
+        assertThat(thrown)
+            .isInstanceOf(UserNotFoundException.class)
+            .hasMessageContaining("사용자");
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void 권한_수정시_사용자의_프로필이_존재하지_않으면_404가_발생한다() {
+
+        // given
+        UUID notExistId = UUID.randomUUID();
+
+        given(userRepository.findById(any())).willReturn(Optional.of(user));
+        given(profileRepository.findByUserId(any())).willReturn(Optional.empty());
+
+        // when
+        Throwable thrown = catchThrowable(() -> userService.updateUserRole(notExistId, Role.ADMIN));
+
+        // then
+        assertThat(thrown)
+            .isInstanceOf(ProfileNotFoundException.class)
+            .hasMessageContaining("프로필");
+        verify(userRepository, never()).save(any());
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 }
