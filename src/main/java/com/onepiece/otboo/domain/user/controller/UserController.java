@@ -69,7 +69,7 @@ public class UserController implements UserApi {
     @PatchMapping("{userId}/role")
     public ResponseEntity<Void> changeRole(
         @PathVariable("userId") String userId,
-        UserRoleUpdateRequest request
+        @Valid @RequestBody UserRoleUpdateRequest request
     ) {
         log.info("[UserController] 권한 변경 요청 - userId: {}, role: {}", userId, request.role());
         userService.changeRole(UUID.fromString(userId), Role.valueOf(request.role()));

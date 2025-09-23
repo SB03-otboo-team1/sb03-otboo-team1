@@ -68,7 +68,8 @@ public interface UserApi {
             )
         )
     })
-    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(@Valid @ModelAttribute UserGetRequest request);
+    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(
+        @Valid @ModelAttribute UserGetRequest request);
 
     @Operation(
         summary = "권한 수정",
@@ -87,8 +88,8 @@ public interface UserApi {
             )
         )
     })
-    ResponseEntity<Void> changeRole(@PathVariable("id") String userId,
-        @RequestBody UserRoleUpdateRequest request);
+    ResponseEntity<Void> changeRole(@PathVariable("userId") String userId,
+        @Valid @RequestBody UserRoleUpdateRequest request);
 
     @Operation(
         summary = "계정 잠금 상태 변경",
