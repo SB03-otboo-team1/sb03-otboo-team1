@@ -110,6 +110,16 @@ class FollowServiceImplTest {
     }
 
     @Test
+    @DisplayName("팔로우 생성 실패 - 존재하지 않는 유저")
+    void createFollow_fail_userNotFound() {
+        FollowRequest request = new FollowRequest(UUID.randomUUID(), UUID.randomUUID());
+        given(userRepository.findById(request.followerId())).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> followService.createFollow(request))
+            .isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
     @DisplayName("이미 팔로우 했을 경우 예외 발생")
     void createFollow_alreadyExists_throwsException() {
         FollowRequest request = new FollowRequest(follower.getId(), following.getId());
@@ -182,6 +192,17 @@ class FollowServiceImplTest {
 
         verify(followRepository).deleteByFollowerAndFollowing(follower, following);
     }
+
+    @Test
+    @DisplayName("언팔로우 실패 - 대상 유저 없음")
+    void deleteFollow_fail_userNotFound() {
+        FollowRequest request = new FollowRequest(follower.getId(), UUID.randomUUID());
+        given(userRepository.findById(request.followeeId())).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> followService.deleteFollow(request))
+            .isInstanceOf(UserNotFoundException.class);
+    }
+
 
     @Test
     @DisplayName("팔로우 요약 조회 성공 - viewer가 팔로우 중일 때")
