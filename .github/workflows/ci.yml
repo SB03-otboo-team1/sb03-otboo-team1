@@ -19,6 +19,8 @@ jobs:
       TEMP_PASSWORD_CHARSET: ${{ secrets.TEMP_PASSWORD_CHARSET }}
       TEMP_PASSWORD_SPECIAL_CHARSET: ${{ secrets.TEMP_PASSWORD_SPECIAL_CHARSET }}
       SERVICE_API_KEY: ${{ secrets.SERVICE_API_KEY}}
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
