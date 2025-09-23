@@ -43,7 +43,7 @@ public enum ErrorCode {
     INVALID_AREA(HttpStatus.BAD_REQUEST, "서비스 지역이 아닙니다.", "해당 위치는 서비스 대상 지역이 아닙니다."),
 
     // CLOTHES
-    CLOTHES_NOT_FOUND(HttpStatus.NOT_FOUND, "의상 확인 실패", "의상을 찾을 수 없습니다."),
+    CLOTHES_NOT_FOUND(HttpStatus.NOT_FOUND, "의상 확인 실패", "의상을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
