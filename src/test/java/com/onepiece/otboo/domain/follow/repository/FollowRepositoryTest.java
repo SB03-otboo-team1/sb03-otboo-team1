@@ -9,12 +9,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.UUID;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,16 +42,13 @@ class FollowRepositoryTest {
     @Test
     @DisplayName("팔로우 저장 및 조회 성공")
     void saveAndFindFollow_success() {
-
         User follower = userRepository.save(createUser("follower@test.com"));
         User following = userRepository.save(createUser("following@test.com"));
 
-        Follow follow = Follow.builder()
+        Follow saved = followRepository.save(Follow.builder()
             .follower(follower)
             .following(following)
-            .build();
-
-        Follow saved = followRepository.save(follow);
+            .build());
 
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getFollower().getEmail()).isEqualTo("follower@test.com");
@@ -62,7 +58,6 @@ class FollowRepositoryTest {
     @Test
     @DisplayName("follower 기준으로 Follow 조회")
     void findByFollower_success() {
-
         User follower = userRepository.save(createUser("f1@test.com"));
         User following1 = userRepository.save(createUser("f2@test.com"));
         User following2 = userRepository.save(createUser("f3@test.com"));
@@ -93,7 +88,6 @@ class FollowRepositoryTest {
     @Test
     @DisplayName("이미 팔로우 관계가 존재하는지 확인")
     void existsByFollowerAndFollowing_success() {
-
         User follower = userRepository.save(createUser("f1@test.com"));
         User following = userRepository.save(createUser("f2@test.com"));
         followRepository.save(Follow.builder().follower(follower).following(following).build());
@@ -106,7 +100,6 @@ class FollowRepositoryTest {
     @Test
     @DisplayName("팔로우 삭제 성공")
     void deleteByFollowerAndFollowing_success() {
-
         User follower = userRepository.save(createUser("f1@test.com"));
         User following = userRepository.save(createUser("f2@test.com"));
         followRepository.save(Follow.builder().follower(follower).following(following).build());
@@ -118,9 +111,8 @@ class FollowRepositoryTest {
     }
 
     @Test
-    @DisplayName("특정 사용자의 팔로워 수를 조회할 수 있다")
+    @DisplayName("특정 사용자의 팔로워 수 조회")
     void countByFollowing_success() {
-
         User following = userRepository.save(createUser("target@test.com"));
         User follower1 = userRepository.save(createUser("f1@test.com"));
         User follower2 = userRepository.save(createUser("f2@test.com"));
@@ -133,9 +125,8 @@ class FollowRepositoryTest {
     }
 
     @Test
-    @DisplayName("특정 사용자의 팔로잉 수를 조회할 수 있다")
+    @DisplayName("특정 사용자의 팔로잉 수 조회")
     void countByFollower_success() {
-
         User follower = userRepository.save(createUser("f1@test.com"));
         User following1 = userRepository.save(createUser("f2@test.com"));
         User following2 = userRepository.save(createUser("f3@test.com"));
@@ -146,5 +137,4 @@ class FollowRepositoryTest {
 
         assertThat(count).isEqualTo(2);
     }
-
 }
