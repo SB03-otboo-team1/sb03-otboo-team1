@@ -85,7 +85,7 @@ public interface UserApi {
             )
         ),
         @ApiResponse(
-            responseCode = "400", description = "프로필 조회 실패",
+            responseCode = "404", description = "프로필 조회 실패",
             content = @Content(
                 mediaType = "*/*",
                 schema = @Schema(implementation = ErrorResponse.class)
