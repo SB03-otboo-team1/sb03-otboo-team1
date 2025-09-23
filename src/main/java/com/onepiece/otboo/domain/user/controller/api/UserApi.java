@@ -68,7 +68,8 @@ public interface UserApi {
             )
         )
     })
-    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(@Valid @ModelAttribute UserGetRequest request);
+    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(
+        @Valid @ModelAttribute UserGetRequest request);
 
     @Operation(
         summary = "권한 수정"

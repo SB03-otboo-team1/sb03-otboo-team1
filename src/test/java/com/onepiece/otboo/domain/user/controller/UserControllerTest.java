@@ -1,11 +1,15 @@
 package com.onepiece.otboo.domain.user.controller;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -13,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
@@ -31,10 +36,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @ActiveProfiles("test")
 @WebMvcTest(value = UserController.class,
@@ -66,15 +74,7 @@ class UserControllerTest {
         UserCreateRequest userCreateRequest = new UserCreateRequest("test", "test@test.com",
             "test1234@");
 
-        UserDto userDto = UserDto.builder()
-            .id(UUID.randomUUID())
-            .createdAt(Instant.now())
-            .email("test@test.com")
-            .name("test")
-            .role(Role.USER)
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
-            .locked(false)
-            .build();
+        UserDto userDto = UserDtoFixture.createUser("test@test.com", "test", Role.USER, false);
 
         given(userService.create(any(UserCreateRequest.class))).willReturn(userDto);
 
@@ -238,5 +238,76 @@ class UserControllerTest {
 
         // then
         result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 권한_수정_성공시_200을_반환한다() throws Exception {
+
+        // given
+        UserRoleUpdateRequest request = new UserRoleUpdateRequest(Role.ADMIN);
+
+        UserDto userDto = UserDtoFixture.createUser("test@test.com", "test", Role.ADMIN, false);
+
+        given(userService.updateUserRole(any(UUID.class), any(Role.class))).willReturn(
+            userDto);
+
+        // when
+        ResultActions result = mockMvc.perform(patch("/api/users/{userId}/role", userDto.id())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)));
+
+        // then
+        result.andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(userDto.id().toString()))
+            .andExpect(jsonPath("$.role").value(Role.ADMIN.name()));
+    }
+
+    @Test
+    void 존재하지_않는_권한으로_권한_수정시_400을_반환한다() throws Exception {
+
+        // given
+        // enum(Role)에 매핑 불가한 값
+        String body = """
+            { "role": "KING" }
+            """;
+
+        UUID userId = UUID.randomUUID();
+
+        // when
+        ResultActions result = mockMvc.perform(patch("/api/users/{userId}/role", userId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body));
+
+        // then
+        result.andExpect(status().isBadRequest());
+        MvcResult mvcResult = result.andReturn();
+        Throwable thrown = mvcResult.getResolvedException();
+        assertThat(thrown)
+            .isInstanceOf(HttpMessageNotReadableException.class);
+        verify(userService, never()).updateUserRole(any(UUID.class), any());
+    }
+
+    @Test
+    void 권한_누락_후_권한_수정시_400을_반환한다() throws Exception {
+
+        // given
+        String body = """
+            {}
+            """;
+
+        UUID userId = UUID.randomUUID();
+
+        // when
+        ResultActions result = mockMvc.perform(patch("/api/users/{userId}/role", userId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body));
+
+        // then
+        result.andExpect(status().isBadRequest());
+        MvcResult mvcResult = result.andReturn();
+        Throwable thrown = mvcResult.getResolvedException();
+        assertThat(thrown)
+            .isInstanceOf(MethodArgumentNotValidException.class);
+        verify(userService, never()).updateUserRole(any(UUID.class), any());
     }
 }
