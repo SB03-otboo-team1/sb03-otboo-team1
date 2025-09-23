@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
-@Profile({"dev", "prod", "test-security"})
+@Profile({"dev", "prod", "test-security", "test-integration"})
 public class SecuritySupportConfig {
 
     @Bean
