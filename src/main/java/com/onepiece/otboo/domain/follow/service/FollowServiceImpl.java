@@ -3,20 +3,20 @@ package com.onepiece.otboo.domain.follow.service;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
-import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,13 +57,11 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public List<FollowResponse> getFollowings(UUID userId) {
+    public List<FollowingResponse> getFollowings(UUID userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> UserNotFoundException.byId(userId));
 
-        return followRepository.findByFollower(user).stream()
-            .map(followMapper::toResponse)
-            .collect(Collectors.toList());
+        return followRepository.findFollowingsWithProfile(user);
     }
 
     @Override
