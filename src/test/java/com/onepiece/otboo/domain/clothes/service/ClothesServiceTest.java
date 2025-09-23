@@ -8,6 +8,7 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.exception.ClothesNotFoundException;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.util.S3Service;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -92,11 +93,11 @@ class ClothesServiceTest {
         when(clothesMapper.toDto(any(Clothes.class))).thenReturn(testClothesResponse);
 
         // when
-        CursorPageResponse<ClothesDto> result = clothesService.findAll();
+        CursorPageResponseDto<ClothesDto> result = clothesService.findAll();
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.getName()).isEqualTo("테스트 의상");
+        assertThat(result.name()).isEqualTo("테스트 의상");
         verify(clothesRepository).findById(clothesId);
         verify(clothesMapper).toDto(testClothes);
     }
