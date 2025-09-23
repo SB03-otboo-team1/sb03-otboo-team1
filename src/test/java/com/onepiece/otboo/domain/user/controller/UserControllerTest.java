@@ -251,7 +251,16 @@ class UserControllerTest {
         String userId = String.valueOf(UUID.randomUUID());
         String role = "ADMIN";
         UserRoleUpdateRequest req = new UserRoleUpdateRequest(role);
-        Mockito.doNothing().when(userService).changeRole(any(UUID.class), any());
+        UserDto userDto = UserDto.builder()
+            .id(UUID.fromString(userId))
+            .email("test@test.com")
+            .name("test")
+            .role(Role.ADMIN)
+            .locked(false)
+            .build();
+
+        Mockito.doReturn(userDto).when(userService)
+            .changeRole(any(UUID.class), any());
 
         ResultActions result = mockMvc.perform(patch("/api/users/" + userId + "/role")
             .contentType(MediaType.APPLICATION_JSON)

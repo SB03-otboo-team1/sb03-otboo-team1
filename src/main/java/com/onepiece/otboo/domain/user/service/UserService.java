@@ -13,7 +13,7 @@ public interface UserService {
 
     CursorPageResponseDto<UserDto> getUsers(UserGetRequest userGetRequest);
 
-    void changeRole(UUID userId, Role role);
+    UserDto changeRole(UUID userId, Role role);
 
     UserDto lockUser(UUID userId);
 

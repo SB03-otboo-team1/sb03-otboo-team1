@@ -119,7 +119,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void changeRole(UUID userId, Role role) {
+    public UserDto changeRole(UUID userId, Role role) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> UserNotFoundException.byId(userId));
         user.updateRole(role);
@@ -128,6 +128,8 @@ public class UserServiceImpl implements UserService {
         jwtRegistry.invalidateAllTokens(userId, Instant.now());
 
         log.info("[UserService] 사용자 권한 변경 - userId: {}, role: {}, 토큰 무효화 완료", userId, role);
+
+        return userMapper.toDto(user, profileRepository.findByUserId(userId).orElse(null));
     }
 
     @Override
