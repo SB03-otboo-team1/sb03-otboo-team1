@@ -14,7 +14,7 @@ import lombok.Builder;
 public record UserGetRequest(
     String cursor,
     UUID idAfter,
-    @Min(0)
+    @Min(1)
     @Max(100)
     Integer limit,
     @Pattern(regexp = "email|createdAt", message = "정렬 조건은 email과 createdAt만 가능합니다.")
@@ -26,7 +26,7 @@ public record UserGetRequest(
     Boolean locked
 ) {
 
-    public enum SortBy {EMAIL, CREATED_AT;}
+    public enum SortBy {EMAIL, CREATED_AT}
 
     public UserGetRequest {
         if (limit == null) {

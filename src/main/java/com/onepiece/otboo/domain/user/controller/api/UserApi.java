@@ -54,7 +54,7 @@ public interface UserApi {
             responseCode = "200", description = "계정 목록 조회 성공",
             content = @Content(
                 mediaType = "*/*",
-                array = @ArraySchema(schema = @Schema(implementation = UserDto.class))
+                array = @ArraySchema(schema = @Schema(implementation = CursorPageResponseDto.class))
             )
         ),
         @ApiResponse(
