@@ -44,4 +44,16 @@ public class Follow extends BaseEntity {
             throw DuplicateFollowException.of(this.follower.getId(), this.following.getId());
         }
     }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Follow)) return false;
+        Follow other = (Follow) o;
+        return getId() != null && getId().equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
