@@ -20,6 +20,7 @@ import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.enums.SkyStatus;
 import com.onepiece.otboo.domain.weather.mapper.WeatherMapper;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -51,10 +53,20 @@ class WeatherServiceImplTest {
     @Mock
     private WeatherMapper weatherMapper;
 
-    @InjectMocks
+    @Mock
+    private Clock clock;
+
     private WeatherServiceImpl weatherService;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
+    @BeforeEach
+    void setUp() {
+        ZonedDateTime fixedZdt = ZonedDateTime.of(2025, 9, 22, 12, 15, 0, 0, KST);
+        Clock fixedClock = Clock.fixed(fixedZdt.toInstant(), KST);
+        weatherService = new WeatherServiceImpl(locationRepository, weatherRepository,
+            weatherMapper, fixedClock);
+    }
 
     private Location location(UUID id, double lat, double lon) {
         Location l = mock(Location.class);
@@ -130,6 +142,8 @@ class WeatherServiceImplTest {
 
     @Test
     void 날씨_데이터_조회_테스트() {
+
+        // given
         double latitude = 37.5;
         double longitude = 127.0;
         Location exact = location(UUID.randomUUID(), latitude, longitude);

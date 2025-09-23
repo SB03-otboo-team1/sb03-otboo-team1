@@ -16,6 +16,16 @@ public class UserFixture {
             .build();
     }
 
+    public static User createUser(String email) {
+        return User.builder()
+            .provider(Provider.LOCAL)
+            .email(email)
+            .password("password")
+            .locked(false)
+            .role(Role.USER)
+            .build();
+    }
+
     public static User createUserWithTemporaryPassword(String tempPassword,
         java.time.Instant expiration) {
         return User.builder()
