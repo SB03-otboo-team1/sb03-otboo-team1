@@ -4,8 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.BDDMockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -13,10 +14,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
+import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.fixture.UserDtoFixture;
+import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.global.config.JpaConfig;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -27,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -238,5 +244,117 @@ class UserControllerTest {
 
         // then
         result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 권한변경_성공시_200반환() throws Exception {
+        String userId = String.valueOf(UUID.randomUUID());
+        String role = "ADMIN";
+        UserRoleUpdateRequest req = new UserRoleUpdateRequest(role);
+        UserDto userDto = UserDto.builder()
+            .id(UUID.fromString(userId))
+            .email("test@test.com")
+            .name("test")
+            .role(Role.ADMIN)
+            .locked(false)
+            .build();
+
+        Mockito.doReturn(userDto).when(userService)
+            .changeRole(any(UUID.class), any());
+
+        ResultActions result = mockMvc.perform(patch("/api/users/" + userId + "/role")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(req)));
+
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    void 존재하지않는사용자_권한변경시_404반환() throws Exception {
+        String userId = String.valueOf(UUID.randomUUID());
+        String role = "USER";
+        UserRoleUpdateRequest req = new UserRoleUpdateRequest(role);
+        Mockito.doThrow(new UserNotFoundException()).when(userService)
+            .changeRole(any(UUID.class), any());
+
+        ResultActions result = mockMvc.perform(patch("/api/users/" + userId + "/role")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(req)));
+
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 계정잠금_성공시_200과_잠금상태반환() throws Exception {
+        var user = UserFixture.createUser();
+        UUID userId = UUID.randomUUID();
+        UserDto lockedDto = UserDto.builder()
+            .id(userId)
+            .createdAt(Instant.now())
+            .email(user.getEmail())
+            .name("test")
+            .role(user.getRole())
+            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .locked(true)
+            .build();
+        given(userService.lockUser(any(UUID.class))).willReturn(lockedDto);
+        String body = objectMapper.writeValueAsString(new UserLockUpdateRequest(true));
+
+        mockMvc.perform(patch("/api/users/" + userId + "/lock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.locked").value(true));
+
+        verify(userService).lockUser(userId);
+    }
+
+    @Test
+    void 계정잠금해제_성공시_200과_해제상태반환() throws Exception {
+        UUID userId = UUID.randomUUID();
+        var user = UserFixture.createUser();
+        UserDto unlockedDto = UserDto.builder()
+            .id(userId)
+            .createdAt(Instant.now())
+            .email(user.getEmail())
+            .name("test")
+            .role(user.getRole())
+            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .locked(false)
+            .build();
+        given(userService.unlockUser(any(UUID.class))).willReturn(unlockedDto);
+        String body = objectMapper.writeValueAsString(new UserLockUpdateRequest(false));
+
+        mockMvc.perform(patch("/api/users/" + userId + "/lock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.locked").value(false));
+
+        verify(userService).unlockUser(userId);
+    }
+
+    @Test
+    void 존재하지않는사용자_계정잠금시_404반환() throws Exception {
+        UUID userId = UUID.randomUUID();
+        given(userService.lockUser(any(UUID.class))).willThrow(new UserNotFoundException());
+        String body = objectMapper.writeValueAsString(new UserLockUpdateRequest(true));
+
+        mockMvc.perform(patch("/api/users/" + userId + "/lock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 존재하지않는사용자_계정잠금해제시_404반환() throws Exception {
+        UUID userId = UUID.randomUUID();
+        given(userService.unlockUser(any(UUID.class))).willThrow(new UserNotFoundException());
+        String body = objectMapper.writeValueAsString(new UserLockUpdateRequest(false));
+
+        mockMvc.perform(patch("/api/users/" + userId + "/lock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isNotFound());
     }
 }
