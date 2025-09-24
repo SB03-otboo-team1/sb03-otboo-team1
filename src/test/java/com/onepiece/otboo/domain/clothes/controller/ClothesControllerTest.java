@@ -13,14 +13,17 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.service.ClothesService;
 import com.onepiece.otboo.global.config.JpaConfig;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.infra.security.testconfig.TestSecurityConfig;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,6 +31,8 @@ import org.springframework.test.web.servlet.MockMvc;
     excludeAutoConfiguration = {JpaConfig.class}
 )
 @AutoConfigureMockMvc(addFilters = false)
+@Import(TestSecurityConfig.class)
+@ActiveProfiles("test")
 class ClothesControllerTest {
 
   @Autowired
