@@ -8,4 +8,5 @@ public interface FileStorage {
 
   String uploadFile(MultipartFile file) throws IOException;
   InputStream getFile(String imageUrl);
+  void deleteFile(String imageUrl);
 }

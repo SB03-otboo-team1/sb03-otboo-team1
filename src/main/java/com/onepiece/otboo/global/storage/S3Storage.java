@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -70,13 +71,31 @@ public class S3Storage implements FileStorage{
   public InputStream getFile(String imageUrl) {
     log.info("get file from s3 bucket");
 
+    String key = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+
     GetObjectRequest request = GetObjectRequest.builder()
         .bucket(bucket)
-        .key(imageUrl)
+        .key(key)
         .build();
 
-    log.info("get file from s3 bucket success: {}", imageUrl);
+    log.info("get file from s3 bucket success: {}", key);
 
     return s3Client.getObject(request);
+  }
+
+  @Override
+  public void deleteFile(String imageUrl) {
+    log.info("delete file from s3 bucket");
+
+    String key = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+
+    s3Client.deleteObject(
+        DeleteObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .build()
+    );
+
+    log.info("delete file from s3 bucket success: {}", key);
   }
 }
