@@ -21,3 +21,4 @@ public class ClothesNotFoundException extends ClothesException {
     super(errorCode, details);
   }
 }
+
