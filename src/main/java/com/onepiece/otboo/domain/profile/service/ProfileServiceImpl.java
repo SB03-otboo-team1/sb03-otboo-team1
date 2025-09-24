@@ -14,8 +14,6 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
 import com.onepiece.otboo.global.util.ArrayUtil;
 import com.onepiece.otboo.global.util.NumberConverter;
-import com.onepiece.otboo.infra.converter.LatLonToXYConverter;
-import com.onepiece.otboo.infra.converter.LatLonToXYConverter.Point;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -42,9 +42,12 @@ public enum ErrorCode {
     INVALID_COORDINATE(HttpStatus.BAD_REQUEST, "유효하지 않은 좌표 값입니다.", "위도와 경도를 확인해주세요."),
     INVALID_AREA(HttpStatus.BAD_REQUEST, "서비스 지역이 아닙니다.", "해당 위치는 서비스 대상 지역이 아닙니다."),
 
-    /// PROFILE
-    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 확인 실패", "해당 유저의 프로필을 찾을 수 없습니다.");
+    // PROFILE
+    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 확인 실패", "해당 유저의 프로필을 찾을 수 없습니다."),
 
+    // FILE
+    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 타입", "이미지 파일만 업로드 가능합니다."),
+    FILE_SIZE_EXCEED(HttpStatus.BAD_REQUEST, "파일 크기 초과", "최대 업로드 가능 크기를 확인해 주세요.");
     private final HttpStatus status;
     private final String message;
     private final String detail;
