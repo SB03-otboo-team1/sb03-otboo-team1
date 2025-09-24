@@ -7,6 +7,7 @@ import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -28,6 +29,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         String password = authentication.getCredentials().toString();
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
+        if (user.isLocked()) {
+            throw new LockedException("계정이 잠겨 있습니다.");
+        }
         if (passwordEncoder.matches(password, user.getPassword())) {
             CustomUserDetails userDetails = customUserDetailsMapper.toCustomUserDetails(user);
             return new UsernamePasswordAuthenticationToken(userDetails, password,
