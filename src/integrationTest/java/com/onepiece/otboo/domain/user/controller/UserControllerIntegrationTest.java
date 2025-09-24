@@ -90,12 +90,12 @@ public class UserControllerIntegrationTest {
 
         ProfileDto profileDto = ProfileDtoFixture.createProfile(userId2);
 
-        given(profileService.getUserProfile(userId)).willReturn(profileDto);
+        given(profileService.getUserProfile(userId2)).willReturn(profileDto);
 
         CustomUserDetails principal = customUserDetails(userId, "ADMIN");
 
         // when
-        ResultActions result = mockMvc.perform(get("/api/users/{userId}/profiles", userId)
+        ResultActions result = mockMvc.perform(get("/api/users/{userId}/profiles", userId2)
             .with(user(principal)));
 
         // then
