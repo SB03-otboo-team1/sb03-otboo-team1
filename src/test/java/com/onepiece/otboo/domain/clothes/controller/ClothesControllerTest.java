@@ -11,17 +11,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.service.ClothesService;
+import com.onepiece.otboo.global.config.JpaConfig;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(ClothesController.class)
+@WebMvcTest(value = ClothesController.class,
+    excludeAutoConfiguration = {JpaConfig.class}
+)
+@AutoConfigureMockMvc(addFilters = false)
 class ClothesControllerTest {
 
   @Autowired
@@ -206,8 +212,9 @@ class ClothesControllerTest {
   }
 
   @Test
+  @WithMockUser(username = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
   void 의상_목록_조회_필수_파라미터_누락_실패() throws Exception {
-    // when & then
+    // when & then - ownerId가 없으면 400 에러가 발생해야 함
     mockMvc.perform(get("/api/clothes")
             .param("limit", "15")
             .param("sortBy", "id")
