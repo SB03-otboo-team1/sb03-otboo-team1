@@ -114,7 +114,7 @@ public class GlobalExceptionHandler {
                 )));
     }
 
-//     필수 파라미터 누락 시 400에러 발생
+    // 필수 파라미터 누락 시 400에러 발생
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMessageNotReadable(
         MissingServletRequestParameterException e) {
