@@ -124,7 +124,7 @@ public class UserController implements UserApi {
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{userId}/profiles")
     public ResponseEntity<ProfileDto> updateUserProfile(
         @PathVariable UUID userId,
-        @Valid @RequestBody ProfileUpdateRequest request,
+        @Valid @RequestPart ProfileUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile profileImage) {
 
         log.info("[UserController] 프로필 업데이트 요청 - userId: {}", userId);

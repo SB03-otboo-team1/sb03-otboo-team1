@@ -181,7 +181,7 @@ public interface UserApi {
     })
     ResponseEntity<ProfileDto> updateUserProfile(
         @PathVariable UUID userId,
-        @Valid @RequestBody ProfileUpdateRequest request,
+        @Valid @RequestPart ProfileUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile profileImage
     );
 }
