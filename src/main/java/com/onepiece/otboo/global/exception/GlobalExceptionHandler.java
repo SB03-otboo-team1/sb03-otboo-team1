@@ -14,8 +14,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
@@ -110,5 +112,29 @@ public class GlobalExceptionHandler {
                     "reason", "지원하지 않는 Content-Type",
                     "supported", String.valueOf(e.getSupportedMediaTypes())
                 )));
+    }
+
+//     필수 파라미터 누락 시 400에러 발생
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+        MissingServletRequestParameterException e) {
+      return ResponseEntity
+          .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+          .body(ErrorResponse.of(
+              ErrorCode.INVALID_INPUT_VALUE, e,
+              Map.of("reason", "필수 파라미터 누락")
+          ));
+    }
+
+    // 유효하지 않은 Enum value 입력 시 400에러 발생
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+        MethodArgumentTypeMismatchException e) {
+      return ResponseEntity
+          .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+          .body(ErrorResponse.of(
+              ErrorCode.INVALID_INPUT_VALUE, e,
+              Map.of("reason", "필수 파라미터 누락")
+          ));
     }
 }
