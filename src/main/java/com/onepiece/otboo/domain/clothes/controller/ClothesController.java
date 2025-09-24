@@ -6,6 +6,7 @@ import com.onepiece.otboo.domain.clothes.service.ClothesService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,7 @@ public class ClothesController {
       @Parameter(description = "ID 이후") @RequestParam(required = false) UUID idAfter,
       @Parameter(description = "페이지 크기") @RequestParam(required = true, defaultValue = "15") int limit,
       @Parameter(description = "의상 타입") @RequestParam(required = false) ClothesType typeEqual,
-      @Parameter(description = "소유자 ID") @RequestParam(required = true) UUID ownerId,
+      @Parameter(description = "소유자 ID") @Valid @RequestParam(required = true) UUID ownerId,
       @Parameter(description = "정렬 기준") @RequestParam(required = true, defaultValue = "id") String sortBy,
       @Parameter(description = "정렬 방향") @RequestParam(required = true, defaultValue = "asc") String sortDirection
   ) {
