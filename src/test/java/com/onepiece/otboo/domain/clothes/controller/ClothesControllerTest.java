@@ -22,7 +22,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -217,7 +216,6 @@ class ClothesControllerTest {
   }
 
   @Test
-  @WithMockUser(username = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
   void 의상_목록_조회_필수_파라미터_누락_실패() throws Exception {
     // when & then - ownerId가 없으면 400 에러가 발생해야 함
     mockMvc.perform(get("/api/clothes")
