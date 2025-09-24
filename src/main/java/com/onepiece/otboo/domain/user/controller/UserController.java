@@ -1,5 +1,7 @@
 package com.onepiece.otboo.domain.user.controller;
 
+import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
+import com.onepiece.otboo.domain.profile.service.ProfileService;
 import com.onepiece.otboo.domain.user.controller.api.UserApi;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController implements UserApi {
 
     private final UserService userService;
+    private final ProfileService profileService;
 
     @Override
     @PostMapping
@@ -60,6 +63,20 @@ public class UserController implements UserApi {
 
         log.info("[UserController] 계정 목록 조회 성공 - {}개의 데이터, 다음 페이지 존재 여부: {}",
             result.data().size(), result.hasNext());
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @Override
+    @PreAuthorize("#userId == principal.userId or hasRole('ADMIN')")
+    @GetMapping("/{userId}/profiles")
+    public ResponseEntity<ProfileDto> getUserProfile(@PathVariable UUID userId) {
+
+        log.info("[UserController] 프로필 조회 요청 - userId: {}", userId);
+
+        ProfileDto result = profileService.getUserProfile(userId);
+
+        log.info("[UserController] 프로필 조회 완료 - userId: {} nickname: {}", userId, result.name());
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }

@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.user.controller.api;
 
+import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
@@ -69,8 +70,38 @@ public interface UserApi {
             )
         )
     })
-    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(
-        @Valid @ModelAttribute UserGetRequest request);
+    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(@Valid @ModelAttribute UserGetRequest request);
+
+
+    @Operation(
+        summary = "프로필 조회"
+        , description = "프로필 조회 API"
+        , security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", description = "프로필 조회 성공",
+            content = @Content(
+                mediaType = "*/*",
+                array = @ArraySchema(schema = @Schema(implementation = ProfileDto.class))
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404", description = "프로필 조회 실패",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "403", description = "권한 부족",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    ResponseEntity<ProfileDto> getUserProfile(@PathVariable UUID userId);
 
     @Operation(
         summary = "권한 수정",
