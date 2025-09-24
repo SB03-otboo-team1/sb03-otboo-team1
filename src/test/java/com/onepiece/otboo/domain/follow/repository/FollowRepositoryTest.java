@@ -1,22 +1,19 @@
 package com.onepiece.otboo.domain.follow.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.onepiece.otboo.domain.follow.entity.Follow;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.config.TestJpaConfig;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-
-import java.util.List;
-import java.util.UUID;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -31,8 +28,7 @@ class FollowRepositoryTest {
 
     private User createUser(String email) {
         return User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email(email)
             .password("password123")
             .locked(false)

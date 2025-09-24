@@ -18,6 +18,7 @@ import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
@@ -70,7 +71,7 @@ class UserServiceImplTest {
     @BeforeEach
     void setUp() {
         user = User.builder()
-            .provider(Provider.LOCAL)
+            .socialAccount(SocialAccount.builder().build())
             .email("test@test.com")
             .password("encodedPassword")
             .locked(false)

@@ -1,14 +1,12 @@
 package com.onepiece.otboo.domain.follow.entity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class FollowTest {
 
@@ -16,8 +14,7 @@ class FollowTest {
     @DisplayName("Follow 엔티티를 빌더로 생성할 수 있다")
     void createFollowEntity_success() {
         User follower = User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId("follower-" + UUID.randomUUID())
+            .socialAccount(SocialAccount.builder().build())
             .email("follower@test.com")
             .password("password123")
             .locked(false)
@@ -25,8 +22,7 @@ class FollowTest {
             .build();
 
         User following = User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId("following-" + UUID.randomUUID())
+            .socialAccount(SocialAccount.builder().build())
             .email("following@test.com")
             .password("password123")
             .locked(false)

@@ -1,9 +1,9 @@
 package com.onepiece.otboo.domain.user.entity;
 
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -24,12 +24,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Table(name = "users")
 public class User extends BaseUpdatableEntity {
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Provider provider;
-
-    @Column(name = "provider_user_id")
-    private String providerUserId;
+    @Embedded
+    private SocialAccount socialAccount;
 
     @Column(nullable = false)
     private String email;

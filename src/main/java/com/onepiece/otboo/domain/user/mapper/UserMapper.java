@@ -23,6 +23,6 @@ public interface UserMapper {
 
     // 필요 시 Provider 리스트 변환 로직
     default List<Provider> toProviders(User user) {
-        return List.of(user.getProvider()); // 단일 Provider만 갖는 경우
+        return List.of(user.getSocialAccount().getProvider()); // 단일 Provider만 갖는 경우
     }
 }

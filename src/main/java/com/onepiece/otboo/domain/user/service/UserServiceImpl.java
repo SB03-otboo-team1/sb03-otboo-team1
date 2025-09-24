@@ -5,8 +5,8 @@ import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
         String encodedPassword = passwordEncoder.encode(userCreateRequest.password());
 
         User user = User.builder()
-            .provider(Provider.LOCAL)
+            .socialAccount(SocialAccount.builder().build())
             .email(email)
             .password(encodedPassword)
             .role(Role.USER)

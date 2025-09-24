@@ -1,7 +1,7 @@
 package com.onepiece.otboo.infra.seeder;
 
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class UserTableSeeder implements DataSeeder {
         int count = 0;
         for (int i = 1; i <= 10; i++) {
             User user = User.builder()
-                .provider(Provider.LOCAL)
+                .socialAccount(SocialAccount.builder().build())
                 .email("user" + i + "@example.com")
                 .password(passwordEncoder.encode("!qwe1234"))
                 .role(Role.USER)

@@ -1,35 +1,34 @@
 package com.onepiece.otboo.domain.follow.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.exception.ErrorCode;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 class FollowServiceImplTest {
 
@@ -48,14 +47,13 @@ class FollowServiceImplTest {
     private User follower;
     private User following;
     private Follow follow;
-    
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
         follower = User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email("follower@test.com")
             .password("pwd123")
             .locked(false)
@@ -63,8 +61,7 @@ class FollowServiceImplTest {
             .build();
 
         following = User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email("following@test.com")
             .password("pwd123")
             .locked(false)
