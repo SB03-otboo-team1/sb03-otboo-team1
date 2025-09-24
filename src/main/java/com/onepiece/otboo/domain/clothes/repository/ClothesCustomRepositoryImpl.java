@@ -1,7 +1,6 @@
 package com.onepiece.otboo.domain.clothes.repository;
 
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
-import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.entity.QClothes;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
@@ -40,9 +39,9 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
       where.and(clothes.id.gt(idAfter));
     }
 
-    List<Clothes> result = jpaQueryFactory
-        .select(Projections.constructor(Clothes.class,
-            clothes.id, clothes.name, clothes.type, clothes.createdAt))
+    List<ClothesDto> result = jpaQueryFactory
+        .select(Projections.constructor(ClothesDto.class,
+            clothes.id, clothes.ownerId, clothes.name, clothes.imageUrl, clothes.type))
         .from(clothes)
         .where(where)
         .orderBy(clothes.createdAt.asc())
@@ -54,12 +53,8 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
       result = result.subList(0, limit);
     }
 
-    List<ClothesDto> resultDto = result.stream()
-        .map(clothesMapper::toDto)
-        .toList();
-
-    String nextCursor = result.isEmpty() ? null : String.valueOf(result.get(result.size() - 1).getId());
-    UUID nextIdAfter = result.isEmpty() ? null : result.get(0).getId();
+    String nextCursor = result.isEmpty() ? null : String.valueOf(result.get(result.size() - 1).id());
+    UUID nextIdAfter = result.isEmpty() ? null : result.get(0).id();
 
     // totalCount
     Long totalCount = jpaQueryFactory
@@ -69,7 +64,7 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
         .fetchOne();
 
     return new CursorPageResponseDto<>(
-        resultDto,
+        result,
         nextCursor,
         nextIdAfter,
         hasNext,
