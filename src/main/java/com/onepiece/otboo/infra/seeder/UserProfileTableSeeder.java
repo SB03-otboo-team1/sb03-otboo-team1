@@ -39,7 +39,8 @@ public class UserProfileTableSeeder implements DataSeeder {
         int count = 0;
         for (int i = 0; i < users.size(); i++) {
             User user = users.get(i);
-            Location location = locations.isEmpty() ? null : locations.get(i % locations.size());
+            Location location =
+                locations.isEmpty() ? null : locations.get(randInt(0, locations.size() - 1));
             String nickname = "user" + (i + 1);
             Gender gender = switch (i % 3) {
                 case 0 -> Gender.MALE;
