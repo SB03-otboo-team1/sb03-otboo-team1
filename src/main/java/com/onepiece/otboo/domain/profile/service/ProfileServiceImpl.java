@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.profile.service;
 
+import com.onepiece.otboo.domain.profile.dto.request.ProfileUpdateRequest;
 import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.exception.ProfileNotFoundException;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -23,6 +25,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
 
+    @Override
     @Transactional(readOnly = true)
     public ProfileDto getUserProfile(UUID userId) {
         User user = findUser(userId);
@@ -31,6 +34,20 @@ public class ProfileServiceImpl implements ProfileService {
         log.info("[ProfileService] 프로필 조회 완료 - userId: {}", userId);
 
         return profileMapper.toDto(user, profile);
+    }
+
+    @Override
+    @Transactional
+    public ProfileDto update(UUID userId, ProfileUpdateRequest request,
+        MultipartFile profileImage) {
+        User user = findUser(userId);
+        Profile profile = findProfile(userId);
+
+        Profile updatedProfile = profileRepository.save(profile);
+
+        log.info("[ProfileService] 프로필 업데이트 성공 - userId: {}", userId);
+
+        return profileMapper.toDto(user, updatedProfile);
     }
 
     private User findUser(UUID userId) {
