@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ClotheServiceImpl implements ClothesService {
+public class ClothesServiceImpl implements ClothesService {
 
   private final ClothesRepository clothesRepository;
 
