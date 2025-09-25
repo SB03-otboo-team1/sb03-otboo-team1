@@ -1,28 +1,26 @@
 package com.onepiece.otboo.domain.follow.dto.response;
 
 import com.querydsl.core.annotations.QueryProjection;
-import java.time.Instant;
 import lombok.Builder;
 import lombok.Getter;
-
+import java.time.Instant;
 import java.util.UUID;
 
 @Builder
 @Getter
-public class FollowResponse {
+public class FollowingResponse {
     private UUID id;
-    private UUID followerId;
+    private UUID followingId;
     private String nickname;
-    private String profileImageUrl;
+    private String profileImage;
     private Instant createdAt;
 
     @QueryProjection
-    public FollowResponse(UUID id, UUID followerId, String nickname, String profileImageUrl, Instant createdAt) {
+    public FollowingResponse(UUID id, UUID followingId, String nickname, String profileImage, Instant createdAt) {
         this.id = id;
-        this.followerId = followerId;
+        this.followingId = followingId;
         this.nickname = nickname;
-        this.profileImageUrl = profileImageUrl;
+        this.profileImage = profileImage;
         this.createdAt = createdAt;
     }
 }
-

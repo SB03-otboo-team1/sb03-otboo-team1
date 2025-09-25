@@ -6,8 +6,8 @@ import java.util.UUID;
 
 public class DuplicateFollowException extends FollowException {
 
-    public DuplicateFollowException() {
-        super(ErrorCode.DUPLICATE_FOLLOW);
+    public DuplicateFollowException(ErrorCode errorCode) {
+        super(errorCode);
     }
 
     private DuplicateFollowException(Map<String, Object> details) {

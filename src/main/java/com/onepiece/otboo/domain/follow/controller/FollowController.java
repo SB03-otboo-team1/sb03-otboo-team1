@@ -1,67 +1,69 @@
 package com.onepiece.otboo.domain.follow.controller;
 
+import com.onepiece.otboo.domain.follow.controller.api.FollowApi;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/follows")
 @RequiredArgsConstructor
-public class FollowController {
+public class FollowController implements FollowApi {
 
     private final FollowService followService;
 
-    /**
-     * 팔로우 생성
-     */
-    @PostMapping
-    public ResponseEntity<FollowResponse> createFollow(@RequestBody FollowRequest request) {
+    @Override
+    public ResponseEntity<FollowResponse> createFollow(FollowRequest request) {
         FollowResponse response = followService.createFollow(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * 팔로워 목록 조회
-     */
-    @GetMapping("/followers/{userId}")
-    public ResponseEntity<List<FollowResponse>> getFollowers(@PathVariable UUID userId) {
-        List<FollowResponse> responses = followService.getFollowers(userId);
+    @Override
+    public ResponseEntity<CursorPageResponseDto<FollowResponse>> getFollowers(
+        UUID followeeId,
+        String cursor,
+        UUID idAfter,
+        int limit,
+        String nameLike,
+        String sortBy,
+        String sortDirection
+    ) {
+        CursorPageResponseDto<FollowResponse> responses =
+            followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike, sortBy, sortDirection);
         return ResponseEntity.ok(responses);
     }
 
-    /**
-     * 팔로잉 목록 조회
-     */
-    @GetMapping("/followings/{userId}")
-    public ResponseEntity<List<FollowResponse>> getFollowings(@PathVariable UUID userId) {
-        List<FollowResponse> responses = followService.getFollowings(userId);
+    @Override
+    public ResponseEntity<CursorPageResponseDto<FollowingResponse>> getFollowings(
+        UUID followerId,
+        String cursor,
+        UUID idAfter,
+        int limit,
+        String nameLike,
+        String sortBy,
+        String sortDirection
+    ) {
+        CursorPageResponseDto<FollowingResponse> responses =
+            followService.getFollowings(followerId, cursor, idAfter, limit, nameLike, sortBy, sortDirection);
         return ResponseEntity.ok(responses);
     }
 
-    /**
-     * 언팔로우(팔로우 취소)
-     */
-    @DeleteMapping
-    public ResponseEntity<Void> deleteFollow(@RequestBody FollowRequest request) {
+    @Override
+    public ResponseEntity<Void> deleteFollow(FollowRequest request) {
         followService.deleteFollow(request);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 팔로우 요약 정보 조회
-     */
-    @GetMapping("/summary/{userId}")
-    public ResponseEntity<FollowSummaryResponse> getFollowSummary(
-        @PathVariable UUID userId,
-        @RequestParam(required = false) UUID viewerId) {
+    @Override
+    public ResponseEntity<FollowSummaryResponse> getFollowSummary(UUID userId, UUID viewerId) {
         FollowSummaryResponse summary = followService.getFollowSummary(userId, viewerId);
         return ResponseEntity.ok(summary);
     }
