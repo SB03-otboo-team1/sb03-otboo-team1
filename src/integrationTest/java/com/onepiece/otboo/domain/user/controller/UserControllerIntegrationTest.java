@@ -168,18 +168,22 @@ public class UserControllerIntegrationTest {
         result.andExpect(status().isForbidden());
     }
 
-    private MockPart jsonPart(String name, Object body) throws Exception {
+    private MockPart jsonPart(Object body) throws Exception {
         byte[] json = objectMapper.writeValueAsBytes(body);
-        MockPart part = new MockPart(name, json);
+        MockPart part = new MockPart("request", json);
         part.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         return part;
     }
 
-    private ResultActions callPatch(UUID pathUserId, CustomUserDetails principal, Object reqPart) throws Exception {
+    private ResultActions callPatch(UUID pathUserId, CustomUserDetails principal, Object reqPart)
+        throws Exception {
         return mockMvc.perform(
             multipart("/api/users/{userId}/profiles", pathUserId)
-                .part(jsonPart("request", reqPart))
-                .with(rb -> { rb.setMethod("PATCH"); return rb; })
+                .part(jsonPart(reqPart))
+                .with(rb -> {
+                    rb.setMethod("PATCH");
+                    return rb;
+                })
                 .with(user(principal))
                 .with(csrf()));
     }

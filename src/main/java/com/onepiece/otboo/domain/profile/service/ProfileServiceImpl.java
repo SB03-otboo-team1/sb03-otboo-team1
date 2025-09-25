@@ -136,11 +136,7 @@ public class ProfileServiceImpl implements ProfileService {
         profile.updateProfileImageUrl(newKey);
 
         if (currentKey != null && !currentKey.equals(newKey)) {
-            try {
-                storage.deleteImage(currentKey);
-            } catch (Exception e) {
-                log.warn("기존 프로필 이미지 삭제 실패", e);
-            }
+            storage.deleteImage(currentKey);
         }
     }
 }
