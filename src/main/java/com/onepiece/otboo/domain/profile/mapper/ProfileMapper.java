@@ -9,6 +9,7 @@ import com.onepiece.otboo.global.storage.S3Storage;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public interface ProfileMapper {
@@ -20,7 +21,8 @@ public interface ProfileMapper {
     @Mapping(target = "location", expression = "java(toWeatherAPILocation(profile))")
     @Mapping(target = "temperatureSensitivity", source = "profile.tempSensitivity")
     @Mapping(target = "profileImageUrl",
-        expression = "java(toPublicUrl(profile.getProfileImageUrl(), storage))")
+        source = "profile.profileImageUrl",
+        qualifiedByName = "toPublicUrl")
     ProfileDto toDto(User user, Profile profile, @Context FileStorage storage);
 
     // Location → WeatherAPILocation 변환
@@ -31,8 +33,11 @@ public interface ProfileMapper {
         return WeatherAPILocation.toDto(profile.getLocation());
     }
 
+    @Named("toPublicUrl")
     default String toPublicUrl(String key, @Context FileStorage storage) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         if (storage instanceof S3Storage s3) {
             return s3.generatePresignedUrl(key);
         }

@@ -117,21 +117,30 @@ public class ProfileServiceImpl implements ProfileService {
             });
     }
 
-    private void updateProfileImage(Profile profile, MultipartFile profileImage) throws IOException {
-        String imageUrl = profile.getProfileImageUrl();
+    private void updateProfileImage(Profile profile, MultipartFile profileImage)
+        throws IOException {
+        if (profileImage == null) {
+            return;
+        }
+        String currentKey = profile.getProfileImageUrl();
 
         if (profileImage.isEmpty()) {
-            if (profile.getProfileImageUrl() != null) {
-                storage.deleteImage(imageUrl);
+            if (currentKey != null) {
+                storage.deleteImage(currentKey);
                 profile.updateProfileImageUrl(null);
             }
+            return;
         }
 
-        if (profile.getProfileImageUrl() != null) {
-            storage.deleteImage(imageUrl);
-        }
-        String newProfileImageUrl = storage.uploadImage(PROFILE_PREFIX, profileImage);
+        String newKey = storage.uploadImage(PROFILE_PREFIX, profileImage);
+        profile.updateProfileImageUrl(newKey);
 
-        profile.updateProfileImageUrl(newProfileImageUrl);
+        if (currentKey != null && !currentKey.equals(newKey)) {
+            try {
+                storage.deleteImage(currentKey);
+            } catch (Exception e) {
+                log.warn("기존 프로필 이미지 삭제 실패", e);
+            }
+        }
     }
 }
