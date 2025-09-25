@@ -37,6 +37,7 @@ public enum ErrorCode {
     FEED_NOT_FOUND(HttpStatus.NOT_FOUND, "피드 확인 실패", "피드를 찾을 수 없습니다."),
     FEED_FORBIDDEN(HttpStatus.FORBIDDEN, "피드 권한 없음", "해당 피드에 접근/수정/삭제 권한이 없습니다."),
     FEED_GONE(HttpStatus.GONE, "삭제된 피드", "이미 삭제된 피드입니다."),
+    FEED_CLOTHES_REQUIRED(HttpStatus.BAD_REQUEST, "의상 목록 누락", "피드에는 최소 1개 이상의 의상이 필요합니다."),
 
     // LOCATION
     INVALID_COORDINATE(HttpStatus.BAD_REQUEST, "유효하지 않은 좌표 값입니다.", "위도와 경도를 확인해주세요."),

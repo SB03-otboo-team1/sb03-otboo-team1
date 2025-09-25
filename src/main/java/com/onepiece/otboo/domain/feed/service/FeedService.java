@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.feed.service;
 
 import com.onepiece.otboo.domain.feed.dto.request.FeedCreateRequest;
+import com.onepiece.otboo.domain.feed.dto.request.FeedUpdateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.domain.feed.entity.Feed;
 import com.onepiece.otboo.domain.feed.entity.FeedClothes;
@@ -81,4 +82,15 @@ public class FeedService {
 
         feedRepository.delete(feed); // or deleteById(feedId)
     }
+
+    @Transactional
+    public FeedResponse update(UUID feedId, UUID requesterId, FeedUpdateRequest req) {
+        Feed feed = feedRepository.findById(feedId)
+            .orElseThrow(() -> new GlobalException(ErrorCode.FEED_NOT_FOUND));
+        if (!feed.getAuthorId().equals(requesterId)) throw new GlobalException(ErrorCode.FEED_FORBIDDEN);
+
+        feed.updateContent(req.content());
+        return feedMapper.toResponse(feed);
+    }
+
 }
