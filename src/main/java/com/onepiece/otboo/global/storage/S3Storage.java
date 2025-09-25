@@ -20,7 +20,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "otboo.storage.type", havingValue = "s3")
+@ConditionalOnProperty(name = "aws.storage.type", havingValue = "s3")
 public class S3Storage implements FileStorage {
 
     private final S3Client s3Client;
@@ -33,14 +33,14 @@ public class S3Storage implements FileStorage {
 
     public S3Storage(S3Client s3Client,
         S3Presigner s3Presigner,
-        @Value("${otboo.storage.s3.bucket}") String bucket) {
+        @Value("${aws.storage.bucket}") String bucket) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.bucket = bucket;
     }
 
     @Override
-    public String uploadImage(String prefix, MultipartFile image) throws IOException {
+    public String uploadFile(String prefix, MultipartFile image) throws IOException {
 
         // 파일 타입 검증
         String contentType = image.getContentType();
@@ -69,7 +69,7 @@ public class S3Storage implements FileStorage {
     }
 
     @Override
-    public void deleteImage(String key) {
+    public void deleteFile(String key) {
         try {
             DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
                 .bucket(bucket)

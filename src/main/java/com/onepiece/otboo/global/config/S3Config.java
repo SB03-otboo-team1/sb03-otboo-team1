@@ -12,13 +12,13 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 @Configuration
 public class S3Config {
 
-    @Value("${otboo.storage.s3.access-key}")
+    @Value("${aws.storage.access-key}")
     private String accessKey;
 
-    @Value("${otboo.storage.s3.secret-key}")
+    @Value("${aws.storage.secret-key}")
     private String secretKey;
 
-    @Value("${otboo.storage.s3.region}")
+    @Value("${aws.storage.region}")
     private String region;
 
     @Bean
@@ -27,7 +27,7 @@ public class S3Config {
     }
 
     @Bean
-    public S3Client amazonS3Client(AwsBasicCredentials awsBasicCredentials) {
+    public S3Client s3Client(AwsBasicCredentials awsBasicCredentials) {
         return S3Client.builder()
             .region(Region.of(region))
             .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))

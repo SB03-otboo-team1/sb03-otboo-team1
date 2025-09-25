@@ -13,7 +13,6 @@ import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
 import com.onepiece.otboo.global.storage.FileStorage;
-import com.onepiece.otboo.global.storage.S3Storage;
 import com.onepiece.otboo.global.util.ArrayUtil;
 import com.onepiece.otboo.global.util.NumberConverter;
 import java.io.IOException;
@@ -36,7 +35,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final LocationPersistenceService locationPersistenceService;
     private final FileStorage storage;
 
-    @Value("${otboo.storage.s3.prefix.profile}")
+    @Value("${aws.storage.prefix.profile}")
     private String PROFILE_PREFIX;
 
     @Override
@@ -126,17 +125,17 @@ public class ProfileServiceImpl implements ProfileService {
 
         if (profileImage.isEmpty()) {
             if (currentKey != null) {
-                storage.deleteImage(currentKey);
+                storage.deleteFile(currentKey);
                 profile.updateProfileImageUrl(null);
             }
             return;
         }
 
-        String newKey = storage.uploadImage(PROFILE_PREFIX, profileImage);
+        String newKey = storage.uploadFile(PROFILE_PREFIX, profileImage);
         profile.updateProfileImageUrl(newKey);
 
         if (currentKey != null && !currentKey.equals(newKey)) {
-            storage.deleteImage(currentKey);
+            storage.deleteFile(currentKey);
         }
     }
 }

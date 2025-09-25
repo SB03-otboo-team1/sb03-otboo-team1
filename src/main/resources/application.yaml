@@ -77,16 +77,6 @@ otboo:
   admin:
     email: ${ADMIN_EMAIL}
     password: ${ADMIN_PASSWORD}
-  storage:
-    type: ${STORAGE_TYPE:s3}
-    s3:
-      access-key: ${AWS_S3_ACCESS_KEY}
-      secret-key: ${AWS_S3_SECRET_KEY}
-      region: ${AWS_S3_REGION}
-      bucket: ${AWS_S3_BUCKET}
-      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:600}
-      prefix:
-        profile: ${PROFILE_PREFIX}
 
 api:
   kakao:
@@ -94,3 +84,14 @@ api:
   weather:
     service-api-key: ${SERVICE_API_KEY}
 
+aws:
+  storage:
+    type: ${STORAGE_TYPE:s3}
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+    region: ${AWS_REGION}
+    bucket: ${AWS_BUCKET}
+    presigned-url-expiration: ${AWS_PRESIGNED_URL_EXPIRATION:600}
+    prefix:
+      profile: ${PROFILE_PREFIX}
+      clothes: ${CLOTHES_PREFIX}

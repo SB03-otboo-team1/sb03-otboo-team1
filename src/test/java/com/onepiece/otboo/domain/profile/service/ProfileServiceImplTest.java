@@ -127,7 +127,7 @@ class ProfileServiceImplTest {
 
         stubUserFound();
         stubProfileFound();
-        given(storage.uploadImage(any(), any())).willReturn("http://example.com/profile.png");
+        given(storage.uploadFile(any(), any())).willReturn("http://example.com/profile.png");
         stubSaveReturns(updated);
         stubMapper(dto);
 
@@ -139,7 +139,7 @@ class ProfileServiceImplTest {
         assertEquals(Gender.MALE, result.gender());
         assertEquals(BIRTH, result.birthDate());
         assertEquals(2, result.temperatureSensitivity());
-        verify(storage).uploadImage(any(), any());
+        verify(storage).uploadFile(any(), any());
     }
 
     @Test
@@ -229,8 +229,8 @@ class ProfileServiceImplTest {
 
         profileService.update(userId, req(Gender.MALE, BIRTH, 2), null);
 
-        verify(storage, never()).uploadImage(any(), any());
-        verify(storage, never()).deleteImage(anyString());
+        verify(storage, never()).uploadFile(any(), any());
+        verify(storage, never()).deleteFile(anyString());
     }
 
     @Test
@@ -246,8 +246,8 @@ class ProfileServiceImplTest {
 
         profileService.update(userId, req(Gender.MALE, BIRTH, 2), empty);
 
-        verify(storage).deleteImage(anyString());
-        verify(storage, never()).uploadImage(any(), any());
+        verify(storage).deleteFile(anyString());
+        verify(storage, never()).uploadFile(any(), any());
     }
 
     @Test
@@ -258,7 +258,7 @@ class ProfileServiceImplTest {
         ReflectionTestUtils.setField(updated, "profileImageUrl", "new-key");
         ProfileDto out = dto(userId, NAME, Gender.MALE, BIRTH, 2, null);
 
-        given(storage.uploadImage(any(), any())).willReturn("new-key");
+        given(storage.uploadFile(any(), any())).willReturn("new-key");
         stubUserFound();
         stubProfileFound();
         stubSaveReturns(updated);
@@ -266,8 +266,8 @@ class ProfileServiceImplTest {
 
         profileService.update(userId, req(Gender.MALE, BIRTH, 2), file);
 
-        verify(storage).uploadImage(any(), any());
-        verify(storage).deleteImage(anyString());
+        verify(storage).uploadFile(any(), any());
+        verify(storage).deleteFile(anyString());
     }
 
     private static final LocalDate BIRTH = LocalDate.of(1999, 7, 2);
