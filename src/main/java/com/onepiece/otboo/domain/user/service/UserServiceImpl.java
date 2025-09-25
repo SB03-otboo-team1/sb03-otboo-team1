@@ -9,10 +9,13 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
+import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.exception.ErrorCode;
+import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final ProfileRepository profileRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtRegistry jwtRegistry;
 
     @Override
     @Transactional
@@ -111,5 +115,52 @@ public class UserServiceImpl implements UserService {
             .build();
 
         return profileRepository.save(profile);
+    }
+
+    @Override
+    @Transactional
+    public UserDto changeRole(UUID userId, Role role) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
+        user.updateRole(role);
+        userRepository.save(user);
+
+        jwtRegistry.invalidateAllTokens(userId, Instant.now());
+
+        log.info("[UserService] 사용자 권한 변경 - userId: {}, role: {}, 토큰 무효화 완료", userId, role);
+
+        return userMapper.toDto(user, profileRepository.findByUserId(userId).orElse(null));
+    }
+
+    @Override
+    @Transactional
+    public UserDto lockUser(UUID userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
+        user.updateLocked(true);
+        userRepository.save(user);
+
+        jwtRegistry.invalidateAllTokens(userId, Instant.now());
+
+        log.info("[UserService] 사용자 계정 잠금 완료 - userId: {}, 토큰 무효화 완료", userId);
+
+        Profile profile = profileRepository.findByUserId(userId)
+            .orElse(null);
+        return userMapper.toDto(user, profile);
+    }
+
+    @Override
+    @Transactional
+    public UserDto unlockUser(UUID userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
+        user.updateLocked(false);
+        userRepository.save(user);
+
+        log.info("[UserService] 사용자 계정 잠금 해제 완료 - userId: {}", userId);
+
+        Profile profile = profileRepository.findByUserId(userId)
+            .orElse(null);
+        return userMapper.toDto(user, profile);
     }
 }
