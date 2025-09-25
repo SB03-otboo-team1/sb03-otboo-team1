@@ -162,7 +162,7 @@ public interface UserApi {
             responseCode = "200", description = "프로필 업데이트 성공",
             content = @Content(
                 mediaType = "*/*",
-                array = @ArraySchema(schema = @Schema(implementation = ProfileDto.class))
+                schema = @Schema(implementation = ProfileDto.class)
             )
         ),
         @ApiResponse(
