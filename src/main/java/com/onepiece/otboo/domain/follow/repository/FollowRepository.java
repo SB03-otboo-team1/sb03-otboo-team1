@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface FollowRepository extends JpaRepository<Follow, UUID> {
+public interface FollowRepository extends JpaRepository<Follow, UUID>, FollowRepositoryCustom {
 
     boolean existsByFollowerAndFollowing(User follower, User following);
 
@@ -19,4 +19,5 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
     long countByFollowing(User following);
 
     long countByFollower(User follower);
+
 }
