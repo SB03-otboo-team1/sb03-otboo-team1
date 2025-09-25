@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.onepiece.otboo.domain.location.service.LocationPersistenceService;
 import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.exception.ProfileNotFoundException;
@@ -19,6 +20,7 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.global.storage.FileStorage;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +42,12 @@ class ProfileServiceImplTest {
 
     @Mock
     private ProfileMapper profileMapper;
+
+    @Mock
+    private LocationPersistenceService locationPersistenceService;
+
+    @Mock
+    private FileStorage storage;
 
     @InjectMocks
     private ProfileServiceImpl profileService;
@@ -65,7 +73,7 @@ class ProfileServiceImplTest {
 
         given(userRepository.findById(any())).willReturn(Optional.of(user));
         given(profileRepository.findByUserId(any())).willReturn(Optional.of(profile));
-        given(profileMapper.toDto(any(User.class), any(Profile.class))).willReturn(profileDto);
+        given(profileMapper.toDto(any(User.class), any(Profile.class), any(FileStorage.class))).willReturn(profileDto);
 
         // when
         ProfileDto result = profileService.getUserProfile(userId);
@@ -77,7 +85,7 @@ class ProfileServiceImplTest {
         assertEquals("1999-07-02", result.birthDate().toString());
         verify(userRepository).findById(userId);
         verify(profileRepository).findByUserId(userId);
-        verify(profileMapper).toDto(user, profile);
+        verify(profileMapper).toDto(user, profile, storage);
     }
 
     @Test
@@ -95,7 +103,7 @@ class ProfileServiceImplTest {
         assertThat(thrown)
             .isInstanceOf(UserNotFoundException.class)
             .hasMessageContaining("사용자");
-        verify(profileMapper, never()).toDto(any(), any());
+        verify(profileMapper, never()).toDto(any(), any(), any());
     }
 
     @Test
@@ -112,6 +120,6 @@ class ProfileServiceImplTest {
         assertThat(thrown)
             .isInstanceOf(ProfileNotFoundException.class)
             .hasMessageContaining("프로필");
-        verify(profileMapper, never()).toDto(any(), any());
+        verify(profileMapper, never()).toDto(any(), any(), any());
     }
 }

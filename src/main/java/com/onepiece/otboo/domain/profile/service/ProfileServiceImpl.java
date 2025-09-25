@@ -47,7 +47,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         log.info("[ProfileService] 프로필 조회 완료 - userId: {}", userId);
 
-        return profileMapper.toDto(user, profile);
+        return profileMapper.toDto(user, profile, storage);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         log.info("[ProfileService] 프로필 업데이트 성공 - userId: {}", userId);
 
-        return profileMapper.toDto(user, updatedProfile);
+        return profileMapper.toDto(user, updatedProfile, storage);
     }
 
     private User findUser(UUID userId) {
