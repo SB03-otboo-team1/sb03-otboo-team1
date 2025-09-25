@@ -423,6 +423,29 @@ class UserControllerTest {
     }
 
     @Test
+    void 허용_범위를_넘는_이름으로_프로필_수정_요청시_400을_반환한다() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        String longName = "a".repeat(21);
+        ProfileUpdateRequest request = ProfileDtoFixture.createUpdateRequest(
+            longName,
+            Gender.MALE,
+            LocalDate.of(1999, 7, 2),
+            2
+        );
+
+        // when
+        ResultActions result = mockMvc.perform(
+            TestUtils.multipartPatch("/api/users/{userId}/profiles", userId)
+                .part(TestUtils.jsonPart(objectMapper, "request", request)));
+
+        // then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
     void 허용_범위를_초과한_온도_민감도로_프로필_수정_요청시_400을_반환한다() throws Exception {
 
         // given
