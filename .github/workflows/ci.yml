@@ -21,6 +21,10 @@ jobs:
       SERVICE_API_KEY: ${{ secrets.SERVICE_API_KEY}}
       ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      PROFILE_PREFIX: ${{ secrets.PROFILE_PREFIX }}
+      CLOTHES_PREFIX: ${{ secrets.CLOTHES_PREFIX }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
