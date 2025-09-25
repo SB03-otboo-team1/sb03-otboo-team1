@@ -2,6 +2,7 @@ package com.onepiece.otboo.global.storage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +12,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Utilities;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -35,7 +38,8 @@ public class S3Storage implements FileStorage{
   public String uploadFile(MultipartFile file) throws IOException {
     log.info("S3에 이미지 업로드 시작");
 
-    String key = UUID.randomUUID().toString();
+    String extension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1);
+    String key = UUID.randomUUID() + extension;
 
     PutObjectRequest request = PutObjectRequest.builder()
         .bucket(bucket)
@@ -44,7 +48,11 @@ public class S3Storage implements FileStorage{
         .contentLength(file.getSize())
         .build();
 
-    String imageUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
+      S3Utilities utilities = s3Client.utilities();
+      String imageUrl = utilities.getUrl(GetUrlRequest.builder()
+          .bucket(bucket)
+          .key(key)
+          .build()).toExternalForm();
 
     try {
       s3Client.putObject(
@@ -71,7 +79,7 @@ public class S3Storage implements FileStorage{
   public InputStream getFile(String imageUrl) {
     log.info("get file from s3 bucket");
 
-    String key = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+    String key = URI.create(imageUrl).getPath().substring(1);
 
     GetObjectRequest request = GetObjectRequest.builder()
         .bucket(bucket)
@@ -87,7 +95,7 @@ public class S3Storage implements FileStorage{
   public void deleteFile(String imageUrl) {
     log.info("delete file from s3 bucket");
 
-    String key = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+    String key = URI.create(imageUrl).getPath().substring(1);
 
     s3Client.deleteObject(
         DeleteObjectRequest.builder()
