@@ -397,7 +397,7 @@ class UserControllerTest {
         result.andExpect(jsonPath("$.name").value("한동우"));
         result.andExpect(jsonPath("$.birthDate").value("1999-07-02"));
         result.andExpect(jsonPath("$.gender").value("MALE"));
-        result.andExpect(jsonPath("$.temperatureSensitivity").value("2"));
+        result.andExpect(jsonPath("$.temperatureSensitivity").value(2));
     }
 
     @Test
@@ -476,7 +476,7 @@ class UserControllerTest {
         String invalidJson = """
             {
               "name": "한동우",
-              "gender": "MAAAN",  // Gender enum 에 존재하지 않는 값
+              "gender": "MAAAN",
               "birthDate": "1999-07-02",
               "location": null,
               "temperatureSensitivity": 2
