@@ -3,7 +3,6 @@ package com.onepiece.otboo.domain.clothes.repository;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.entity.QClothes;
-import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Repository;
 public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
 
   private final JPAQueryFactory jpaQueryFactory;
-  private final ClothesMapper clothesMapper;
 
   @Override
   public CursorPageResponseDto<ClothesDto> findCursorPage(UUID ownerId, String cursor, UUID idAfter,
