@@ -16,6 +16,7 @@ public class ClothesServiceImpl implements ClothesService {
 
   private final ClothesRepository clothesRepository;
 
+  @Override
   public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, String sortBy, String sortDirection, ClothesType typeEqual) {
 
     CursorPageResponseDto<ClothesDto> result =
