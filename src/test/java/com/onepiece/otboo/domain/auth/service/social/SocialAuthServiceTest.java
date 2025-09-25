@@ -96,11 +96,6 @@ class SocialAuthServiceTest {
         // given
         User socialUser = UserFixture.createSocialUser(email, "", false, Role.USER, provider,
             providerUserId);
-        given(userRepository.findBySocialAccountProviderAndSocialAccountProviderUserId(provider,
-            providerUserId))
-            .willReturn(Optional.of(socialUser));
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(socialUser));
-        given(userRepository.save(any(User.class))).willAnswer(inv -> inv.getArgument(0));
 
         // when
         String updatedPassword = "newPassword123!";

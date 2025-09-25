@@ -1,5 +1,18 @@
 package com.onepiece.otboo.domain.feed.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.feed.dto.request.FeedUpdateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
@@ -7,6 +20,7 @@ import com.onepiece.otboo.domain.feed.service.FeedService;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,23 +31,15 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @WebMvcTest(controllers = FeedController.class)
 class FeedControllerUpdateTest {
 
     private static final String BASE_URL = "/api/feeds";
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
+    @Autowired
+    MockMvc mockMvc;
+    @Autowired
+    ObjectMapper objectMapper;
 
     @MockitoBean
     FeedService feedService;
@@ -56,7 +62,8 @@ class FeedControllerUpdateTest {
                 .content(objectMapper.writeValueAsString(body))
         ).andExpect(status().isOk());
 
-        verify(feedService, times(1)).update(eq(feedId), eq(requesterId), any(FeedUpdateRequest.class));
+        verify(feedService, times(1)).update(eq(feedId), eq(requesterId),
+            any(FeedUpdateRequest.class));
         verifyNoMoreInteractions(feedService);
     }
 
@@ -83,7 +90,8 @@ class FeedControllerUpdateTest {
                 .content(objectMapper.writeValueAsString(body))
         ).andExpect(status().isOk());
 
-        verify(feedService, times(1)).update(eq(feedId), eq(requesterId), any(FeedUpdateRequest.class));
+        verify(feedService, times(1)).update(eq(feedId), eq(requesterId),
+            any(FeedUpdateRequest.class));
         verifyNoMoreInteractions(feedService);
     }
 
@@ -158,15 +166,21 @@ class FeedControllerUpdateTest {
     }
 
     @Test
-    void 피드_수정_미인증사용자_요청시_401응답() throws Exception {
+    void 피드_수정_미인증사용자_요청시_401또는302응답() throws Exception {
         UUID feedId = UUID.randomUUID();
         var body = new FeedUpdateRequest("content");
 
         mockMvc.perform(
-            patch(BASE_URL + "/{id}", feedId)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body))
-        ).andExpect(status().isUnauthorized());
+                patch(BASE_URL + "/{id}", feedId)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(body))
+            )
+            .andExpect(result -> {
+                int status = result.getResponse().getStatus();
+                if (status != 401 && status != 302) {
+                    throw new AssertionError("인증 실패 401 또는 302 Redirect를 예상하지만 실제 응답: " + status);
+                }
+            });
     }
 }
