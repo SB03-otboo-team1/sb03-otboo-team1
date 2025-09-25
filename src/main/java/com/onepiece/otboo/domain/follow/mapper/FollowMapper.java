@@ -9,12 +9,13 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface FollowMapper {
 
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "follower.id", target = "followerId")
-    @Mapping(source = "following.id", target = "followingId")
+    @Mapping(source = "createdAt", target = "createdAt")
     FollowResponse toResponse(Follow follow);
 
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "follower.id", target = "followerId")
     @Mapping(source = "following.id", target = "followingId")
     FollowData toData(Follow follow);
-
 }
