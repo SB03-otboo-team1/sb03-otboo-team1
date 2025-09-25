@@ -12,11 +12,15 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
+import com.onepiece.otboo.global.storage.FileStorage;
+import com.onepiece.otboo.global.storage.S3Storage;
 import com.onepiece.otboo.global.util.ArrayUtil;
 import com.onepiece.otboo.global.util.NumberConverter;
+import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +34,10 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
     private final LocationPersistenceService locationPersistenceService;
+    private final FileStorage storage;
+
+    @Value("${otboo.storage.s3.prefix.profile}")
+    private String PROFILE_PREFIX;
 
     @Override
     @Transactional(readOnly = true)
@@ -45,7 +53,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     @Transactional
     public ProfileDto update(UUID userId, ProfileUpdateRequest request,
-        MultipartFile profileImage) {
+        MultipartFile profileImage) throws IOException {
         User user = findUser(userId);
         Profile profile = findProfile(userId);
 
@@ -67,6 +75,8 @@ public class ProfileServiceImpl implements ProfileService {
         if (request.temperatureSensitivity() != null) {
             profile.updateTempSensitivity(request.temperatureSensitivity());
         }
+
+        updateProfileImage(profile, profileImage);
 
         Profile updatedProfile = profileRepository.save(profile);
 
@@ -105,5 +115,23 @@ public class ProfileServiceImpl implements ProfileService {
 
                 return locationPersistenceService.save(location);
             });
+    }
+
+    private void updateProfileImage(Profile profile, MultipartFile profileImage) throws IOException {
+        String imageUrl = profile.getProfileImageUrl();
+
+        if (profileImage.isEmpty()) {
+            if (profile.getProfileImageUrl() != null) {
+                storage.deleteImage(imageUrl);
+                profile.updateProfileImageUrl(null);
+            }
+        }
+
+        if (profile.getProfileImageUrl() != null) {
+            storage.deleteImage(imageUrl);
+        }
+        String newProfileImageUrl = storage.uploadImage(PROFILE_PREFIX, profileImage);
+
+        profile.updateProfileImageUrl(newProfileImageUrl);
     }
 }

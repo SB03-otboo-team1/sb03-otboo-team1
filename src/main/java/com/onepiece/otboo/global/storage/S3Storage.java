@@ -55,7 +55,7 @@ public class S3Storage implements FileStorage {
 
         // UUID 앞에서 12글자만 추출
         String shortUUID = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        String key = "image/" + shortUUID + "_" + image.getOriginalFilename();
+        String key = prefix + shortUUID + "_" + image.getOriginalFilename();
 
         // 메타 데이터 설정
         PutObjectRequest putRequest = PutObjectRequest.builder()
@@ -68,6 +68,7 @@ public class S3Storage implements FileStorage {
         return key;
     }
 
+    @Override
     public void deleteImage(String key) {
         try {
             DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()

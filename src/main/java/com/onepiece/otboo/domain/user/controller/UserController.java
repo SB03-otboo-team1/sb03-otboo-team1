@@ -13,6 +13,7 @@ import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -125,7 +126,8 @@ public class UserController implements UserApi {
     public ResponseEntity<ProfileDto> updateUserProfile(
         @PathVariable UUID userId,
         @Valid @RequestPart ProfileUpdateRequest request,
-        @RequestPart(value = "image", required = false) MultipartFile profileImage) {
+        @RequestPart(value = "image", required = false) MultipartFile profileImage)
+    throws IOException {
 
         log.info("[UserController] 프로필 업데이트 요청 - userId: {}", userId);
 

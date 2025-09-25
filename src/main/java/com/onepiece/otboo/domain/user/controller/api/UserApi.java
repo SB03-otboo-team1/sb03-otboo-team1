@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -183,5 +184,5 @@ public interface UserApi {
         @PathVariable UUID userId,
         @Valid @RequestPart ProfileUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile profileImage
-    );
+    ) throws IOException;
 }
