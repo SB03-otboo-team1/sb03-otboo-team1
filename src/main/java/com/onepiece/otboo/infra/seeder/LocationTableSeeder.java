@@ -38,7 +38,7 @@ public class LocationTableSeeder implements DataSeeder {
             String city = cities[randInt(0, cities.length - 1)];
             String district = districts[randInt(0, districts.length - 1)];
             String neighborhood = neighborhoods[randInt(0, neighborhoods.length - 1)];
-            String locationName = city + " " + district + " " + neighborhood;
+            String locationName = city + "," + district + "," + neighborhood;
             Location location = Location.builder()
                 .latitude(lat)
                 .longitude(lon)

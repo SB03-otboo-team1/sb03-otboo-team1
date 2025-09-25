@@ -37,10 +37,14 @@ public enum ErrorCode {
     FEED_NOT_FOUND(HttpStatus.NOT_FOUND, "피드 확인 실패", "피드를 찾을 수 없습니다."),
     FEED_FORBIDDEN(HttpStatus.FORBIDDEN, "피드 권한 없음", "해당 피드에 접근/수정/삭제 권한이 없습니다."),
     FEED_GONE(HttpStatus.GONE, "삭제된 피드", "이미 삭제된 피드입니다."),
+    FEED_CLOTHES_REQUIRED(HttpStatus.BAD_REQUEST, "의상 목록 누락", "피드에는 최소 1개 이상의 의상이 필요합니다."),
 
     // LOCATION
     INVALID_COORDINATE(HttpStatus.BAD_REQUEST, "유효하지 않은 좌표 값입니다.", "위도와 경도를 확인해주세요."),
-    INVALID_AREA(HttpStatus.BAD_REQUEST, "서비스 지역이 아닙니다.", "해당 위치는 서비스 대상 지역이 아닙니다.");
+    INVALID_AREA(HttpStatus.BAD_REQUEST, "서비스 지역이 아닙니다.", "해당 위치는 서비스 대상 지역이 아닙니다."),
+
+    /// PROFILE
+    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 확인 실패", "해당 유저의 프로필을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
