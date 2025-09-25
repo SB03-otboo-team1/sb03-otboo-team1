@@ -10,11 +10,13 @@ import com.onepiece.otboo.infra.security.handler.RestAuthenticationEntryPoint;
 import com.onepiece.otboo.infra.security.handler.SpaCsrfTokenRequestHandler;
 import com.onepiece.otboo.infra.security.jwt.JwtAuthenticationFilter;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -100,7 +102,16 @@ public class SecurityFilterChainFactory {
     private UsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter(
         AuthenticationManager authenticationManager
     ) {
-        UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter();
+        UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter() {
+            @Override
+            protected String obtainPassword(HttpServletRequest request) {
+                String password = super.obtainPassword(request);
+                if (password == null || password.isBlank()) {
+                    throw new BadCredentialsException("비밀번호를 입력해 주세요.");
+                }
+                return password;
+            }
+        };
         filter.setFilterProcessesUrl("/api/auth/sign-in");
         filter.setUsernameParameter("username");
         filter.setAuthenticationManager(authenticationManager);

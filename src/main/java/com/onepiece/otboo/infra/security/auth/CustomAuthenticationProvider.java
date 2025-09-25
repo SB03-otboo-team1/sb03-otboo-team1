@@ -28,6 +28,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         String password = authentication.getCredentials().toString();
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
+        }
         if (passwordEncoder.matches(password, user.getPassword())) {
             CustomUserDetails userDetails = customUserDetailsMapper.toCustomUserDetails(user);
             return new UsernamePasswordAuthenticationToken(userDetails, password,
