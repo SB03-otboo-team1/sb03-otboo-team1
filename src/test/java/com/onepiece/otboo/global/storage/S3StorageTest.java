@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.profile.exception.InvalidFileTypeException;
@@ -22,6 +23,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Utilities;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
@@ -131,5 +135,47 @@ class S3StorageTest {
             GetObjectPresignRequest.class);
         verify(s3Presigner).presignGetObject(captor.capture());
         assertThat(captor.getValue().signatureDuration()).isEqualTo(Duration.ofMinutes(10));
+    }
+
+    @Test
+    void 파일_삭제_테스트() {
+
+        // given
+        String key = KEY + "test.jpg";
+
+        // when
+        s3Storage.deleteFile(key);
+
+        // then
+        ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
+        verify(s3Client, times(1)).deleteObject(captor.capture());
+        DeleteObjectRequest req = captor.getValue();
+        assertEquals("test-bucket", req.bucket());
+        assertEquals(key, req.key());
+    }
+
+    @Test
+    void presigned_url_실패시_S3Utilities_URL로_폴백() throws Exception {
+        // given
+        String key = "image/test.jpg";
+
+        // 1) presign 실패 유도
+        given(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class)))
+            .willThrow(new RuntimeException("presign failed"));
+
+        // 2) utilities.getUrl 폴백 세팅
+        S3Utilities utilities = mock(S3Utilities.class);
+        given(s3Client.utilities()).willReturn(utilities);
+
+        URL fakeUrl = new URL("https://test-bucket.s3.amazonaws.com/image/test.jpg");
+        given(utilities.getUrl(any(GetUrlRequest.class))).willReturn(fakeUrl);
+
+        // when
+        String url = s3Storage.generatePresignedUrl(key);
+
+        // then
+        assertEquals("https://test-bucket.s3.amazonaws.com/image/test.jpg", url);
+        verify(s3Presigner, times(1)).presignGetObject(any(GetObjectPresignRequest.class));
+        verify(utilities, times(1)).getUrl(any(GetUrlRequest.class));
     }
 }
