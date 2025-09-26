@@ -1,4 +1,4 @@
-package com.onepiece.otboo.infra.security.handler;
+package com.onepiece.otboo.infra.security.jwt.handler;
 
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;

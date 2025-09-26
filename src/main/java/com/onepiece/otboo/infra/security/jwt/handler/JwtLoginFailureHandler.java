@@ -1,6 +1,7 @@
-package com.onepiece.otboo.infra.security.handler;
+package com.onepiece.otboo.infra.security.jwt.handler;
 
 import com.onepiece.otboo.infra.security.exception.SecurityUnauthorizedException;
+import com.onepiece.otboo.infra.security.handler.SecurityErrorResponseHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;

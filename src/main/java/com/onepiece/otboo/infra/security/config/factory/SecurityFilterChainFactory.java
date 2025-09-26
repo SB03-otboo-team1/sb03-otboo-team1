@@ -2,14 +2,14 @@ package com.onepiece.otboo.infra.security.config.factory;
 
 import com.onepiece.otboo.infra.security.auth.CustomAuthenticationProvider;
 import com.onepiece.otboo.infra.security.config.props.SecurityProperties;
-import com.onepiece.otboo.infra.security.handler.JwtLoginFailureHandler;
-import com.onepiece.otboo.infra.security.handler.JwtLoginSuccessHandler;
-import com.onepiece.otboo.infra.security.handler.JwtLogoutHandler;
 import com.onepiece.otboo.infra.security.handler.RestAccessDeniedHandler;
 import com.onepiece.otboo.infra.security.handler.RestAuthenticationEntryPoint;
 import com.onepiece.otboo.infra.security.handler.SpaCsrfTokenRequestHandler;
 import com.onepiece.otboo.infra.security.jwt.JwtAuthenticationFilter;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
+import com.onepiece.otboo.infra.security.jwt.handler.JwtLoginFailureHandler;
+import com.onepiece.otboo.infra.security.jwt.handler.JwtLoginSuccessHandler;
+import com.onepiece.otboo.infra.security.jwt.handler.JwtLogoutHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;

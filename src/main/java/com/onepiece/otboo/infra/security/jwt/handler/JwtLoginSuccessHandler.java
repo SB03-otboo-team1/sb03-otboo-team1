@@ -1,4 +1,4 @@
-package com.onepiece.otboo.infra.security.handler;
+package com.onepiece.otboo.infra.security.jwt.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
