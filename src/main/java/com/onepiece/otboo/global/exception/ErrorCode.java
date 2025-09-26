@@ -32,6 +32,7 @@ public enum ErrorCode {
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다.", "다시 로그인해 주세요."),
     TOKEN_ERROR(HttpStatus.UNAUTHORIZED, "토큰 처리 중 에러가 발생했습니다.", "다시 로그인해 주세요."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.", "다시 로그인해 주세요."),
+    UNSUPPORTED_PROVIDER(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 provider입니다.", "provider 값을 확인해 주세요."),
 
     // FEED
     FEED_NOT_FOUND(HttpStatus.NOT_FOUND, "피드 확인 실패", "피드를 찾을 수 없습니다."),
