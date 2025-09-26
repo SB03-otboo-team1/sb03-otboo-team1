@@ -6,6 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.within;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.location.exception.InvalidCoordinateException;
+import com.onepiece.otboo.domain.location.fixture.LocationFixture;
 import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import com.onepiece.otboo.domain.weather.dto.response.WeatherDto;
 import com.onepiece.otboo.domain.weather.entity.Weather;
@@ -39,6 +41,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
@@ -59,6 +62,7 @@ class WeatherServiceImplTest {
     private WeatherServiceImpl weatherService;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final String DEFAULT_LOC = "서울특별시,중구,태평로1가";
 
     @BeforeEach
     void setUp() {
@@ -66,6 +70,7 @@ class WeatherServiceImplTest {
         Clock fixedClock = Clock.fixed(fixedZdt.toInstant(), KST);
         weatherService = new WeatherServiceImpl(locationRepository, weatherRepository,
             weatherMapper, fixedClock);
+        ReflectionTestUtils.setField(weatherService, "DEFAULT_LOCATION_NAME", DEFAULT_LOC);
     }
 
     private Location location(UUID id, double lat, double lon) {
@@ -286,5 +291,57 @@ class WeatherServiceImplTest {
 
         // then
         assertEquals(0, result.size());
+    }
+
+    @Test
+    void 특정_사용자의_위치_정보가_없는_경우_기본_위치_날씨_데이터를_조회한다() {
+
+        // given
+        double latitude = 37.5;
+        double longitude = 127.0;
+
+        given(locationRepository.findByLatitudeAndLongitude(anyDouble(), anyDouble()))
+            .willReturn(Optional.empty());
+        given(locationRepository.findNearest(anyDouble(), anyDouble()))
+            .willReturn(Optional.empty());
+
+        Location defaultLocation = LocationFixture.createLocation();
+        UUID defaultId = UUID.randomUUID();
+        ReflectionTestUtils.setField(defaultLocation, "id", defaultId);
+
+        given(locationRepository.findByLocationNames(anyString()))
+            .willReturn(Optional.of(defaultLocation));
+        given(weatherRepository.findRange(eq(defaultId), any(), any()))
+            .willReturn(List.of());
+
+        // when
+        List<WeatherDto> result = weatherService.getWeather(longitude, latitude);
+
+        // then
+        assertEquals(0, result.size());
+        verify(locationRepository).findByLocationNames("서울특별시,중구,태평로1가");
+        verify(weatherRepository).findRange(eq(defaultId), any(), any());
+    }
+
+    @Test
+    void 기본_위치가_DB에_없으면_예외가_발생한다() {
+        // given
+        double latitude = 37.5;
+        double longitude = 127.0;
+
+        given(locationRepository.findByLatitudeAndLongitude(anyDouble(), anyDouble()))
+            .willReturn(Optional.empty());
+        given(locationRepository.findNearest(anyDouble(), anyDouble()))
+            .willReturn(Optional.empty());
+        given(locationRepository.findByLocationNames("서울특별시,중구,태평로1가"))
+            .willReturn(Optional.empty());
+
+        // when
+        Throwable thrown = catchThrowable(() -> weatherService.getWeather(longitude, latitude));
+
+        // then
+        assertThat(thrown)
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("기본 위치가 존재");
     }
 }
