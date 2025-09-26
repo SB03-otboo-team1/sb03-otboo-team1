@@ -25,6 +25,7 @@ import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.fixture.UserDtoFixture;
+import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -335,5 +336,45 @@ class UserServiceImplTest {
         assertThat(thrown).isInstanceOf(UserNotFoundException.class);
         verify(userRepository).findById(notExistId);
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void 비밀번호_변경_성공_테스트() {
+
+        // given
+        String newPassword = "newPassword123@";
+
+        User updatedUser = UserFixture.createUser();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.save(any(User.class))).willReturn(updatedUser);
+
+        // when
+        userService.updatePassword(userId, newPassword);
+
+        // then
+        verify(userRepository).save(any());
+        verify(passwordEncoder).encode(anyString());
+    }
+
+    @Test
+    void 존재하지_않는_사용자의_비밀번호_변경시_예외가_발생한다() {
+
+        // given
+        UUID notExistId = UUID.randomUUID();
+        String newPassword = "newPassword123@";
+
+        given(userRepository.findById(notExistId)).willReturn(Optional.empty());
+
+        // when
+        Throwable thrown = catchThrowable(
+            () -> userService.updatePassword(notExistId, newPassword));
+
+        // then
+        assertThat(thrown)
+            .isInstanceOf(UserNotFoundException.class)
+            .hasMessageContaining("사용자");
+        verify(userRepository, never()).save(any());
+        verify(passwordEncoder, never()).encode(anyString());
     }
 }
