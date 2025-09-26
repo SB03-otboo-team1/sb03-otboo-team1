@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.user.controller.api;
 
 import com.onepiece.otboo.domain.profile.dto.request.ProfileUpdateRequest;
 import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
+import com.onepiece.otboo.domain.user.dto.request.ChangePasswordRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
@@ -185,4 +186,40 @@ public interface UserApi {
         @Valid @RequestPart ProfileUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile profileImage
     ) throws IOException;
+
+    @Operation(
+        summary = "프로필 업데이트",
+        description = "프로필 업데이트 API",
+        security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "204", description = "비밀번호 변경 성공"
+        ),
+        @ApiResponse(
+            responseCode = "400", description = "비밀번호 변경 실패(잘못된 요청)",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404", description = "비밀번호 변경 실패(사용자 없음)",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "403", description = "권한 부족",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    ResponseEntity<Void> updatePassword(
+        @PathVariable UUID userId,
+        @Valid @RequestBody ChangePasswordRequest request
+    );
 }
