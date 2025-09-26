@@ -3,6 +3,7 @@ package com.onepiece.otboo.global.storage;
 import com.onepiece.otboo.domain.profile.exception.FileSizeExceededException;
 import com.onepiece.otboo.domain.profile.exception.InvalidFileTypeException;
 import java.io.IOException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
@@ -84,18 +86,27 @@ public class S3Storage implements FileStorage {
 
     public String generatePresignedUrl(String key) {
         // Presigned Url 생성
-        GetObjectRequest getRequest = GetObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .build();
+        try {
+            GetObjectRequest getRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
 
-        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-            .signatureDuration(Duration.ofMinutes(10))
-            .getObjectRequest(getRequest)
-            .build();
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .getObjectRequest(getRequest)
+                .build();
 
-        return s3Presigner.presignGetObject(presignRequest)
-            .url()
-            .toString();
+            return s3Presigner.presignGetObject(presignRequest)
+                .url()
+                .toString();
+        } catch (Exception e) {
+            log.warn("[S3Storage] Presigned URL 생성 실패, S3Utilities URL로 폴백 시도 - key: {}", key, e);
+            URL url = s3Client.utilities().getUrl(GetUrlRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build());
+            return url.toString();
+        }
     }
 }
