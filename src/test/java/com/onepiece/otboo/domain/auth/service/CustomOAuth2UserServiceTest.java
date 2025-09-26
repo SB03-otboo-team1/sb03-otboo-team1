@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.auth.service.social;
+package com.onepiece.otboo.domain.auth.service;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,13 +20,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 @ExtendWith(MockitoExtension.class)
-class SocialAuthServiceTest {
+class CustomOAuth2UserServiceTest {
 
     @Mock
     UserRepository userRepository;
 
     @InjectMocks
-    SocialAuthService service;
+    CustomOAuth2UserService service;
 
     final String email = "test@social.com";
     final Provider provider = Provider.GOOGLE;

@@ -6,13 +6,25 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 @Slf4j
-public class CustomUserDetails implements UserDetails {
+@Getter
+@Setter
+@RequiredArgsConstructor
+public class CustomUserDetails implements UserDetails, OAuth2User {
+
+    @Override
+    public String getName() {
+        return email != null ? email : (userId != null ? userId.toString() : "");
+    }
 
     private final UUID userId;
     private final String email;
@@ -22,17 +34,6 @@ public class CustomUserDetails implements UserDetails {
     private final String temporaryPassword;
     private final Instant temporaryPasswordExpirationTime;
     private Map<String, Object> attributes;
-
-    public CustomUserDetails(UUID userId, String email, String password, Role role, boolean locked,
-        String temporaryPassword, java.time.Instant temporaryPasswordExpirationTime) {
-        this.userId = userId;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.locked = locked;
-        this.temporaryPassword = temporaryPassword;
-        this.temporaryPasswordExpirationTime = temporaryPasswordExpirationTime;
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -81,17 +82,5 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    public UUID getUserId() {
-        return this.userId;
-    }
-
-    public Map<String, Object> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
     }
 }
