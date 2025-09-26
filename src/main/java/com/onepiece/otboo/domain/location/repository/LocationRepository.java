@@ -9,4 +9,6 @@ public interface LocationRepository extends JpaRepository<Location, UUID>,
     LocationRepositoryCustom {
 
     Optional<Location> findByLatitudeAndLongitude(double latitude, double longitude);
+
+    Optional<Location> findByLocationNames(String name);
 }

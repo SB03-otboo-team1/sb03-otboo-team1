@@ -77,6 +77,8 @@ otboo:
   admin:
     email: ${ADMIN_EMAIL}
     password: ${ADMIN_PASSWORD}
+  location:
+    default: ${DEFAULT_LOCATION_NAME}
 
 api:
   kakao:
