@@ -18,4 +18,6 @@ public interface UserService {
     UserDto lockUser(UUID userId);
 
     UserDto unlockUser(UUID userId);
+
+    void updatePassword(UUID userId, String password);
 }

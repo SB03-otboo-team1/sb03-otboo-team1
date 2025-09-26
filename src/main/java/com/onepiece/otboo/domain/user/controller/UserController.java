@@ -4,6 +4,7 @@ import com.onepiece.otboo.domain.profile.dto.request.ProfileUpdateRequest;
 import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
 import com.onepiece.otboo.domain.profile.service.ProfileService;
 import com.onepiece.otboo.domain.user.controller.api.UserApi;
+import com.onepiece.otboo.domain.user.dto.request.ChangePasswordRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
@@ -136,5 +137,22 @@ public class UserController implements UserApi {
         log.info("[UserController] 프로필 업데이트 성공 - userId: {}", userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @Override
+    @PreAuthorize("#userId == principal.userId")
+    @PatchMapping("/{userId}/password")
+    public ResponseEntity<Void> updatePassword(
+        @PathVariable UUID userId,
+        @Valid @RequestBody ChangePasswordRequest request
+    ) {
+
+        log.info("[UserController] 비밀번호 변경 요청 - userId: {}", userId);
+
+        userService.updatePassword(userId, request.password());
+
+        log.info("[UserController] 비밀번호 변경 성공 - userId: {}", userId);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
