@@ -2,10 +2,14 @@ package com.onepiece.otboo.domain.user.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -15,7 +19,11 @@ import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
 import com.onepiece.otboo.domain.profile.enums.Gender;
 import com.onepiece.otboo.domain.profile.fixture.ProfileDtoFixture;
 import com.onepiece.otboo.domain.profile.service.ProfileService;
+import com.onepiece.otboo.domain.user.dto.request.ChangePasswordRequest;
+import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.fixture.UserFixture;
+import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -44,6 +52,9 @@ public class UserControllerIntegrationTest {
 
     @MockitoBean
     private ProfileService profileService;
+
+    @MockitoBean
+    private UserService userService;
 
     private ProfileUpdateRequest req;
 
@@ -163,6 +174,55 @@ public class UserControllerIntegrationTest {
 
         // when
         ResultActions result = callPatch(userId, principal, req);
+
+        // then
+        result.andExpect(status().isForbidden());
+        verify(userService, never()).updatePassword(any(), any());
+    }
+
+    @Test
+    void 본인의_비밀번호_변경_요청시_204를_반환한다() throws Exception {
+
+        // given
+        User user = UserFixture.createUser();
+        UUID userId = UUID.randomUUID();
+        CustomUserDetails principal = customUserDetails(userId, "USER");
+
+        ChangePasswordRequest request = new ChangePasswordRequest("newPassword123@");
+
+        doNothing().when(userService).updatePassword(any(), any());
+
+        // when
+        ResultActions result = mockMvc.perform(
+            patch("/api/users/{userId}/password", userId)
+                .with(user(principal))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+        );
+
+        // then
+        result.andExpect(status().isNoContent());
+    }
+
+    @Test
+    void 다른_사용자의_비밀번호_변경_요청시_403을_반환한다() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+        UUID userId2 = UUID.randomUUID();
+        CustomUserDetails principal = customUserDetails(userId, "USER");
+
+        ChangePasswordRequest request = new ChangePasswordRequest("newPassword123@");
+
+        // when
+        ResultActions result = mockMvc.perform(
+            patch("/api/users/{userId}/password", userId2)
+                .with(user(principal))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+        );
 
         // then
         result.andExpect(status().isForbidden());

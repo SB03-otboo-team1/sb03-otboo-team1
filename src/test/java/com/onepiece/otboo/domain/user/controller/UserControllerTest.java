@@ -3,8 +3,10 @@ package com.onepiece.otboo.domain.user.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.verify;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,6 +19,7 @@ import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
 import com.onepiece.otboo.domain.profile.enums.Gender;
 import com.onepiece.otboo.domain.profile.fixture.ProfileDtoFixture;
 import com.onepiece.otboo.domain.profile.service.ProfileService;
+import com.onepiece.otboo.domain.user.dto.request.ChangePasswordRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
@@ -492,4 +495,23 @@ class UserControllerTest {
         result.andExpect(status().isBadRequest());
     }
 
+    @Test
+    void 비밀번호_변경_성공시_204를_반환한다() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+        String newPassword = "newPassword123@";
+        ChangePasswordRequest request = new ChangePasswordRequest(newPassword);
+
+        doNothing().when(userService).updatePassword(eq(userId), eq(newPassword));
+
+        // when
+        ResultActions result = mockMvc.perform(patch("/api/users/{userId}/password", userId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request))
+        );
+
+        // then
+        result.andExpect(status().isNoContent());
+    }
 }
