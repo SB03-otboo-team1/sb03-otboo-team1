@@ -55,13 +55,15 @@ public class ClothesRepositoryTest {
 
         // when
         CursorPageResponseDto<ClothesDto> result = clothesRepository.findCursorPage(
-            ownerId, null, null, 10, "id", "asc", null
+            ownerId, null, null, 10, "createdAt", "desc", null
         );
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.data()).hasSize(2);
+        assertThat(result.data()).doesNotContainNull();
         assertThat(result.totalCount()).isEqualTo(2L);
+        assertThat(result.hasNext()).isFalse();
     }
 
     @Test
@@ -75,8 +77,8 @@ public class ClothesRepositoryTest {
             null,
             null,
             10,
-            "id",
-            "asc",
+            "createdAt",
+            "desc",
             ClothesType.TOP
         );
 

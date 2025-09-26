@@ -1,7 +1,6 @@
 package com.onepiece.otboo.global.storage;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -9,12 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Utilities;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -38,8 +37,12 @@ public class S3Storage implements FileStorage{
   public String uploadFile(MultipartFile file) throws IOException {
     log.info("S3에 이미지 업로드 시작");
 
-    String extension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1);
-    String key = UUID.randomUUID() + extension;
+    String originalFilename = file.getOriginalFilename();
+    String extension = StringUtils.getFilenameExtension(originalFilename);
+    if (!StringUtils.hasText(extension)) {
+        throw new IllegalArgumentException("파일 확장자를 확인할 수 없습니다.");
+    }
+    String key = UUID.randomUUID() + "." + extension;
 
     PutObjectRequest request = PutObjectRequest.builder()
         .bucket(bucket)
@@ -73,22 +76,6 @@ public class S3Storage implements FileStorage{
 
       throw e;
     }
-  }
-
-  @Override
-  public InputStream getFile(String imageUrl) {
-    log.info("get file from s3 bucket");
-
-    String key = URI.create(imageUrl).getPath().substring(1);
-
-    GetObjectRequest request = GetObjectRequest.builder()
-        .bucket(bucket)
-        .key(key)
-        .build();
-
-    log.info("get file from s3 bucket success: {}", key);
-
-    return s3Client.getObject(request);
   }
 
   @Override

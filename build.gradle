@@ -116,7 +116,7 @@ dependencies {
 
     // Database
     runtimeOnly 'org.postgresql:postgresql'
-    implementation 'com.h2database:h2'
+    runtimeOnly 'com.h2database:h2'
 
     // Spring Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -129,7 +129,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
     // https://mvnrepository.com/artifact/io.netty/netty-resolver-dns-native-macos
-    runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.2.Final:osx-aarch_64'
+    runtimeOnly('io.netty:netty-resolver-dns-native-macos') {
+        artifact {
+            classifier = 'osx-aarch_64'
+        }
+    }
 
     // ======================== Test ========================
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

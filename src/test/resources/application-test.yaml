@@ -20,8 +20,8 @@ logging:
     io.netty.resolver.dns: ERROR
 
 aws:
-  access-key: ${AWS_ACCESS_KEY}
-  secret-key: ${AWS_SECRET_KEY}
+  access-key: ${AWS_ACCESS_KEY:dummy-access-key}
+  secret-key: ${AWS_SECRET_KEY:dummy-secret-key}
   region: ap-northeast-2
   s3:
     bucket: clothes-images-onepiece

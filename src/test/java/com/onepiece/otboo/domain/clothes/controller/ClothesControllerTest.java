@@ -3,11 +3,11 @@ package com.onepiece.otboo.domain.clothes.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.service.ClothesService;
@@ -37,9 +37,6 @@ class ClothesControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
-
   @MockitoBean
   private ClothesService clothesService;
 
@@ -63,19 +60,19 @@ class ClothesControllerTest {
         UUID.randomUUID(),
         false,
         1L,
-        "id",
-        "asc"
+        "createdAt",
+        "desc"
     );
 
-    given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq("id"), eq("asc"), any()))
+    given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq("createdAt"), eq("asc"), any()))
         .willReturn(response);
 
     // when & then
     mockMvc.perform(get("/api/clothes")
             .param("ownerId", ownerId.toString())
             .param("limit", "15")
-            .param("sortBy", "id")
-            .param("sortDirection", "asc")
+            .param("sortBy", "createdAt")
+            .param("sortDirection", "desc")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data").isArray())
@@ -107,8 +104,8 @@ class ClothesControllerTest {
         null,
         false,
         1L,
-        "id",
-        "asc"
+        "createdAt",
+        "desc"
     );
 
     given(clothesService.getClothes(eq(ownerId), any(), any(), eq(10), eq("createdAt"), eq("desc"), eq(ClothesType.BOTTOM)))
@@ -162,7 +159,7 @@ class ClothesControllerTest {
         "asc"
     );
 
-    given(clothesService.getClothes(eq(ownerId), eq("test-cursor"), eq(idAfter), eq(5), eq("id"), eq("asc"), any()))
+    given(clothesService.getClothes(eq(ownerId), eq("test-cursor"), eq(idAfter), eq(5), eq("createdAt"), eq("desc"), any()))
         .willReturn(response);
 
     // when & then
@@ -171,8 +168,8 @@ class ClothesControllerTest {
             .param("cursor", "test-cursor")
             .param("idAfter", idAfter.toString())
             .param("limit", "5")
-            .param("sortBy", "id")
-            .param("sortDirection", "asc")
+            .param("sortBy", "createdAt")
+            .param("sortDirection", "desc")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data").isArray())
@@ -194,19 +191,19 @@ class ClothesControllerTest {
         null,
         false,
         0L,
-        "id",
-        "asc"
+        "createdAt",
+        "desc"
     );
 
-    given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq("id"), eq("asc"), any()))
+    given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq("createdAt"), eq("desc"), any()))
         .willReturn(response);
 
     // when & then
     mockMvc.perform(get("/api/clothes")
             .param("ownerId", ownerId.toString())
             .param("limit", "15")
-            .param("sortBy", "id")
-            .param("sortDirection", "asc")
+            .param("sortBy", "createdAt")
+            .param("sortDirection", "desc")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data").isArray())
@@ -220,8 +217,8 @@ class ClothesControllerTest {
     // when & then - ownerId가 없으면 400 에러가 발생해야 함
     mockMvc.perform(get("/api/clothes")
             .param("limit", "15")
-            .param("sortBy", "id")
-            .param("sortDirection", "asc")
+            .param("sortBy", "createdAt")
+            .param("sortDirection", "desc")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
   }
@@ -235,8 +232,8 @@ class ClothesControllerTest {
     mockMvc.perform(get("/api/clothes")
             .param("ownerId", ownerId.toString())
             .param("limit", "15")
-            .param("sortBy", "id")
-            .param("sortDirection", "asc")
+            .param("sortBy", "createdAt")
+            .param("sortDirection", "desc")
             .param("typeEqual", "INVALID_TYPE")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
@@ -248,8 +245,8 @@ class ClothesControllerTest {
     mockMvc.perform(get("/api/clothes")
             .param("ownerId", "invalid-uuid")
             .param("limit", "15")
-            .param("sortBy", "id")
-            .param("sortDirection", "asc")
+            .param("sortBy", "createdAt")
+            .param("sortDirection", "desc")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
   }
@@ -259,27 +256,16 @@ class ClothesControllerTest {
     // given
     UUID ownerId = UUID.randomUUID();
 
-    CursorPageResponseDto<ClothesDto> response = new CursorPageResponseDto<>(
-        List.of(),
-        null,
-        null,
-        false,
-        0L,
-        "id",
-        "asc"
-    );
-
-    given(clothesService.getClothes(eq(ownerId), any(), any(), eq(-1), eq("id"), eq("asc"), any()))
-        .willReturn(response);
-
     // when & then
     mockMvc.perform(get("/api/clothes")
             .param("ownerId", ownerId.toString())
             .param("limit", "-1")
-            .param("sortBy", "id")
-            .param("sortDirection", "asc")
+            .param("sortBy", "createdAt")
+            .param("sortDirection", "desc")
             .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk());
+        .andExpect(status().isBadRequest());
+
+    verifyNoInteractions(clothesService);
   }
 
   @Test
@@ -303,19 +289,19 @@ class ClothesControllerTest {
           null,
           false,
           1L,
-          "id",
-          "asc"
+          "createdAt",
+          "desc"
       );
 
-      given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq("id"), eq("asc"), eq(type)))
+      given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq("createdAt"), eq("desc"), eq(type)))
           .willReturn(response);
 
       // when & then
       mockMvc.perform(get("/api/clothes")
               .param("ownerId", ownerId.toString())
               .param("limit", "15")
-              .param("sortBy", "id")
-              .param("sortDirection", "asc")
+              .param("sortBy", "createdAt")
+              .param("sortDirection", "desc")
               .param("typeEqual", type.name())
               .contentType(MediaType.APPLICATION_JSON))
           .andExpect(status().isOk())
