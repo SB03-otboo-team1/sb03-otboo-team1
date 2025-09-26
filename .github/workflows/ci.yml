@@ -21,8 +21,6 @@ jobs:
       SERVICE_API_KEY: ${{ secrets.SERVICE_API_KEY}}
       ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,6 +35,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests with coverage
+        env:
+            AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+            AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
         run: ./gradlew clean test jacocoMergedReport
 
       - name: Upload coverage to Codecov
