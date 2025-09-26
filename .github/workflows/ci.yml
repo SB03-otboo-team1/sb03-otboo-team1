@@ -27,6 +27,7 @@ jobs:
       AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
       PROFILE_PREFIX: ${{ secrets.PROFILE_PREFIX }}
       CLOTHES_PREFIX: ${{ secrets.CLOTHES_PREFIX }}
+      DEFAULT_LOCATION_NAME: ${{ secrets.DEFAULT_LOCATION_NAME }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
