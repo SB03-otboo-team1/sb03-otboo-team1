@@ -1,8 +1,10 @@
 package com.onepiece.otboo.domain.follow.repository;
 
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.dto.response.QFollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.QFollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.QFollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.QFollow;
 import com.onepiece.otboo.domain.profile.entity.QProfile;
@@ -77,7 +79,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
     }
 
     @Override
-    public List<FollowResponse> findFollowersWithProfileCursor(
+    public List<FollowerResponse> findFollowersWithProfileCursor(
         User followee,
         String cursor,
         UUID idAfter,
@@ -114,7 +116,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
                 : follow.createdAt.desc();
 
         return queryFactory
-            .select(new QFollowResponse(
+            .select(new QFollowerResponse(
                 follow.id,
                 user.id,
                 profile.nickname,

@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
@@ -55,11 +56,11 @@ public class FollowServiceImpl implements FollowService {
     }
 
     /**
-     * 팔로워 목록 조회 (커서 기반 페이지네이션)
+     * 팔로워 목록 조회 (커서 기반 페이지네이션, QueryDSL Projection)
      */
     @Override
     @Transactional(readOnly = true)
-    public CursorPageResponseDto<FollowResponse> getFollowers(
+    public CursorPageResponseDto<FollowerResponse> getFollowers(
         UUID followeeId,
         String cursor,
         UUID idAfter,
@@ -71,7 +72,7 @@ public class FollowServiceImpl implements FollowService {
         User followee = userRepository.findById(followeeId)
             .orElseThrow(() -> UserNotFoundException.byId(followeeId));
 
-        List<FollowResponse> results = followRepository.findFollowersWithProfileCursor(
+        List<FollowerResponse> results = followRepository.findFollowersWithProfileCursor(
             followee, cursor, idAfter, limit, nameLike, sortBy, sortDirection
         );
 
@@ -83,7 +84,7 @@ public class FollowServiceImpl implements FollowService {
         String nextCursor = null;
         String nextIdAfter = null;
         if (!results.isEmpty()) {
-            FollowResponse last = results.get(results.size() - 1);
+            FollowerResponse last = results.get(results.size() - 1);
             nextCursor = last.getCreatedAt().toString();
             nextIdAfter = last.getId().toString();
         }
@@ -102,7 +103,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     /**
-     * 팔로잉 목록 조회 (프로필 포함, 커서 기반 페이지네이션)
+     * 팔로잉 목록 조회 (커서 기반 페이지네이션, QueryDSL Projection)
      */
     @Override
     @Transactional(readOnly = true)
@@ -118,6 +119,7 @@ public class FollowServiceImpl implements FollowService {
         User follower = userRepository.findById(followerId)
             .orElseThrow(() -> UserNotFoundException.byId(followerId));
 
+        // ✅ Repository에서 바로 DTO Projection 반환
         List<FollowingResponse> results = followRepository.findFollowingsWithProfileCursor(
             follower, cursor, idAfter, limit, nameLike, sortBy, sortDirection
         );
