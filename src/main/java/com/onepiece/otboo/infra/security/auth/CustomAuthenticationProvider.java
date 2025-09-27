@@ -32,17 +32,19 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if (user.isLocked()) {
             throw new LockedException("계정이 잠겨 있습니다.");
         }
-        if (user.getPassword() == null || user.getPassword().isBlank()) {
-            throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
-        }
-        if (passwordEncoder.matches(password, user.getPassword())) {
+        // 임시 비밀번호 처리
+        if (user.isTemporaryPasswordValid(password, passwordEncoder)) {
+            user.clearTemporaryPassword();
+            userRepository.save(user);
             CustomUserDetails userDetails = customUserDetailsMapper.toCustomUserDetails(user);
             return new UsernamePasswordAuthenticationToken(userDetails, password,
                 userDetails.getAuthorities());
         }
-        if (user.isTemporaryPasswordValid(password, passwordEncoder)) {
-            user.clearTemporaryPassword();
-            userRepository.save(user);
+        // 비밀번호가 없는 경우 소셜 또는 비정상
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
+        }
+        if (passwordEncoder.matches(password, user.getPassword())) {
             CustomUserDetails userDetails = customUserDetailsMapper.toCustomUserDetails(user);
             return new UsernamePasswordAuthenticationToken(userDetails, password,
                 userDetails.getAuthorities());
