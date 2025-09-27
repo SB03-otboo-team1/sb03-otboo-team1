@@ -18,7 +18,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -47,7 +46,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
             return;
         }
 
-        jwtRegistry.invalidateAllTokens(userDetails.getUserId(), Instant.now());
+        jwtRegistry.blacklistAllTokens(userDetails.getUserId());
 
         String accessToken;
         String refreshToken;

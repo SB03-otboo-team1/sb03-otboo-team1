@@ -15,7 +15,6 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -125,7 +124,7 @@ public class UserServiceImpl implements UserService {
         user.updateRole(role);
         userRepository.save(user);
 
-        jwtRegistry.invalidateAllTokens(userId, Instant.now());
+        jwtRegistry.blacklistAllTokens(userId);
 
         log.info("[UserService] 사용자 권한 변경 - userId: {}, role: {}, 토큰 무효화 완료", userId, role);
 
@@ -140,7 +139,7 @@ public class UserServiceImpl implements UserService {
         user.updateLocked(true);
         userRepository.save(user);
 
-        jwtRegistry.invalidateAllTokens(userId, Instant.now());
+        jwtRegistry.blacklistAllTokens(userId);
 
         log.info("[UserService] 사용자 계정 잠금 완료 - userId: {}, 토큰 무효화 완료", userId);
 

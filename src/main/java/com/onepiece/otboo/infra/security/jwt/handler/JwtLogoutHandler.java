@@ -2,15 +2,12 @@ package com.onepiece.otboo.infra.security.jwt.handler;
 
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
-import com.onepiece.otboo.infra.security.userdetails.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +23,6 @@ public class JwtLogoutHandler implements LogoutHandler {
 
     private final JwtProvider jwtProvider;
     private final JwtRegistry jwtRegistry;
-    private final CustomUserDetailsService userDetailsService;
 
     @Override
     public void logout(
@@ -34,28 +30,36 @@ public class JwtLogoutHandler implements LogoutHandler {
         HttpServletResponse response,
         Authentication authentication
     ) {
+        // Access Token 기반 전체 세션 만료
         String bearer = request.getHeader("Authorization");
-        if (bearer == null
-            || !bearer.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX_LENGTH)) {
+        if (bearer != null && bearer.regionMatches(true, 0, BEARER_PREFIX, 0,
+            BEARER_PREFIX_LENGTH)) {
+            String token = bearer.substring(BEARER_PREFIX_LENGTH).trim();
+            if (jwtProvider.validateAccessToken(token)) {
+                UUID userId = jwtProvider.getUserIdFromToken(token);
+                if (userId != null) {
+                    jwtRegistry.blacklistAllTokens(userId);
+                    log.debug("로그아웃: userId {}의 모든 세션 만료", userId);
+                }
+            } else {
+                log.debug("로그아웃 무시: 액세스 토큰이 유효하지 않거나 만료됨");
+            }
+        } else {
             log.debug("로그아웃 무시: Authorization 헤더 없음 또는 잘못됨");
-            return;
-        }
-        String token = bearer.substring(BEARER_PREFIX_LENGTH).trim();
-        if (!jwtProvider.validateAccessToken(token)) {
-            log.debug("로그아웃 무시: 토큰이 유효하지 않거나 만료됨");
-            return;
-        }
-        String email = jwtProvider.getEmailFromToken(token);
-        if (email == null || email.isBlank()) {
-            log.debug("로그아웃 무시: 토큰에 이메일 정보 없음");
-            return;
         }
 
+        // Refresh Token 쿠키 만료 처리
         try {
-            var userDetails = userDetailsService.loadUserByUsername(email);
-            UUID userId = userDetails.getUserId();
-            jwtRegistry.invalidateAllTokens(userId, Instant.now());
-        } catch (UsernameNotFoundException ignored) {
+            var cookies = request.getCookies();
+            if (cookies != null) {
+                for (var cookie : cookies) {
+                    if (JwtProvider.REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+                        response.addCookie(jwtProvider.generateRefreshTokenExpirationCookie());
+                        break;
+                    }
+                }
+            }
+        } catch (Exception ignored) {
         }
     }
 }

@@ -14,7 +14,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -50,7 +49,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             return;
         }
 
-        jwtRegistry.invalidateAllTokens(userDetails.getUserId(), Instant.now());
+        jwtRegistry.blacklistAllTokens(userDetails.getUserId());
 
         try {
             String accessToken = jwtProvider.generateAccessToken(userDetails);
