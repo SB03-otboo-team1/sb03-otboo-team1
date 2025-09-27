@@ -5,13 +5,13 @@ import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface FollowMapper {
 
     /**
-     * Follow → FollowResponse
-     * 닉네임/프로필이미지는 Repository Projection에서 채워줌
+     * Follow → FollowResponse 닉네임/프로필이미지는 Repository Projection에서 채워줌
      */
     @Mapping(source = "id", target = "id")
     @Mapping(source = "follower.id", target = "followerId")
