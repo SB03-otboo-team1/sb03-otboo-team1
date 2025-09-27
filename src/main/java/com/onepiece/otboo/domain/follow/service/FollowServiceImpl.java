@@ -7,6 +7,7 @@ import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
+import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
 import com.onepiece.otboo.domain.user.entity.User;
@@ -160,6 +161,10 @@ public class FollowServiceImpl implements FollowService {
 
         User followee = userRepository.findById(request.followeeId())
             .orElseThrow(() -> UserNotFoundException.byId(request.followeeId()));
+
+        if (!followRepository.existsByFollowerAndFollowing(follower, followee)) {
+            throw FollowNotFoundException.of(follower.getId(), followee.getId());
+        }
 
         followRepository.deleteByFollowerAndFollowing(follower, followee);
     }
