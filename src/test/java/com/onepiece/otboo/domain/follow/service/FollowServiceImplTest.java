@@ -6,6 +6,7 @@ import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
+import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
 import com.onepiece.otboo.domain.user.entity.User;
@@ -188,6 +189,7 @@ class FollowServiceImplTest {
         FollowRequest request = new FollowRequest(follower.getId(), following.getId());
         given(userRepository.findById(request.followerId())).willReturn(Optional.of(follower));
         given(userRepository.findById(request.followeeId())).willReturn(Optional.of(following));
+        given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(true); // ✅ 추가
 
         followService.deleteFollow(request);
 
@@ -204,6 +206,18 @@ class FollowServiceImplTest {
             .isInstanceOf(UserNotFoundException.class);
     }
 
+    @Test
+    @DisplayName("언팔로우 실패 - 팔로우 관계가 존재하지 않을 때")
+    void deleteFollow_fail_followNotFound() {
+        FollowRequest request = new FollowRequest(follower.getId(), following.getId());
+        given(userRepository.findById(request.followerId())).willReturn(Optional.of(follower));
+        given(userRepository.findById(request.followeeId())).willReturn(Optional.of(following));
+        given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(false);
+
+        assertThatThrownBy(() -> followService.deleteFollow(request))
+            .isInstanceOf(FollowNotFoundException.class)
+            .hasMessageContaining(ErrorCode.FOLLOW_NOT_FOUND.getMessage());
+    }
 
     @Test
     @DisplayName("팔로우 요약 조회 성공 - viewer가 팔로우 중일 때")
