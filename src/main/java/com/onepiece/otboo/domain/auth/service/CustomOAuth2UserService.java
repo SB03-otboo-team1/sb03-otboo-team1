@@ -1,17 +1,20 @@
 package com.onepiece.otboo.domain.auth.service;
 
 import com.onepiece.otboo.domain.auth.exception.UnsupportedProviderException;
+import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
-import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.infra.security.mapper.CustomUserDetailsMapper;
+import com.onepiece.otboo.infra.security.oauth2.user.OAuth2UserInfo;
+import com.onepiece.otboo.infra.security.oauth2.user.OAuth2UserInfoFactory;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -20,9 +23,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * 소셜 인증 연동/매핑 서비스
- */
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
-    private final UserMapper userMapper;
+    private final CustomUserDetailsMapper customUserDetailsMapper;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -39,41 +40,99 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         Provider provider = toProvider(registrationId);
-        Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        String providerUserId = extractProviderUserId(provider, attributes, userRequest);
-        String email = extractEmail(provider, attributes);
-        String nickname = extractNickname(provider, attributes);
+        OAuth2UserInfo userInfo = OAuth2UserInfoFactory.from(provider, oAuth2User.getAttributes());
+        String providerUserId = userInfo.getProviderUserId();
+        String email = userInfo.getEmail();
+        String nickname = userInfo.getNickname();
+        String profileImageUrl = userInfo.getProfileImageUrl();
 
-        Optional<User> byProvider = userRepository
-            .findBySocialAccountProviderAndSocialAccountProviderUserId(provider, providerUserId);
-        Optional<User> byEmail =
-            email == null ? Optional.empty() : userRepository.findByEmail(email);
+        if (email == null || email.isBlank()) {
+            throw new OAuth2AuthenticationException("잘못된 요청입니다.");
+        }
 
-        User user = byProvider.or(() -> byEmail).orElse(null);
+        User existingUser = userRepository.findByEmail(email).orElse(null);
+        if (existingUser != null) {
+            updateExistingUserAndProfile(existingUser, provider, providerUserId, nickname,
+                profileImageUrl);
+        } else {
+            createNewUserAndProfile(provider, providerUserId, email, nickname,
+                profileImageUrl);
+        }
 
-        UUID userId = user == null ? null : user.getId();
-        Role role = user == null ? Role.USER : user.getRole();
-        boolean locked = user != null && user.isLocked();
-
-        CustomUserDetails userDetails = new CustomUserDetails(
-            userId,
-            email,
-            "",
-            role,
-            locked,
-            null,
-            null
-        );
-
-        userDetails.updateAttributes(Map.of(
+        User savedUser = userRepository.findByEmail(email).orElse(null);
+        CustomUserDetails customUserDetails = customUserDetailsMapper.toCustomUserDetails(
+            savedUser);
+        customUserDetails.updateAttributes(Map.of(
             "provider", provider.name(),
             "providerUserId", providerUserId,
             "email", email,
-            "nickname", nickname
+            "nickname", nickname == null ? "" : nickname,
+            "profileImageUrl", profileImageUrl == null ? "" : profileImageUrl
         ));
+        return customUserDetails;
+    }
 
-        return userDetails;
+    /**
+     * 기존 유저 및 프로필 정보 갱신
+     */
+    private void updateExistingUserAndProfile(User user, Provider provider, String providerUserId,
+        String nickname, String profileImageUrl) {
+        // 계정이 잠겨 있으면 로그인 거부
+        if (user.isLocked()) {
+            throw new OAuth2AuthenticationException("접근 거부되었습니다.");
+        }
+        // 소셜 계정이 연결되어 있지 않거나 정보가 다르면 연결
+        var socialAccount = user.getSocialAccount();
+        if (socialAccount == null || !socialAccount.isValid() || !socialAccount.isSameProviderAndId(
+            provider, providerUserId)) {
+            user.linkSocialAccount(provider, providerUserId);
+            userRepository.save(user);
+        }
+        // 프로필이 없으면 생성, 기본 정보가 없으면 채움
+        Profile profile = profileRepository.findByUserId(user.getId()).orElse(null);
+        if (profile == null) {
+            profile = Profile.builder()
+                .user(user)
+                .nickname(nickname)
+                .profileImageUrl(profileImageUrl)
+                .build();
+            profileRepository.save(profile);
+        } else {
+            if ((profile.getNickname() == null || profile.getNickname().isBlank())
+                && nickname != null) {
+                profile.updateNickname(nickname);
+            }
+            if ((profile.getProfileImageUrl() == null || profile.getProfileImageUrl().isBlank())
+                && profileImageUrl != null) {
+                profile.updateProfileImageUrl(profileImageUrl);
+            }
+        }
+    }
+
+    /**
+     * 신규 유저 및 프로필 생성
+     */
+    private void createNewUserAndProfile(Provider provider, String providerUserId, String email,
+        String nickname, String profileImageUrl) {
+        User newUser = User.builder()
+            .socialAccount(SocialAccount.builder()
+                .provider(provider)
+                .providerUserId(providerUserId)
+                .build())
+            .email(email)
+            .password("")
+            .role(Role.USER)
+            .locked(false)
+            .build();
+        newUser = userRepository.save(newUser);
+
+        Profile profile = Profile.builder()
+            .user(newUser)
+            .nickname(nickname)
+            .profileImageUrl(profileImageUrl)
+            .build();
+        profileRepository.save(profile);
     }
 
     private Provider toProvider(String registrationId) {
@@ -85,43 +144,5 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             case "kakao" -> Provider.KAKAO;
             default -> throw new UnsupportedProviderException();
         };
-    }
-
-    private String extractProviderUserId(Provider provider, Map<String, Object> attributes,
-        OAuth2UserRequest userRequest) {
-        return switch (provider) {
-            case GOOGLE -> getString(attributes, "sub");
-            case KAKAO -> getString(attributes, "id");
-            default -> getString(attributes,
-                userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint()
-                    .getUserNameAttributeName());
-        };
-    }
-
-    private String extractEmail(Provider provider, Map<String, Object> attributes) {
-        return switch (provider) {
-            case GOOGLE -> getString(attributes, "email");
-            case KAKAO -> {
-                Object account = attributes.get("kakao_account");
-                yield account instanceof Map<?, ?> acc ? getString(acc, "email") : null;
-            }
-            default -> null;
-        };
-    }
-
-    private String extractNickname(Provider provider, Map<String, Object> attributes) {
-        return switch (provider) {
-            case GOOGLE -> getString(attributes, "name");
-            case KAKAO -> {
-                Object properties = attributes.get("properties");
-                yield properties instanceof Map<?, ?> map ? getString(map, "nickname") : null;
-            }
-            default -> null;
-        };
-    }
-
-    private String getString(Map<?, ?> map, String key) {
-        Object val = map.get(key);
-        return val != null ? val.toString() : null;
     }
 }
