@@ -1,14 +1,16 @@
 package com.onepiece.otboo.domain.auth.service;
 
 import com.onepiece.otboo.domain.auth.exception.UnsupportedProviderException;
-import com.onepiece.otboo.domain.user.entity.SocialAccount;
+import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -27,109 +29,99 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
+    private final UserMapper userMapper;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
+        DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
-        Provider provider = Provider.valueOf(registrationId.toUpperCase());
-        String providerUserId;
-        String email;
-        switch (provider) {
-            case GOOGLE:
-                providerUserId = getGoogleProviderUserId(oAuth2User);
-                email = getGoogleEmail(oAuth2User);
-                break;
-            case KAKAO:
-                providerUserId = getKakaoProviderUserId(oAuth2User);
-                email = getKakaoEmail(oAuth2User);
-                break;
-            default:
-                throw new UnsupportedProviderException();
-        }
-
-        User user = linkOrCreateUser(provider, providerUserId, email);
-
-        // 인증 컨텍스트를 CustomUserDetails로 래핑
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        Provider provider = toProvider(registrationId);
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        attributes.put("userId", user.getId());
-        attributes.put("email", user.getEmail());
-        attributes.put("role", user.getRole());
-        attributes.put("provider", provider.name());
-        attributes.put("providerUserId", providerUserId);
 
-        CustomUserDetails customUserDetails = new CustomUserDetails(
-            user.getId(),
-            user.getEmail(),
-            user.getPassword(),
-            user.getRole(),
-            user.isLocked(),
-            user.getTemporaryPassword(),
-            user.getTemporaryPasswordExpirationTime()
+        String providerUserId = extractProviderUserId(provider, attributes, userRequest);
+        String email = extractEmail(provider, attributes);
+        String nickname = extractNickname(provider, attributes);
+
+        Optional<User> byProvider = userRepository
+            .findBySocialAccountProviderAndSocialAccountProviderUserId(provider, providerUserId);
+        Optional<User> byEmail =
+            email == null ? Optional.empty() : userRepository.findByEmail(email);
+
+        User user = byProvider.or(() -> byEmail).orElse(null);
+
+        UUID userId = user == null ? null : user.getId();
+        Role role = user == null ? Role.USER : user.getRole();
+        boolean locked = user != null && user.isLocked();
+
+        CustomUserDetails userDetails = new CustomUserDetails(
+            userId,
+            email,
+            "",
+            role,
+            locked,
+            null,
+            null
         );
-        customUserDetails.setAttributes(attributes);
-        return customUserDetails;
+
+        userDetails.updateAttributes(Map.of(
+            "provider", provider.name(),
+            "providerUserId", providerUserId,
+            "email", email,
+            "nickname", nickname
+        ));
+
+        return userDetails;
     }
 
-    private String getGoogleProviderUserId(OAuth2User oAuth2User) {
-        return oAuth2User.getAttribute("sub");
-    }
-
-    private String getGoogleEmail(OAuth2User oAuth2User) {
-        return oAuth2User.getAttribute("email");
-    }
-
-    private String getKakaoProviderUserId(OAuth2User oAuth2User) {
-        Object idObj = oAuth2User.getAttribute("id");
-        return idObj != null ? String.valueOf(idObj) : "";
-    }
-
-    private String getKakaoEmail(OAuth2User oAuth2User) {
-        Object propertiesObj = oAuth2User.getAttribute("properties");
-        if (propertiesObj instanceof Map) {
-            Object nickObj = ((Map<?, ?>) propertiesObj).get("nickname");
-            return (nickObj != null ? nickObj.toString() : "unknown") + "@kakao.com";
+    private Provider toProvider(String registrationId) {
+        if (registrationId == null) {
+            throw new UnsupportedProviderException();
         }
-        return "unknown@kakao.com";
+        return switch (registrationId.toLowerCase()) {
+            case "google" -> Provider.GOOGLE;
+            case "kakao" -> Provider.KAKAO;
+            default -> throw new UnsupportedProviderException();
+        };
     }
 
-    public User linkOrCreateUser(Provider provider, String providerUserId, String email) {
-        SocialAccount socialAccount = SocialAccount.builder()
-            .provider(provider)
-            .providerUserId(providerUserId)
-            .build();
+    private String extractProviderUserId(Provider provider, Map<String, Object> attributes,
+        OAuth2UserRequest userRequest) {
+        return switch (provider) {
+            case GOOGLE -> getString(attributes, "sub");
+            case KAKAO -> getString(attributes, "id");
+            default -> getString(attributes,
+                userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint()
+                    .getUserNameAttributeName());
+        };
+    }
 
-        Optional<User> byProvider = userRepository.findBySocialAccountProviderAndSocialAccountProviderUserId(
-            provider, providerUserId);
-        if (byProvider.isPresent()) {
-            return byProvider.get();
-        }
+    private String extractEmail(Provider provider, Map<String, Object> attributes) {
+        return switch (provider) {
+            case GOOGLE -> getString(attributes, "email");
+            case KAKAO -> {
+                Object account = attributes.get("kakao_account");
+                yield account instanceof Map<?, ?> acc ? getString(acc, "email") : null;
+            }
+            default -> null;
+        };
+    }
 
-        Optional<User> byEmail = userRepository.findByEmail(email);
-        if (byEmail.isPresent()) {
-            User user = byEmail.get();
-            User updated = User.builder()
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .temporaryPassword(user.getTemporaryPassword())
-                .temporaryPasswordExpirationTime(user.getTemporaryPasswordExpirationTime())
-                .locked(user.isLocked())
-                .role(user.getRole())
-                .socialAccount(socialAccount)
-                .build();
-            return userRepository.save(updated);
-        }
+    private String extractNickname(Provider provider, Map<String, Object> attributes) {
+        return switch (provider) {
+            case GOOGLE -> getString(attributes, "name");
+            case KAKAO -> {
+                Object properties = attributes.get("properties");
+                yield properties instanceof Map<?, ?> map ? getString(map, "nickname") : null;
+            }
+            default -> null;
+        };
+    }
 
-        User newUser = User.builder()
-            .email(email)
-            .socialAccount(socialAccount)
-            .password("")
-            .locked(false)
-            .role(Role.USER)
-            .build();
-
-        return userRepository.save(newUser);
+    private String getString(Map<?, ?> map, String key) {
+        Object val = map.get(key);
+        return val != null ? val.toString() : null;
     }
 }
