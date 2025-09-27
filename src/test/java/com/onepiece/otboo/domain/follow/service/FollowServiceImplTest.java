@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
@@ -138,7 +139,7 @@ class FollowServiceImplTest {
         UUID userId = following.getId();
         given(userRepository.findById(userId)).willReturn(Optional.of(following));
 
-        FollowResponse followResponse = FollowResponse.builder()
+        FollowerResponse followerResponse = FollowerResponse.builder()
             .id(UUID.randomUUID())
             .followerId(follower.getId())
             .nickname("팔로워닉네임")
@@ -148,7 +149,7 @@ class FollowServiceImplTest {
 
         given(followRepository.findFollowersWithProfileCursor(
             any(User.class), any(), any(), anyInt(), any(), any(), any()
-        )).willReturn(List.of(followResponse));
+        )).willReturn(List.of(followerResponse));
 
         var response = followService.getFollowers(userId, null, null, 10, null, "createdAt", "ASC");
 
@@ -167,7 +168,7 @@ class FollowServiceImplTest {
             .id(UUID.randomUUID())
             .followingId(following.getId())
             .nickname("팔로잉닉네임")
-            .profileImage("profile.png")
+            .profileImageUrl("profile.png")
             .createdAt(Instant.now())
             .build();
 

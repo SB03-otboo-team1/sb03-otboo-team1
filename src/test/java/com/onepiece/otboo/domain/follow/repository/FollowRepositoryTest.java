@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.follow.repository;
 
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.profile.entity.Profile;
@@ -184,7 +185,7 @@ class FollowRepositoryTest {
             .following(following)
             .build());
 
-        List<FollowResponse> responses = followRepository
+        List<FollowerResponse> responses = followRepository
             .findFollowersWithProfileCursor(following, null, null, 10, null, "createdAt", "ASC");
 
         assertThat(responses).hasSize(1);

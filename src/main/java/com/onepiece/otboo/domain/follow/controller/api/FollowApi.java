@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.follow.controller.api;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
@@ -25,7 +26,7 @@ public interface FollowApi {
 
     @Operation(summary = "팔로워 목록 조회", description = "특정 사용자를 팔로우하는 모든 사용자 목록을 조회합니다.")
     @GetMapping("/followers/{userId}")
-    ResponseEntity<CursorPageResponseDto<FollowResponse>> getFollowers(
+    ResponseEntity<CursorPageResponseDto<FollowerResponse>> getFollowers(
         @PathVariable("userId") UUID followeeId,
         @RequestParam(required = false) String cursor,
         @RequestParam(required = false) UUID idAfter,
