@@ -12,15 +12,15 @@ public class FollowingResponse {
     private UUID id;
     private UUID followingId;
     private String nickname;
-    private String profileImage;
+    private String profileImageUrl;
     private Instant createdAt;
 
     @QueryProjection
-    public FollowingResponse(UUID id, UUID followingId, String nickname, String profileImage, Instant createdAt) {
+    public FollowingResponse(UUID id, UUID followingId, String nickname, String profileImageUrl, Instant createdAt) {
         this.id = id;
         this.followingId = followingId;
         this.nickname = nickname;
-        this.profileImage = profileImage;
+        this.profileImageUrl = profileImageUrl;
         this.createdAt = createdAt;
     }
 }
