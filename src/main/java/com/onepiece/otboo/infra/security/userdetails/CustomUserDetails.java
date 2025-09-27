@@ -1,7 +1,6 @@
 package com.onepiece.otboo.infra.security.userdetails;
 
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
-import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Role;
 import java.time.Instant;
 import java.util.Collection;
@@ -11,6 +10,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 @Slf4j
+@Setter
 @Getter
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails, OAuth2User {
@@ -30,12 +31,6 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     private final String temporaryPassword;
     private final Instant temporaryPasswordExpirationTime;
     private Map<String, Object> attributes;
-
-    private UserDto userDto;
-
-    public void updateUserDto(UserDto userDto) {
-        this.userDto = userDto;
-    }
 
     public void updateAttributes(Map<String, Object> newAttributes) {
         if (newAttributes == null) {

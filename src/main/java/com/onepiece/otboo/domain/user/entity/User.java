@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.user.entity;
 
+import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
@@ -77,5 +78,12 @@ public class User extends BaseUpdatableEntity {
 
     public void updateRole(Role role) {
         this.role = role;
+    }
+
+    public void linkSocialAccount(Provider provider, String providerUserId) {
+        this.socialAccount = SocialAccount.builder()
+            .provider(provider)
+            .providerUserId(providerUserId)
+            .build();
     }
 }
