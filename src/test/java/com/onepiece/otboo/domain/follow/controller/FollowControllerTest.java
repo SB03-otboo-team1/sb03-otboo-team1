@@ -6,8 +6,10 @@ import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
+import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -141,6 +144,26 @@ class FollowControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isNoContent());
     }
+
+    @Test
+    @DisplayName("언팔로우 실패 - Follow 관계 없음")
+    void deleteFollow_fail_followNotFound() throws Exception {
+        UUID followerId = UUID.randomUUID();
+        UUID followeeId = UUID.randomUUID();
+        FollowRequest request = new FollowRequest(followerId, followeeId);
+
+        doThrow(FollowNotFoundException.of(followerId, followeeId))
+            .when(followService).deleteFollow(any(FollowRequest.class));
+
+        mockMvc.perform(delete("/api/follows")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.exceptionName").value("FollowNotFoundException"))
+            .andExpect(jsonPath("$.message").value(
+                ErrorCode.FOLLOW_NOT_FOUND.getMessage()));
+    }
+
 
     @Test
     @DisplayName("팔로우 요약 조회 성공")
