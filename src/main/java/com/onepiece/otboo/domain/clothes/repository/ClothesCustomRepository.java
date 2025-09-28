@@ -24,7 +24,7 @@ public interface ClothesCustomRepository {
    * @return 커서 페이징된 의상 목록
    */
   List<Clothes> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter,
-                                               int limit, String sortBy, String sortDirection, 
+                                               int limit, String sortBy, String sortDirection,
                                                ClothesType typeEqual);
   Long countClothes(UUID ownerId, ClothesType typeEqual);
 }
