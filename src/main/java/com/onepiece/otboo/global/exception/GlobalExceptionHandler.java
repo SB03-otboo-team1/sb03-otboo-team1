@@ -2,8 +2,10 @@ package com.onepiece.otboo.global.exception;
 
 import com.onepiece.otboo.domain.auth.exception.TokenExpiredException;
 import com.onepiece.otboo.domain.auth.exception.TokenForgedException;
+import com.onepiece.otboo.domain.clothes.exception.InvalidClothesSortException;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import com.onepiece.otboo.infra.security.exception.SecurityForbiddenException;
+import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -134,7 +136,25 @@ public class GlobalExceptionHandler {
           .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
           .body(ErrorResponse.of(
               ErrorCode.INVALID_INPUT_VALUE, e,
-              Map.of("reason", "필수 파라미터 누락")
+              Map.of("reason", "유효하지 않은 Enum value 입력")
           ));
+    }
+
+    // 유효하지 않은 limit value 입력 시 400에러 발생
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+        ConstraintViolationException e) {
+        return ResponseEntity
+            .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+            .body(ErrorResponse.of(
+                ErrorCode.INVALID_INPUT_VALUE, e,
+                Map.of("reason", "유효하지 않은 limit value 입력")
+            ));
+    }
+
+    // 잘못된 정렬 기준 입력 시 400에러 발생
+    @ExceptionHandler(InvalidClothesSortException.class)
+    public ResponseEntity<String> handleInvalidSort(InvalidClothesSortException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
     }
 }

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public interface ClothesApi {
   ResponseEntity<CursorPageResponseDto<ClothesDto>> getClothes(
       @Parameter(description = "커서") @RequestParam(required = false) String cursor,
       @Parameter(description = "다음 ID 커서") @RequestParam(required = false) UUID idAfter,
-      @Parameter(description = "페이지 크기") @RequestParam(required = true, defaultValue = "15") @Positive int limit,
+      @Parameter(description = "페이지 크기") @RequestParam(required = true, defaultValue = "15") @Positive @Min(1) int limit,
       @Parameter(description = "의상 타입") @RequestParam(required = false) ClothesType typeEqual,
       @Parameter(description = "소유자 ID") @RequestParam(required = true) UUID ownerId,
       @Parameter(description = "정렬 기준") @RequestParam(required = true, defaultValue = "createdAt") String sortBy,

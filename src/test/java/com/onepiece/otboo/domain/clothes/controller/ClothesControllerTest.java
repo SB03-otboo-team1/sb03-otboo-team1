@@ -64,7 +64,7 @@ class ClothesControllerTest {
         "desc"
     );
 
-    given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq("createdAt"), eq("asc"), any()))
+    given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq("createdAt"), eq("desc"), any()))
         .willReturn(response);
 
     // when & then
