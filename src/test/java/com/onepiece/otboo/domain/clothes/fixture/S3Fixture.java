@@ -2,15 +2,12 @@ package com.onepiece.otboo.domain.clothes.fixture;
 
 import com.onepiece.otboo.global.storage.FileStorage;
 import com.onepiece.otboo.global.storage.S3Storage;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 /**
  * S3 테스트용 픽스처 클래스
@@ -72,12 +69,6 @@ public class S3Fixture {
       }
 
       @Override
-      public InputStream getFile(String imageUrl) {
-        // 테스트용 가짜 InputStream 반환
-        return new ByteArrayInputStream("fake-image-data".getBytes(StandardCharsets.UTF_8));
-      }
-
-      @Override
       public void deleteFile(String imageUrl) {
         // 테스트에서는 실제 삭제하지 않음
       }
@@ -126,11 +117,6 @@ public class S3Fixture {
       @Override
       public String uploadFile(MultipartFile file) throws IOException {
         return createRandomTestImageUrl();
-      }
-
-      @Override
-      public InputStream getFile(String imageUrl) {
-        return new ByteArrayInputStream("fake-image-data".getBytes(StandardCharsets.UTF_8));
       }
 
       @Override
