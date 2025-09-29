@@ -4,6 +4,7 @@ import com.onepiece.otboo.global.util.ArrayUtil;
 import com.onepiece.otboo.infra.api.client.KmaClient;
 import com.onepiece.otboo.infra.api.dto.BaseDt;
 import com.onepiece.otboo.infra.api.dto.KmaItem;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -26,6 +27,7 @@ public class KmaWeatherProvider implements WeatherProvider {
 
     private final KmaClient kmaClient;
     private final CacheManager cacheManager;
+    private final Clock clock;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final String[] BASE_TIMES = {"2300", "2000", "1700"};
@@ -55,7 +57,7 @@ public class KmaWeatherProvider implements WeatherProvider {
         }
 
         // 2) 어제 fcstDate가 없으면, 어제 base도 1~2개 보완 조회
-        LocalDate today = ZonedDateTime.now(KST).toLocalDate();
+        LocalDate today = ZonedDateTime.now(clock).withZoneSameInstant(KST).toLocalDate();
         boolean hasYesterday = acc.stream().anyMatch(it ->
             LocalDate.parse(it.fcstDate(), DATE).isEqual(today.minusDays(1))
         );
@@ -111,7 +113,7 @@ public class KmaWeatherProvider implements WeatherProvider {
 
     // 오늘 기준으로 베이스 선택
     private BaseDt resolveLatestBaseToday() {
-        ZonedDateTime now = ZonedDateTime.now(KST);
+        ZonedDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(KST);
         LocalDate d = now.toLocalDate();
         LocalTime t = now.toLocalTime();
         for (String bt : BASE_TIMES) {
