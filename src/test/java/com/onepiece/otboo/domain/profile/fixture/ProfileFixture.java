@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.profile.fixture;
 
+import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.location.fixture.LocationFixture;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.enums.Gender;
@@ -30,6 +31,19 @@ public class ProfileFixture {
             .tempSensitivity(5)
             .user(user)
             .location(LocationFixture.createLocation())
+            .build();
+    }
+
+    public static Profile createProfile(User user, String name, String profileImageUrl,
+        Gender gender, LocalDate birthDate, Integer tempSensitivity, Location location) {
+        return Profile.builder()
+            .nickname(name)
+            .profileImageUrl(profileImageUrl)
+            .gender(gender)
+            .birthDate(birthDate)
+            .tempSensitivity(tempSensitivity)
+            .user(user)
+            .location(location)
             .build();
     }
 }
