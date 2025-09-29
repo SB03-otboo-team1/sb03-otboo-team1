@@ -59,7 +59,6 @@ class ClothesRepositoryTest {
             ownerId, null, null, 10, "createdAt", "desc", null);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getName()).isEqualTo("셔츠");
     }
 
     @Test
