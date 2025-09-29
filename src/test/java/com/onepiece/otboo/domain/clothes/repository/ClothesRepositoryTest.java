@@ -7,6 +7,7 @@ import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.exception.InvalidClothesSortException;
 import com.onepiece.otboo.global.config.TestJpaConfig;
+import com.onepiece.otboo.global.config.TestJpaConfig.MutableDateTimeProvider;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -26,6 +26,8 @@ class ClothesRepositoryTest {
     @Autowired
     private ClothesRepository clothesRepository;
 
+    @Autowired
+    private MutableDateTimeProvider time;
 
     private UUID ownerId;
 
@@ -33,24 +35,22 @@ class ClothesRepositoryTest {
     void 데이터_준비() {
         ownerId = UUID.randomUUID();
 
+        time.setNow(Instant.parse("2025-09-29T13:00:00Z"));
         Clothes shirt = Clothes.builder()
             .ownerId(ownerId)
             .name("셔츠")
             .type(ClothesType.TOP)
             .build();
-        ReflectionTestUtils.setField(shirt, "createdAt", Instant.now());
 
+        time.setNow(Instant.parse("2025-09-29T13:30:00Z"));
         Clothes pants = Clothes.builder()
                 .ownerId(ownerId)
                 .name("바지")
                 .type(ClothesType.BOTTOM)
                 .build();
-        ReflectionTestUtils.setField(pants, "createdAt", Instant.now().plusSeconds(100));
 
         clothesRepository.save(shirt);
-        clothesRepository.flush();
         clothesRepository.save(pants);
-        clothesRepository.flush();
     }
 
     @Test
@@ -59,6 +59,7 @@ class ClothesRepositoryTest {
             ownerId, null, null, 10, "createdAt", "desc", null);
 
         assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("바지");
     }
 
     @Test

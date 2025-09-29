@@ -15,9 +15,6 @@ public interface ClothesCustomRepository {
    * 커서 기반 페이징으로 의상 목록을 조회합니다.
    *
    * @param ownerId 소유자 ID
-   * @param cursor 커서
-   * @param idAfter ID 이후
-   * @param limit 페이지 크기
    * @param sortBy 정렬 기준
    * @param sortDirection 정렬 방향
    * @param typeEqual 의상 타입

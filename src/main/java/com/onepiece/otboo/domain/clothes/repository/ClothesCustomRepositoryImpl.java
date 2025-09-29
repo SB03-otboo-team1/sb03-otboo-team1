@@ -1,14 +1,14 @@
 package com.onepiece.otboo.domain.clothes.repository;
 
+import static com.onepiece.otboo.domain.user.entity.QUser.user;
+
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.entity.QClothes;
-import com.onepiece.otboo.domain.clothes.exception.InvalidClothesSortException;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -37,28 +37,45 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
           where.and(clothes.type.eq(typeEqual));
       }
 
-      // 정렬 방향
-      Order order = (sortDirection != null && sortDirection.equalsIgnoreCase("desc"))
-          ? Order.DESC
-          : Order.ASC;
-
-      // 정렬 기준
-      List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
-      if ("name".equalsIgnoreCase(sortBy)) {
-          orderSpecifiers.add(new OrderSpecifier<>(order, clothes.name));
-      } else if ("createdAt".equalsIgnoreCase(sortBy)){
-          // 기본 정렬: createdAt + id (안정성 확보)
-          orderSpecifiers.add(new OrderSpecifier<>(order, clothes.createdAt));
-          orderSpecifiers.add(new OrderSpecifier<>(order, clothes.id));
-      } else {
-          throw new InvalidClothesSortException();
+      if (cursor != null && idAfter != null) {
+          boolean desc = sortDirection.equalsIgnoreCase("DESC");
+          switch (sortBy) {
+              case "createdAt" -> {
+                  Instant cAt = Instant.parse(cursor);
+                  if (desc) {
+                      where.and(clothes.createdAt.lt(cAt)
+                          .or(clothes.createdAt.eq(cAt).and(clothes.id.lt(idAfter))));
+                  } else {
+                      where.and(clothes.createdAt.gt(cAt)
+                          .or(clothes.createdAt.eq(cAt).and(clothes.id.gt(idAfter))));
+                  }
+              }
+              case "name" -> {
+                  if (!desc) {
+                      where.and(clothes.name.gt(cursor)
+                          .or(clothes.name.eq(cursor).and(clothes.id.gt(idAfter))));
+                  } else {
+                      where.and(clothes.name.lt(cursor)
+                          .or(clothes.name.eq(cursor).and(clothes.id.lt(idAfter))));
+                  }
+              }
+          }
       }
+
+      OrderSpecifier<?> primary = switch (sortBy) {
+          case "createdAt" ->
+              (sortDirection != null && sortDirection.equalsIgnoreCase("desc") ? clothes.createdAt.desc() : clothes.createdAt.asc());
+          case "name" ->
+              (sortDirection != null && sortDirection.equalsIgnoreCase("desc") ? clothes.name.desc() : clothes.name.asc());
+          default -> throw new IllegalStateException("Unexpected value: " + sortBy);
+      };
+      OrderSpecifier<?> tieBreaker = (sortDirection.equalsIgnoreCase("desc") ? clothes.id.desc(): user.id.asc());
 
       List<Clothes> result = jpaQueryFactory
           .select(clothes)
           .from(clothes)
           .where(where)
-          .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
+          .orderBy(primary, tieBreaker)
           .limit(limit + 1)
           .fetch();
 

@@ -1,6 +1,7 @@
 package com.onepiece.otboo.global.storage;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -57,10 +58,10 @@ public class S3Storage implements FileStorage{
           .key(key)
           .build()).toExternalForm();
 
-    try {
+    try (InputStream inputStream = file.getInputStream()){
       s3Client.putObject(
           request,
-          RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+          RequestBody.fromInputStream(inputStream, file.getSize())
       );
 
       log.info("S3에 이미지 업로드 성공 - 경로: {}", imageUrl);

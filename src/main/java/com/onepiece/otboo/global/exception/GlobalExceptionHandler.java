@@ -154,7 +154,12 @@ public class GlobalExceptionHandler {
 
     // 잘못된 정렬 기준 입력 시 400에러 발생
     @ExceptionHandler(InvalidClothesSortException.class)
-    public ResponseEntity<String> handleInvalidSort(InvalidClothesSortException ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleInvalidSort(InvalidClothesSortException e) {
+        return ResponseEntity
+            .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+            .body(ErrorResponse.of(
+                ErrorCode.INVALID_INPUT_VALUE, e,
+                Map.of("reason", "유효하지 않은 정렬 기준 입력")
+            ));
     }
 }

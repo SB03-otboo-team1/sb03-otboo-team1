@@ -24,26 +24,35 @@ public class ClothesServiceImpl implements ClothesService {
   @Override
   public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, String sortBy, String sortDirection, ClothesType typeEqual) {
 
-    List<Clothes> result =
+    List<Clothes> clothes =
         clothesRepository.getClothesWithCursor(ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
 
-      if (result == null) {
-          result = Collections.emptyList();
+      if (clothes == null) {
+          clothes = Collections.emptyList();
       }
 
-    boolean hasNext = result.size() > limit;
-    List<Clothes> content = result.subList(0, hasNext ? limit : result.size());
+    boolean hasNext = clothes.size() > limit;
 
-    String nextCursor = null;
-    UUID nextIdAfter = null;
-    if (hasNext && !content.isEmpty()) {
-        Clothes last = content.get(content.size() - 1);
-        nextCursor = String.valueOf(last.getCreatedAt()) + String.valueOf(last.getId());
-        nextIdAfter = last.getId();
-    }
+      String nextCursor = null;
+      UUID nextIdAfter = null;
+
+      if (hasNext) {
+          clothes = clothes.subList(0, limit);
+          Clothes lastClothes = clothes.get(limit - 1);
+          switch (sortBy) {
+              case "createdAt" -> {
+                  nextCursor = lastClothes.getCreatedAt().toString();
+              }
+              case "name" -> {
+                  nextCursor = lastClothes.getName();
+              }
+          }
+          nextIdAfter = lastClothes.getId();
+      }
+
     Long totalCount = clothesRepository.countClothes(ownerId, typeEqual);
 
-    List<ClothesDto> data = content.stream().map(clothesMapper::toDto).toList();
+    List<ClothesDto> data = clothes.stream().map(clothesMapper::toDto).toList();
 
     log.info("옷 목록 조회 완료 - ownerId: {}, limit: {}, 전체 데이터 개수: {}", ownerId, limit, totalCount);
 

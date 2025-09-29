@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.web.configurers.AuthorizeH
 public final class SecurityAuthorizeRequestHelper {
 
     private static final Endpoint[] COMMON_PUBLIC_ENDPOINTS = {
-//        new Endpoint(null,"**"),
         new Endpoint(null, "/"),
         new Endpoint(null, "/index.html"),
         new Endpoint(null, "logo_symbol.svg"),
