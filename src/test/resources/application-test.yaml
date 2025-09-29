@@ -13,3 +13,16 @@ spring:
       ddl-auto: create-drop
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+
+# DNS 네이티브 resolver 비활성화
+logging:
+  level:
+    io.netty.resolver.dns: ERROR
+
+aws:
+  access-key: ${AWS_ACCESS_KEY:dummy-access-key}
+  secret-key: ${AWS_SECRET_KEY:dummy-secret-key}
+  region: ap-northeast-2
+  s3:
+    bucket: clothes-images-onepiece
+    region: ap-northeast-2

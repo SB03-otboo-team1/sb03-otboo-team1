@@ -21,10 +21,9 @@ jobs:
       SERVICE_API_KEY: ${{ secrets.SERVICE_API_KEY}}
       ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+      AWS_PRESIGNED_URL_EXPIRATION: ${{ secrets.AWS_PRESIGNED_URL_EXPIRATION }}
       PROFILE_PREFIX: ${{ secrets.PROFILE_PREFIX }}
       CLOTHES_PREFIX: ${{ secrets.CLOTHES_PREFIX }}
     steps:
@@ -41,6 +40,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests with coverage
+        env:
+            AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+            AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
         run: ./gradlew clean test jacocoMergedReport
 
       - name: Upload coverage to Codecov
