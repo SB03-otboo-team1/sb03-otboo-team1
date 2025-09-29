@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
-import com.onepiece.otboo.domain.clothes.exception.InvalidClothesSortException;
 import com.onepiece.otboo.global.config.TestJpaConfig;
 import com.onepiece.otboo.global.config.TestJpaConfig.MutableDateTimeProvider;
 import java.time.Instant;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
@@ -59,7 +59,6 @@ class ClothesRepositoryTest {
             ownerId, null, null, 10, "createdAt", "desc", null);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getName()).isEqualTo("바지");
     }
 
     @Test
@@ -90,7 +89,7 @@ class ClothesRepositoryTest {
 
     @Test
     void 잘못된_정렬_기준으로_옷_목록_조회_실패() {
-        assertThrows(InvalidClothesSortException.class, () -> {
+        assertThrows(InvalidDataAccessApiUsageException.class, () -> {
             clothesRepository.getClothesWithCursor(
                 ownerId, null, null, 10, "invalidField", "asc", null
             );

@@ -1,7 +1,5 @@
 package com.onepiece.otboo.domain.clothes.repository;
 
-import static com.onepiece.otboo.domain.user.entity.QUser.user;
-
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.entity.QClothes;
@@ -9,6 +7,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +68,7 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
               (sortDirection != null && sortDirection.equalsIgnoreCase("desc") ? clothes.name.desc() : clothes.name.asc());
           default -> throw new IllegalStateException("Unexpected value: " + sortBy);
       };
-      OrderSpecifier<?> tieBreaker = (sortDirection.equalsIgnoreCase("desc") ? clothes.id.desc(): user.id.asc());
+      OrderSpecifier<?> tieBreaker = (sortDirection.equalsIgnoreCase("desc") ? clothes.id.desc(): clothes.id.asc());
 
       List<Clothes> result = jpaQueryFactory
           .select(clothes)
@@ -78,6 +77,10 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
           .orderBy(primary, tieBreaker)
           .limit(limit + 1)
           .fetch();
+
+      if (result == null) {
+          result = Collections.emptyList();
+      }
 
       return result;
     }

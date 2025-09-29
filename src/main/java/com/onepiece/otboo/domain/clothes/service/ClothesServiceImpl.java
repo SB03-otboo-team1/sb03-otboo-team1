@@ -6,7 +6,6 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +25,6 @@ public class ClothesServiceImpl implements ClothesService {
 
     List<Clothes> clothes =
         clothesRepository.getClothesWithCursor(ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
-
-      if (clothes == null) {
-          clothes = Collections.emptyList();
-      }
 
     boolean hasNext = clothes.size() > limit;
 
