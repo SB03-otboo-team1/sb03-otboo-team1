@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.feed.controller.api;
 import com.onepiece.otboo.domain.feed.dto.request.FeedCreateRequest;
 import com.onepiece.otboo.domain.feed.dto.request.FeedUpdateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -15,10 +16,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.UUID;
 
@@ -120,6 +123,78 @@ public interface FeedApi {
     @PatchMapping(value = "/{feedId}", consumes = "application/json", produces = "application/json")
     ResponseEntity<FeedResponse> updateFeed(@PathVariable UUID feedId, @Valid @RequestBody FeedUpdateRequest req);
 
+    @Operation(
+        summary = "피드 목록 조회",
+        description = "커서 기반(Keyset) 페이지네이션으로 피드 목록을 조회합니다."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "피드 목록 조회 성공",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = CursorPageResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "유효하지 않은 요청 파라미터",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(produces = "application/json")
+    ResponseEntity<CursorPageResponseDto<FeedResponse>> listFeeds(
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "다음 페이지 커서 (정렬키)",
+            example = "2025-09-10T00:21:17.683Z"
+        )
+        @RequestParam(required = false) String cursor,
+
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "다음 페이지 커서 (동률 우회 키)",
+            schema = @Schema(format = "uuid")
+        )
+        @RequestParam(required = false) UUID idAfter,
+
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "페이지 크기 (1~100)",
+            example = "10"
+        )
+        @RequestParam int limit,
+
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "정렬 기준",
+            schema = @Schema(allowableValues = {"createdAt", "likeCount"}),
+            example = "createdAt"
+        )
+        @RequestParam String sortBy,
+
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "정렬 방향",
+            schema = @Schema(allowableValues = {"ASCENDING", "DESCENDING"}),
+            example = "DESCENDING"
+        )
+        @RequestParam String sortDirection,
+
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "내용 키워드 (부분 일치)",
+            example = "후드티"
+        )
+        @RequestParam(required = false) String keywordLike,
+
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "하늘 상태",
+            schema = @Schema(allowableValues = {"CLEAR", "MOSTLY_CLOUDY", "CLOUDY"}),
+            example = "CLEAR"
+        )
+        @RequestParam(required = false) String skyStatusEqual,
+
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "강수 유형",
+            schema = @Schema(allowableValues = {"NONE", "RAIN", "RAIN_SNOW", "SNOW", "SHOWER"}),
+            example = "NONE"
+        )
+        @RequestParam(required = false) String precipitationTypeEqual,
+
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "작성자 ID 필터",
+            schema = @Schema(format = "uuid")
+        )
+        @RequestParam(required = false) UUID authorIdEqual
+    );
 }
 
 
