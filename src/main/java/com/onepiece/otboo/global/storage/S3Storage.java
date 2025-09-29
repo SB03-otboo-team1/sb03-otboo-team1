@@ -1,97 +1,124 @@
 package com.onepiece.otboo.global.storage;
 
+import com.onepiece.otboo.domain.profile.exception.FileSizeExceededException;
+import com.onepiece.otboo.domain.profile.exception.InvalidFileTypeException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
+import java.net.URL;
+import java.time.Duration;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3Utilities;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class S3Storage implements FileStorage{
+@ConditionalOnProperty(name = "aws.storage.type", havingValue = "s3")
+public class S3Storage implements FileStorage {
 
-  private final S3Client s3Client;
+    private final S3Client s3Client;
 
-  @Value("${aws.s3.bucket}")
-  private String bucket;
+    private final S3Presigner s3Presigner;
 
-  @Value("${aws.s3.region}")
-  private String region;
+    private final String bucket;
 
-  private final ApplicationEventPublisher eventPublisher;
+    @Value("${aws.storage.presigned-url-expiration}")
+    private long presignedExpiration;
 
-  @Override
-  public String uploadFile(MultipartFile file) throws IOException {
-    log.info("S3에 이미지 업로드 시작");
-
-    String originalFilename = file.getOriginalFilename();
-    String extension = StringUtils.getFilenameExtension(originalFilename);
-    if (!StringUtils.hasText(extension)) {
-        throw new IllegalArgumentException("파일 확장자를 확인할 수 없습니다.");
+    public S3Storage(S3Client s3Client,
+        S3Presigner s3Presigner,
+        @Value("${aws.storage.bucket}") String bucket) {
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
+        this.bucket = bucket;
     }
-    String key = UUID.randomUUID() + "." + extension;
 
-    PutObjectRequest request = PutObjectRequest.builder()
-        .bucket(bucket)
-        .key(key)
-        .contentType(file.getContentType())
-        .contentLength(file.getSize())
-        .build();
+    @Override
+    public String uploadFile(String prefix, MultipartFile image) throws IOException {
 
-      S3Utilities utilities = s3Client.utilities();
-      String imageUrl = utilities.getUrl(GetUrlRequest.builder()
-          .bucket(bucket)
-          .key(key)
-          .build()).toExternalForm();
+        // 파일 타입 검증
+        String contentType = image.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new InvalidFileTypeException(contentType);
+        }
 
-    try (InputStream inputStream = file.getInputStream()){
-      s3Client.putObject(
-          request,
-          RequestBody.fromInputStream(inputStream, file.getSize())
-      );
+        // 파일 크기 검증 (예: 5MB 제한)
+        // 5MB
+        long MAX_SIZE = 5 * 1024 * 1024;
+        if (image.getSize() > MAX_SIZE) {
+            throw new FileSizeExceededException(image.getSize(), MAX_SIZE);
+        }
 
-      log.info("S3에 이미지 업로드 성공 - 경로: {}", imageUrl);
+        String key = prefix + UUID.randomUUID() + "." + image.getOriginalFilename();
 
-      return imageUrl;
-
-    } catch (S3Exception e) {
-      log.error("S3 업로드 실패 - S3 서비스 오류 발생", e);
-
-      throw e;
-    } catch (IOException e) {
-      log.error("S3 업로드 실패 - 파일 업로드 오류 발생", e);
-
-      throw e;
-    }
-  }
-
-  @Override
-  public void deleteFile(String imageUrl) {
-    log.info("delete file from s3 bucket");
-
-    String key = URI.create(imageUrl).getPath().substring(1);
-
-    s3Client.deleteObject(
-        DeleteObjectRequest.builder()
+        // 메타 데이터 설정
+        PutObjectRequest putRequest = PutObjectRequest.builder()
             .bucket(bucket)
             .key(key)
-            .build()
-    );
+            .build();
 
-    log.info("delete file from s3 bucket success: {}", key);
-  }
+        try {
+            s3Client.putObject(putRequest, RequestBody.fromBytes(image.getBytes()));
+        } catch (S3Exception e) {
+            log.error("S3 업로드 실패 - S3 서비스 오류 발생", e);
+
+            throw e;
+        } catch (IOException e) {
+            log.error("S3 업로드 실패 - 파일 업로드 오류 발생", e);
+
+            throw e;
+        }
+
+        return key;
+    }
+
+    @Override
+    public void deleteFile(String key) {
+        try {
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+            s3Client.deleteObject(deleteRequest);
+        } catch (Exception e) {
+            log.warn("[S3Storage] S3에서 이미지 삭제 중 오류 발생- key: {}", key, e);
+        }
+    }
+
+    public String generatePresignedUrl(String key) {
+        // Presigned Url 생성
+        try {
+            GetObjectRequest getRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofSeconds(presignedExpiration))
+                .getObjectRequest(getRequest)
+                .build();
+
+            return s3Presigner.presignGetObject(presignRequest)
+                .url()
+                .toString();
+        } catch (Exception e) {
+            log.warn("[S3Storage] Presigned URL 생성 실패, S3Utilities URL로 폴백 시도 - key: {}", key, e);
+            URL url = s3Client.utilities().getUrl(GetUrlRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build());
+            return url.toString();
+        }
+    }
 }

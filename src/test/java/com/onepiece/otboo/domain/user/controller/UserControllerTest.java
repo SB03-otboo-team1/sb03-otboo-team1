@@ -12,7 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onepiece.otboo.domain.profile.dto.request.ProfileUpdateRequest;
 import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
+import com.onepiece.otboo.domain.profile.enums.Gender;
 import com.onepiece.otboo.domain.profile.fixture.ProfileDtoFixture;
 import com.onepiece.otboo.domain.profile.service.ProfileService;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
@@ -28,7 +30,9 @@ import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.global.config.JpaConfig;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.util.TestUtils;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +44,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -364,4 +367,129 @@ class UserControllerTest {
                 .content(body))
             .andExpect(status().isNotFound());
     }
+
+    @Test
+    void 프로필_수정_성공시_200을_반환한다() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        ProfileUpdateRequest request = ProfileDtoFixture.createUpdateRequest(
+            "한동우",
+            Gender.MALE,
+            LocalDate.of(1999, 7, 2),
+            2
+        );
+
+        ProfileDto profileDto = ProfileDtoFixture.createProfile(userId, "한동우", Gender.MALE,
+            LocalDate.of(1999, 7, 2), 2);
+
+        given(profileService.update(any(), any(), any())).willReturn(profileDto);
+
+        // when
+        ResultActions result = mockMvc.perform(
+            TestUtils.multipartPatch("/api/users/{userId}/profiles", userId)
+                .part(TestUtils.jsonPart(objectMapper, "request", request)));
+
+        // then
+        result.andExpect(status().isOk());
+        result.andExpect(jsonPath("$.userId").value(userId.toString()));
+        result.andExpect(jsonPath("$.name").value("한동우"));
+        result.andExpect(jsonPath("$.birthDate").value("1999-07-02"));
+        result.andExpect(jsonPath("$.gender").value("MALE"));
+        result.andExpect(jsonPath("$.temperatureSensitivity").value(2));
+    }
+
+    @Test
+    void 이름을_입력하지_않고_프로필_수정_요청시_400을_반환한다() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        ProfileUpdateRequest request = ProfileDtoFixture.createUpdateRequest(
+            "",
+            Gender.MALE,
+            LocalDate.of(1999, 7, 2),
+            2
+        );
+
+        // when
+        ResultActions result = mockMvc.perform(
+            TestUtils.multipartPatch("/api/users/{userId}/profiles", userId)
+                .part(TestUtils.jsonPart(objectMapper, "request", request)));
+
+        // then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 허용_범위를_넘는_이름으로_프로필_수정_요청시_400을_반환한다() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        String longName = "a".repeat(21);
+        ProfileUpdateRequest request = ProfileDtoFixture.createUpdateRequest(
+            longName,
+            Gender.MALE,
+            LocalDate.of(1999, 7, 2),
+            2
+        );
+
+        // when
+        ResultActions result = mockMvc.perform(
+            TestUtils.multipartPatch("/api/users/{userId}/profiles", userId)
+                .part(TestUtils.jsonPart(objectMapper, "request", request)));
+
+        // then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 허용_범위를_초과한_온도_민감도로_프로필_수정_요청시_400을_반환한다() throws Exception {
+
+        // given
+        UUID userId = UUID.randomUUID();
+
+        ProfileUpdateRequest request = ProfileDtoFixture.createUpdateRequest(
+            "한동우",
+            Gender.MALE,
+            LocalDate.of(1999, 7, 2),
+            99
+        );
+
+        // when
+        ResultActions result = mockMvc.perform(
+            TestUtils.multipartPatch("/api/users/{userId}/profiles", userId)
+                .part(TestUtils.jsonPart(objectMapper, "request", request)));
+
+        // then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 잘못된_Gender_값으로_프로필_수정_요청시_400을_반환한다() throws Exception {
+        // given
+        UUID userId = UUID.randomUUID();
+
+        // ProfileUpdateRequest 대신 잘못된 enum 문자열을 직접 JSON으로 구성
+        String invalidJson = """
+            {
+              "name": "한동우",
+              "gender": "MAAAN",
+              "birthDate": "1999-07-02",
+              "location": null,
+              "temperatureSensitivity": 2
+            }
+            """;
+
+        // when
+        ResultActions result = mockMvc.perform(
+            TestUtils.multipartPatch("/api/users/{userId}/profiles", userId)
+                .part(TestUtils.jsonPart(objectMapper, "request", invalidJson)));
+
+        // then
+        result.andExpect(status().isBadRequest());
+    }
+
 }
