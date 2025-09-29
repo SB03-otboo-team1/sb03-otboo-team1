@@ -6,6 +6,8 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.service.ClothesService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -31,13 +34,13 @@ public class ClothesController implements ClothesApi {
   @GetMapping
   @Operation(summary = "옷 목록 조회", description = "옷 목록 조회 API")
   public ResponseEntity<CursorPageResponseDto<ClothesDto>> getClothes(
-      String cursor,
-      UUID idAfter,
-      int limit,
-      ClothesType typeEqual,
-      UUID ownerId,
-      String sortBy,
-      String sortDirection
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) UUID idAfter,
+      @RequestParam(defaultValue = "15") @Positive @Min(1) int limit,
+      @RequestParam(required = false) ClothesType typeEqual,
+      @RequestParam UUID ownerId,
+      @RequestParam(defaultValue = "createdAt") String sortBy,
+      @RequestParam(defaultValue = "desc")String sortDirection
   ) {
     log.info("의상 목록 조회 API 호출 - 소유자: {}, limit: {}", ownerId, limit);
 
