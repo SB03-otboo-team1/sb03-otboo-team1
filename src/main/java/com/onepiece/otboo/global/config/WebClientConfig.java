@@ -4,8 +4,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode;
@@ -77,6 +76,39 @@ public class WebClientConfig {
             .clientConnector(new ReactorClientHttpConnector(commonHttpClient))
             .uriBuilderFactory(builder)
             .baseUrl("https://apis.data.go.kr/1360000")
+            .filter(appendFixedParams)
+            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+            .build();
+    }
+
+    @Bean
+    public WebClient kmaApiClient(
+        @Value("${api.weather.service-api-key}") String key,
+        HttpClient commonHttpClient
+    ) {
+        DefaultUriBuilderFactory builder =
+            new DefaultUriBuilderFactory(
+                "https://apihub.kma.go.kr");
+        builder.setEncodingMode(EncodingMode.VALUES_ONLY);
+
+        // 모든 요청에 serviceKey, dataType 쿼리 파라미터 자동 추가
+        ExchangeFilterFunction appendFixedParams =
+            ExchangeFilterFunction.ofRequestProcessor(req -> {
+                URI newUri = UriComponentsBuilder.fromUri(req.url())
+                    .replaceQueryParam("authKey")
+                    .replaceQueryParam("dataType")
+                    .queryParam("authKey", key)
+                    .queryParam("dataType", "JSON")
+                    .build(true)
+                    .toUri();
+                ClientRequest newReq = ClientRequest.from(req).url(newUri).build();
+                return Mono.just(newReq);
+            });
+
+        return WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(commonHttpClient))
+            .uriBuilderFactory(builder)
+            .baseUrl("https://apihub.kma.go.kr")
             .filter(appendFixedParams)
             .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
             .build();

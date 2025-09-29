@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class KmaWeatherProvider implements WeatherProvider {
 
-    private final WebClient weatherApiClient;
+    private final WebClient kmaApiClient;
     private final ObjectMapper objectMapper;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
@@ -130,8 +130,8 @@ public class KmaWeatherProvider implements WeatherProvider {
 
     private List<KmaItem> callVillageOnce(int nx, int ny, LocalDate baseDate, String baseTime) {
         try {
-            String json = weatherApiClient.get()
-                .uri(u -> u.path("/VilageFcstInfoService_2.0/getVilageFcst")
+            String json = kmaApiClient.get()
+                .uri(u -> u.path("/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst")
                     .queryParam("numOfRows", NUM_ROWS)
                     .queryParam("pageNo", 1)
                     .queryParam("nx", nx)
