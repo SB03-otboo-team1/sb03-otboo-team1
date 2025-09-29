@@ -24,8 +24,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 
 @ActiveProfiles("test-integration")
+@TestPropertySource(properties = "spring.cache.type=NONE")
 @SpringBatchTest
 @SpringBootTest
 class WeatherBatchConfigTest {
