@@ -212,7 +212,7 @@ class UserServiceImplTest {
         assertEquals(sortBy, result.sortBy());
         assertEquals(sortDirection, result.sortDirection());
         UserDto lastUser = result.data().get(1);
-        assertEquals(lastUser.id().toString(), result.nextIdAfter());
+        assertEquals(lastUser.id(), result.nextIdAfter());
         if ("email".equals(sortBy)) {
             assertEquals(lastUser.email(), result.nextCursor());
         } else {

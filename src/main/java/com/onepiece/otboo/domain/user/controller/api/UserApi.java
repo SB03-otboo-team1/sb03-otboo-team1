@@ -188,8 +188,8 @@ public interface UserApi {
     ) throws IOException;
 
     @Operation(
-        summary = "프로필 업데이트",
-        description = "프로필 업데이트 API",
+        summary = "비밀번호 변경",
+        description = "비밀번호 변경 API",
         security = @SecurityRequirement(name = "CustomHeaderAuth")
     )
     @ApiResponses(value = {

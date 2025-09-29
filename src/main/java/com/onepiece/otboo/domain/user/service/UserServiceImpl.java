@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService {
         boolean hasNext = users.size() > limit;
 
         String nextCursor = null;
-        String nextIdAfter = null;
+        UUID nextIdAfter = null;
 
         if (hasNext) {
             users = users.subList(0, limit);
@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
                     nextCursor = lastUser.email();
                 }
             }
-            nextIdAfter = lastUser.id().toString();
+            nextIdAfter = lastUser.id();
         }
 
         long totalCount = userRepository.countUsers(emailLike, roleEqual, locked);

@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
@@ -31,7 +32,8 @@ public class S3Storage implements FileStorage {
 
     private final String bucket;
 
-    private final long MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    @Value("${aws.storage.presigned-url-expiration}")
+    private long presignedExpiration;
 
     public S3Storage(S3Client s3Client,
         S3Presigner s3Presigner,
@@ -51,13 +53,13 @@ public class S3Storage implements FileStorage {
         }
 
         // 파일 크기 검증 (예: 5MB 제한)
+        // 5MB
+        long MAX_SIZE = 5 * 1024 * 1024;
         if (image.getSize() > MAX_SIZE) {
             throw new FileSizeExceededException(image.getSize(), MAX_SIZE);
         }
 
-        // UUID 앞에서 12글자만 추출
-        String shortUUID = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        String key = prefix + shortUUID + "_" + image.getOriginalFilename();
+        String key = prefix + UUID.randomUUID() + "." + image.getOriginalFilename();
 
         // 메타 데이터 설정
         PutObjectRequest putRequest = PutObjectRequest.builder()
@@ -65,7 +67,17 @@ public class S3Storage implements FileStorage {
             .key(key)
             .build();
 
-        s3Client.putObject(putRequest, RequestBody.fromBytes(image.getBytes()));
+        try {
+            s3Client.putObject(putRequest, RequestBody.fromBytes(image.getBytes()));
+        } catch (S3Exception e) {
+            log.error("S3 업로드 실패 - S3 서비스 오류 발생", e);
+
+            throw e;
+        } catch (IOException e) {
+            log.error("S3 업로드 실패 - 파일 업로드 오류 발생", e);
+
+            throw e;
+        }
 
         return key;
     }
@@ -93,7 +105,7 @@ public class S3Storage implements FileStorage {
                 .build();
 
             GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
+                .signatureDuration(Duration.ofSeconds(presignedExpiration))
                 .getObjectRequest(getRequest)
                 .build();
 

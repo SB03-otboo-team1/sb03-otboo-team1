@@ -9,6 +9,10 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
+/**
+ * AWS S3 설정 클래스
+ * S3 클라이언트를 구성합니다.
+ */
 @Configuration
 public class S3Config {
 
@@ -21,6 +25,11 @@ public class S3Config {
     @Value("${aws.storage.region}")
     private String region;
 
+    /**
+     * S3 클라이언트를 생성합니다.
+     *
+     * @return S3Client 인스턴스
+     */
     @Bean
     public AwsBasicCredentials awsBasicCredentials() {
         return AwsBasicCredentials.create(accessKey, secretKey);

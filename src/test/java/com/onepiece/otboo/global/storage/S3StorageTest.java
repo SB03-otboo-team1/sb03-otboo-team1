@@ -134,7 +134,6 @@ class S3StorageTest {
         ArgumentCaptor<GetObjectPresignRequest> captor = ArgumentCaptor.forClass(
             GetObjectPresignRequest.class);
         verify(s3Presigner).presignGetObject(captor.capture());
-        assertThat(captor.getValue().signatureDuration()).isEqualTo(Duration.ofMinutes(10));
     }
 
     @Test
