@@ -125,29 +125,26 @@ public class FeedQueryService {
             .map(this::ensureDefaults)        // ← null 방지
             .toList();
 
-        String nextCursor = null, nextIdAfter = null;
+        String nextCursor = null;
+        UUID nextIdAfter = null;
         if (hasNext && !rows.isEmpty()) {
             Feed last = rows.get(rows.size() - 1);
-            nextCursor = (sb == FeedSortBy.createdAt) ? last.getCreatedAt().toString() : String.valueOf(last.getLikeCount());
-            nextIdAfter = last.getId().toString();
-        }
+            nextCursor = (sb == FeedSortBy.createdAt)
+                    ? last.getCreatedAt().toString()
+                    : String.valueOf(last.getLikeCount());
+            nextIdAfter = last.getId();
 
-        long totalCount = countAllWithoutCursor(keywordLike, skyStatusEqual, precipitationTypeEqual, authorIdEqual, joinWeather);
+        }    long totalCount = countAllWithoutCursor(keywordLike, skyStatusEqual, precipitationTypeEqual, authorIdEqual, joinWeather);
 
         return new CursorPageResponseDto<>(data, nextCursor, nextIdAfter, hasNext, totalCount, sb.name(), sd.name());
     }
 
-    /**
-     * record(불변) DTO들을 재구성해 author/weather/ootds를 non-null로 보장
-     */
     private FeedResponse ensureDefaults(FeedResponse r) {
-        // Author: null이면 기본값
         AuthorDto author = r.author();
         if (author == null) {
             author = new AuthorDto(null, "", null);
         }
 
-        // Weather: null이면 기본값 (실제 시그니처: UUID, SkyStatus, PrecipitationDto, TemperatureDto)
         WeatherSummaryDto weatherDto = r.weather();
         if (weatherDto == null) {
             PrecipitationDto precipitation = new PrecipitationDto(PrecipitationType.NONE, 0.0, 0.0);
@@ -155,13 +152,11 @@ public class FeedQueryService {
             weatherDto = new WeatherSummaryDto(null, SkyStatus.CLEAR, precipitation, temperature);
         }
 
-        // 리스트/카운트/부울 (primitive는 원래 null 아님)
         List<OotdDto> ootds = (r.ootds() != null) ? r.ootds() : List.of();
         long likeCount = r.likeCount();
         long commentCount = r.commentCount();
         boolean likedByMe = r.likedByMe();
 
-        // record 재생성
         return new FeedResponse(
             r.id(),
             r.createdAt(),
