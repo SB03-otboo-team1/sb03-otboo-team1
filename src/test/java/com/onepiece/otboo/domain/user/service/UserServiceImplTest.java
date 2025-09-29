@@ -236,7 +236,7 @@ class UserServiceImplTest {
         assertThat(user.getRole()).isEqualTo(Role.ADMIN);
         verify(userRepository).findById(userId);
         verify(userRepository).save(user);
-        verify(jwtRegistry).invalidateAllTokens(eq(userId), any(Instant.class));
+        verify(jwtRegistry).blacklistAllTokens(eq(userId));
     }
 
     @Test
@@ -252,7 +252,7 @@ class UserServiceImplTest {
         assertThat(thrown).isInstanceOf(UserNotFoundException.class);
         verify(userRepository).findById(notExistId);
         verify(userRepository, never()).save(any());
-        verify(jwtRegistry, never()).invalidateAllTokens(any(UUID.class), any(Instant.class));
+        verify(jwtRegistry, never()).blacklistAllTokens(eq(userId));
     }
 
     @Test
@@ -268,7 +268,7 @@ class UserServiceImplTest {
         // then
         assertThat(user.getRole()).isEqualTo(Role.ADMIN);
         assertThat(user.getRole()).isNotEqualTo(oldRole);
-        verify(jwtRegistry).invalidateAllTokens(eq(userId), any(Instant.class));
+        verify(jwtRegistry).blacklistAllTokens(eq(userId));
         verify(userRepository).findById(userId);
         verify(userRepository).save(user);
     }
@@ -286,7 +286,7 @@ class UserServiceImplTest {
         assertThat(user.isLocked()).isTrue();
         verify(userRepository).findById(userId);
         verify(userRepository).save(user);
-        verify(jwtRegistry).invalidateAllTokens(eq(userId), any(Instant.class));
+        verify(jwtRegistry).blacklistAllTokens(eq(userId));
     }
 
     @Test
@@ -302,7 +302,7 @@ class UserServiceImplTest {
         assertThat(thrown).isInstanceOf(UserNotFoundException.class);
         verify(userRepository).findById(notExistId);
         verify(userRepository, never()).save(any());
-        verify(jwtRegistry, never()).invalidateAllTokens(any(UUID.class), any(Instant.class));
+        verify(jwtRegistry, never()).blacklistAllTokens(eq(userId));
     }
 
     @Test
@@ -320,7 +320,7 @@ class UserServiceImplTest {
         verify(userRepository).findById(userId);
         verify(userRepository).save(user);
         // 계정 해제 시에는 토큰 무효화 불필요
-        verify(jwtRegistry, never()).invalidateAllTokens(any(UUID.class), any(Instant.class));
+        verify(jwtRegistry, never()).blacklistAllTokens(eq(userId));
     }
 
     @Test
