@@ -78,9 +78,6 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
           .limit(limit + 1)
           .fetch();
 
-      if (result == null) {
-          result = Collections.emptyList();
-      }
 
       return result;
     }
