@@ -125,7 +125,7 @@ public interface FeedApi {
 
     @Operation(
         summary = "피드 목록 조회",
-        description = "커서 기반(Keyset) 페이지네이션으로 피드 목록을 조회합니다."
+        description = "커서 기반(Keyset) 페이지네이션으로 피드 목록을 조회합니다. 다음 페이지 요청 시 `nextCursor`, `nextIdAfter`를 그대로 전달하세요."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "피드 목록 조회 성공",
@@ -138,13 +138,13 @@ public interface FeedApi {
     @GetMapping(produces = "application/json")
     ResponseEntity<CursorPageResponseDto<FeedResponse>> listFeeds(
         @io.swagger.v3.oas.annotations.Parameter(
-            description = "다음 페이지 커서 (정렬키)",
+            description = "다음 페이지 커서 (정렬키). sortBy=createdAt일 때 ISO-8601 시간",
             example = "2025-09-10T00:21:17.683Z"
         )
         @RequestParam(required = false) String cursor,
 
         @io.swagger.v3.oas.annotations.Parameter(
-            description = "다음 페이지 커서 (동률 우회 키)",
+            description = "다음 페이지 커서 (동률 우회 키). 마지막 항목의 UUID",
             schema = @Schema(format = "uuid")
         )
         @RequestParam(required = false) UUID idAfter,
