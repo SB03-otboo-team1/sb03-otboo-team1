@@ -35,6 +35,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests with coverage
+        env:
+            AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+            AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
         run: ./gradlew clean test jacocoMergedReport
 
       - name: Upload coverage to Codecov
