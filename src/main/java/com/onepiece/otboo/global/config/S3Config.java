@@ -31,18 +31,16 @@ public class S3Config {
      * @return S3Client 인스턴스
      */
     @Bean
+    public AwsBasicCredentials awsBasicCredentials() {
+        return AwsBasicCredentials.create(accessKey, secretKey);
+    }
+
+    @Bean
     public S3Client s3Client(AwsBasicCredentials awsBasicCredentials) {
         return S3Client.builder()
             .region(Region.of(region))
             .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
             .build();
-    }
-
-    @Bean
-    public AwsBasicCredentials awsBasicCredentials() {
-        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(accessKey, secretKey);
-
-        return awsBasicCredentials;
     }
 
     @Bean
@@ -53,4 +51,3 @@ public class S3Config {
             .build();
     }
 }
-

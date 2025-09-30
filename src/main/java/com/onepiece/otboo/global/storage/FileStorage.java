@@ -5,7 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface FileStorage {
 
-  String uploadFile(String prefix, MultipartFile file) throws IOException;
+    String uploadFile(String prefix, MultipartFile image) throws IOException;
 
-  void deleteFile(String imageUrl);
+    void deleteFile(String key);
 }

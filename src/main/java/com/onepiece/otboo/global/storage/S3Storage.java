@@ -27,17 +27,17 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 public class S3Storage implements FileStorage {
 
     private final S3Client s3Client;
+
     private final S3Presigner s3Presigner;
+
     private final String bucket;
 
     @Value("${aws.storage.presigned-url-expiration}")
     private long presignedExpiration;
 
-    public S3Storage(
-        S3Client s3Client,
+    public S3Storage(S3Client s3Client,
         S3Presigner s3Presigner,
-        @Value("${aws.storage.bucket}") String bucket
-    ) {
+        @Value("${aws.storage.bucket}") String bucket) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.bucket = bucket;
@@ -45,6 +45,7 @@ public class S3Storage implements FileStorage {
 
     @Override
     public String uploadFile(String prefix, MultipartFile image) throws IOException {
+
         // 파일 타입 검증
         String contentType = image.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
@@ -70,11 +71,14 @@ public class S3Storage implements FileStorage {
             s3Client.putObject(putRequest, RequestBody.fromBytes(image.getBytes()));
         } catch (S3Exception e) {
             log.error("S3 업로드 실패 - S3 서비스 오류 발생", e);
+
             throw e;
         } catch (IOException e) {
             log.error("S3 업로드 실패 - 파일 업로드 오류 발생", e);
+
             throw e;
         }
+
         return key;
     }
 

@@ -135,8 +135,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto lockUser(UUID userId) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> UserNotFoundException.byId(userId));
+        User user = findUser(userId);
         user.updateLocked(true);
         userRepository.save(user);
 
@@ -152,8 +151,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto unlockUser(UUID userId) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> UserNotFoundException.byId(userId));
+        User user = findUser(userId);
         user.updateLocked(false);
         userRepository.save(user);
 
@@ -162,5 +160,23 @@ public class UserServiceImpl implements UserService {
         Profile profile = profileRepository.findByUserId(userId)
             .orElse(null);
         return userMapper.toDto(user, profile);
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(UUID userId, String password) {
+        User user = findUser(userId);
+
+        String encodedPassword = passwordEncoder.encode(password);
+        user.updatePassword(encodedPassword);
+
+        User updatedUser = userRepository.save(user);
+
+        log.info("[UserService] 비밀번호 변경 성공 - userId: {}", updatedUser.getId());
+    }
+
+    private User findUser(UUID userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
     }
 }

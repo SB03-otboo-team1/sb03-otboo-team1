@@ -84,7 +84,6 @@ api:
   weather:
     service-api-key: ${SERVICE_API_KEY}
 
-
 aws:
   storage:
     type: ${STORAGE_TYPE:s3}

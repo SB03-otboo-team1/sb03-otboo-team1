@@ -21,6 +21,7 @@ public enum ErrorCode {
 
     // FOLLOW
     DUPLICATE_FOLLOW(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "이미 해당 사용자를 팔로우하고 있습니다."),
+    FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "팔로우 확인 실패", "팔로우 관계가 존재하지 않습니다."),
 
     // Weather
     WEATHER_NOT_FOUND(HttpStatus.NOT_FOUND, "날씨 확인 실패", "날씨 정보를 찾을 수 없습니다."),
@@ -43,12 +44,11 @@ public enum ErrorCode {
     INVALID_COORDINATE(HttpStatus.BAD_REQUEST, "유효하지 않은 좌표 값입니다.", "위도와 경도를 확인해주세요."),
     INVALID_AREA(HttpStatus.BAD_REQUEST, "서비스 지역이 아닙니다.", "해당 위치는 서비스 대상 지역이 아닙니다."),
 
+    // PROFILE
+    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 확인 실패", "해당 유저의 프로필을 찾을 수 없습니다."),
     // CLOTHES
     CLOTHES_NOT_FOUND(HttpStatus.NOT_FOUND, "의상 확인 실패", "의상을 찾을 수 없습니다."),
     INVALID_CLOTHES_SORT(HttpStatus.BAD_REQUEST, "의상 조회 실패", "유효하지 않은 정렬 기준입니다."),
-
-    /// PROFILE
-    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 확인 실패", "해당 유저의 프로필을 찾을 수 없습니다."),
 
     // FILE
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 타입", "이미지 파일만 업로드 가능합니다."),

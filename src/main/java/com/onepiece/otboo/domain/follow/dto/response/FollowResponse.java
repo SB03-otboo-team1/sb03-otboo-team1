@@ -1,14 +1,14 @@
 package com.onepiece.otboo.domain.follow.dto.response;
 
 import com.querydsl.core.annotations.QueryProjection;
-import java.time.Instant;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.Instant;
 import java.util.UUID;
 
-@Builder
 @Getter
+@Builder
 public class FollowResponse {
     private UUID id;
     private UUID followerId;
@@ -25,4 +25,3 @@ public class FollowResponse {
         this.createdAt = createdAt;
     }
 }
-
