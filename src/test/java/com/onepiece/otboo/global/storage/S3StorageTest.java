@@ -5,6 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,12 +22,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Utilities;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
@@ -201,5 +204,28 @@ class S3StorageTest {
         assertThat(capturedRequest.bucket()).isEqualTo("test-bucket");
         assertThat(capturedRequest.key()).startsWith("image/");
         assertThat(key).isEqualTo(capturedRequest.key());
+    }
+
+    @Test
+    void 업로드_중_AWS_서비스_예외가_발생하면_전파한다() throws Exception {
+        // given
+        MockMultipartFile file = new MockMultipartFile(
+            "file", "test.jpg", "image/jpeg", "bytes".getBytes()
+        );
+
+        // S3Exception은 AwsServiceException의 하위 타입이므로 둘 중 아무거나 사용 가능
+        AwsServiceException ex = S3Exception.builder()
+            .statusCode(500)
+            .message("boom")
+            .build();
+
+        doThrow(ex).when(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+
+        // when
+        Throwable thrown = catchThrowable(() -> s3Storage.uploadFile(KEY, file));
+
+        // then
+        assertThat(thrown).isInstanceOf(AwsServiceException.class);
+        verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
 }
