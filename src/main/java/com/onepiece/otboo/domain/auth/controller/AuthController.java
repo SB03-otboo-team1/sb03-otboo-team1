@@ -85,7 +85,7 @@ public class AuthController implements AuthApi {
                     return;
                 }
 
-                if (!Boolean.TRUE.equals(success)) {
+                if (Boolean.FALSE.equals(success)) {
                     log.warn("임시 비밀번호 이메일 발송에 실패했습니다 - 수신자: {}", request.email());
                 }
             });
