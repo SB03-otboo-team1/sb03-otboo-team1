@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.follow.controller;
 
 import com.onepiece.otboo.domain.follow.controller.api.FollowApi;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
@@ -27,7 +28,7 @@ public class FollowController implements FollowApi {
     }
 
     @Override
-    public ResponseEntity<CursorPageResponseDto<FollowResponse>> getFollowers(
+    public ResponseEntity<CursorPageResponseDto<FollowerResponse>> getFollowers(
         UUID followeeId,
         String cursor,
         UUID idAfter,
@@ -36,7 +37,7 @@ public class FollowController implements FollowApi {
         String sortBy,
         String sortDirection
     ) {
-        CursorPageResponseDto<FollowResponse> responses =
+        CursorPageResponseDto<FollowerResponse> responses =
             followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike, sortBy, sortDirection);
         return ResponseEntity.ok(responses);
     }

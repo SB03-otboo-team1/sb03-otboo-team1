@@ -1,8 +1,8 @@
 package com.onepiece.otboo.domain.follow.repository;
 
-import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
-import com.onepiece.otboo.domain.follow.dto.response.QFollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.QFollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.QFollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.QFollow;
 import com.onepiece.otboo.domain.profile.entity.QProfile;
@@ -11,11 +11,10 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.RequiredArgsConstructor;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class FollowRepositoryImpl implements FollowRepositoryCustom {
@@ -54,10 +53,15 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
             }
         }
 
-        OrderSpecifier<?> orderSpecifier =
+        OrderSpecifier<?> orderByCreatedAt =
             "ASC".equalsIgnoreCase(sortDirection)
                 ? follow.createdAt.asc()
                 : follow.createdAt.desc();
+
+        OrderSpecifier<?> orderById =
+            "ASC".equalsIgnoreCase(sortDirection)
+                ? follow.id.asc()
+                : follow.id.desc();
 
         return queryFactory
             .select(new QFollowingResponse(
@@ -69,15 +73,15 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
             ))
             .from(follow)
             .join(follow.following, user)
-            .leftJoin(profile).on(profile.user.eq(user))
+            .join(profile).on(profile.user.eq(user))
             .where(builder)
-            .orderBy(orderSpecifier, follow.id.asc())
+            .orderBy(orderByCreatedAt, orderById)
             .limit(limit + 1)
             .fetch();
     }
 
     @Override
-    public List<FollowResponse> findFollowersWithProfileCursor(
+    public List<FollowerResponse> findFollowersWithProfileCursor(
         User followee,
         String cursor,
         UUID idAfter,
@@ -108,13 +112,18 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
             }
         }
 
-        OrderSpecifier<?> orderSpecifier =
+        OrderSpecifier<?> orderByCreatedAt =
             "ASC".equalsIgnoreCase(sortDirection)
                 ? follow.createdAt.asc()
                 : follow.createdAt.desc();
 
+        OrderSpecifier<?> orderById =
+            "ASC".equalsIgnoreCase(sortDirection)
+                ? follow.id.asc()
+                : follow.id.desc();
+
         return queryFactory
-            .select(new QFollowResponse(
+            .select(new QFollowerResponse(
                 follow.id,
                 user.id,
                 profile.nickname,
@@ -123,9 +132,9 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
             ))
             .from(follow)
             .join(follow.follower, user)
-            .leftJoin(profile).on(profile.user.eq(user))
+            .join(profile).on(profile.user.eq(user))
             .where(builder)
-            .orderBy(orderSpecifier, follow.id.asc())
+            .orderBy(orderByCreatedAt, orderById)
             .limit(limit + 1)
             .fetch();
     }

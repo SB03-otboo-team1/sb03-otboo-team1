@@ -8,21 +8,21 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Setter
-@Builder
 @Getter
-public class FollowingResponse {
+@Builder
+public class FollowerResponse {
 
     private UUID id;
-    private UUID followingId;
+    private UUID followerId;
     private String nickname;
     private String profileImageUrl;
     private Instant createdAt;
 
     @QueryProjection
-    public FollowingResponse(UUID id, UUID followingId, String nickname, String profileImageUrl,
+    public FollowerResponse(UUID id, UUID followerId, String nickname, String profileImageUrl,
         Instant createdAt) {
         this.id = id;
-        this.followingId = followingId;
+        this.followerId = followerId;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.createdAt = createdAt;

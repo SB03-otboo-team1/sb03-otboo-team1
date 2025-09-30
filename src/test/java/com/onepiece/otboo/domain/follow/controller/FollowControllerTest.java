@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -74,7 +75,7 @@ class FollowControllerTest {
     void getFollowers_success() throws Exception {
         UUID userId = UUID.randomUUID();
 
-        FollowResponse followResponse = FollowResponse.builder()
+        FollowerResponse followerResponse = FollowerResponse.builder()
             .id(UUID.randomUUID())
             .followerId(UUID.randomUUID())
             .nickname("팔로워닉네임")
@@ -82,9 +83,16 @@ class FollowControllerTest {
             .createdAt(Instant.now())
             .build();
 
-        CursorPageResponseDto<FollowResponse> mockResponse =
-            new CursorPageResponseDto<>(List.of(followResponse), "cursor123", UUID.randomUUID(),
-                false, 1L, "createdAt", "ASC");
+        CursorPageResponseDto<FollowerResponse> mockResponse =
+            new CursorPageResponseDto<>(
+                List.of(followerResponse),
+                "cursor123",
+                UUID.randomUUID(),
+                false,
+                1L,
+                "createdAt",
+                "ASC"
+            );
 
         given(followService.getFollowers(eq(userId), any(), any(), anyInt(), any(), any(), any()))
             .willReturn(mockResponse);
@@ -104,7 +112,7 @@ class FollowControllerTest {
             .id(UUID.randomUUID())
             .followingId(followingId)
             .nickname("팔로잉닉네임")
-            .profileImage("profile.png")
+            .profileImageUrl("profile.png")
             .createdAt(Instant.now())
             .build();
 
