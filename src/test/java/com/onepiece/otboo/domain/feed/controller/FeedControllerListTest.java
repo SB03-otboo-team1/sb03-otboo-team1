@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -68,7 +69,7 @@ class FeedControllerListTest {
             isNull(), isNull(), eq(20), eq("createdAt"), eq("DESCENDING"),
             isNull(), isNull(), isNull(), isNull(), meCap.capture()
         );
-        assert meCap.getValue() == null;
+        assertNull(meCap.getValue());
     }
 
     @Test
@@ -123,15 +124,15 @@ class FeedControllerListTest {
             meCap.capture()
         );
 
-        assert cursorCap.getValue().equals(cursor);
-        assert idAfterCap.getValue().toString().equals(idAfter);
-        assert limitCap.getValue() == 10;
-        assert sortByCap.getValue().equals("likeCount");
-        assert sortDirCap.getValue().equals("ASCENDING");
-        assert keywordCap.getValue().equals("후드티");
-        assert skyCap.getValue().equals("CLEAR");
-        assert precipCap.getValue().equals("NONE");
-        assert authorCap.getValue().toString().equals(authorId);
-        assert meCap.getValue().toString().equals("11111111-1111-1111-1111-111111111111");
+        assertEquals(cursor, cursorCap.getValue());
+        assertEquals(idAfter, idAfterCap.getValue().toString());
+        assertEquals(10, limitCap.getValue());
+        assertEquals("likeCount", sortByCap.getValue());
+        assertEquals("ASCENDING", sortDirCap.getValue());
+        assertEquals("후드티", keywordCap.getValue());
+        assertEquals("CLEAR", skyCap.getValue());
+        assertEquals("NONE", precipCap.getValue());
+        assertEquals(authorId, authorCap.getValue().toString());
+        assertEquals("11111111-1111-1111-1111-111111111111", meCap.getValue().toString());
     }
 }
