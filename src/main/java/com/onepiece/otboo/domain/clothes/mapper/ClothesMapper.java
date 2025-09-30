@@ -10,12 +10,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {ClothesAttributeMapper.class})
 public interface ClothesMapper {
 
     @Mapping(target = "imageUrl",
         source = "clothes.imageUrl",
         qualifiedByName = "toPublicUrl")
+    @Mapping(target = "attributes", ignore = true)
     ClothesDto toDto(Clothes clothes, @Context FileStorage fileStorage);
 
     List<ClothesDto> toDto(List<Clothes> clothes, @Context FileStorage fileStorage);
