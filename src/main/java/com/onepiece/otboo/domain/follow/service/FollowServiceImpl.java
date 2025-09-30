@@ -3,9 +3,11 @@ package com.onepiece.otboo.domain.follow.service;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
+import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
 import com.onepiece.otboo.domain.user.entity.User;
@@ -13,12 +15,12 @@ import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.exception.ErrorCode;
+import com.onepiece.otboo.global.storage.FileStorage;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
+    private final FileStorage fileStorage;
 
     /**
      * 팔로우 생성
@@ -51,15 +54,15 @@ public class FollowServiceImpl implements FollowService {
                 .build()
         );
 
-        return followMapper.toResponse(saved);
+        return followMapper.toResponse(saved, fileStorage);
     }
 
     /**
-     * 팔로워 목록 조회 (커서 기반 페이지네이션)
+     * 팔로워 목록 조회 (커서 기반 페이지네이션, QueryDSL Projection)
      */
     @Override
     @Transactional(readOnly = true)
-    public CursorPageResponseDto<FollowResponse> getFollowers(
+    public CursorPageResponseDto<FollowerResponse> getFollowers(
         UUID followeeId,
         String cursor,
         UUID idAfter,
@@ -71,7 +74,7 @@ public class FollowServiceImpl implements FollowService {
         User followee = userRepository.findById(followeeId)
             .orElseThrow(() -> UserNotFoundException.byId(followeeId));
 
-        List<FollowResponse> results = followRepository.findFollowersWithProfileCursor(
+        List<FollowerResponse> results = followRepository.findFollowersWithProfileCursor(
             followee, cursor, idAfter, limit, nameLike, sortBy, sortDirection
         );
 
@@ -83,7 +86,7 @@ public class FollowServiceImpl implements FollowService {
         String nextCursor = null;
         UUID nextIdAfter = null;
         if (!results.isEmpty()) {
-            FollowResponse last = results.get(results.size() - 1);
+            FollowerResponse last = results.get(results.size() - 1);
             nextCursor = last.getCreatedAt().toString();
             nextIdAfter = last.getId();
         }
@@ -102,7 +105,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     /**
-     * 팔로잉 목록 조회 (프로필 포함, 커서 기반 페이지네이션)
+     * 팔로잉 목록 조회 (커서 기반 페이지네이션, QueryDSL Projection)
      */
     @Override
     @Transactional(readOnly = true)
@@ -158,6 +161,10 @@ public class FollowServiceImpl implements FollowService {
 
         User followee = userRepository.findById(request.followeeId())
             .orElseThrow(() -> UserNotFoundException.byId(request.followeeId()));
+
+        if (!followRepository.existsByFollowerAndFollowing(follower, followee)) {
+            throw FollowNotFoundException.of(follower.getId(), followee.getId());
+        }
 
         followRepository.deleteByFollowerAndFollowing(follower, followee);
     }

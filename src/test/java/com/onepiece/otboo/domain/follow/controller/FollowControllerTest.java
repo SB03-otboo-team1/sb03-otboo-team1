@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,9 +16,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
+import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.exception.ErrorCode;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -74,7 +78,7 @@ class FollowControllerTest {
     void getFollowers_success() throws Exception {
         UUID userId = UUID.randomUUID();
 
-        FollowResponse followResponse = FollowResponse.builder()
+        FollowerResponse followerResponse = FollowerResponse.builder()
             .id(UUID.randomUUID())
             .followerId(UUID.randomUUID())
             .nickname("팔로워닉네임")
@@ -82,9 +86,16 @@ class FollowControllerTest {
             .createdAt(Instant.now())
             .build();
 
-        CursorPageResponseDto<FollowResponse> mockResponse =
-            new CursorPageResponseDto<>(List.of(followResponse), "cursor123", UUID.randomUUID(),
-                false, 1L, "createdAt", "ASC");
+        CursorPageResponseDto<FollowerResponse> mockResponse =
+            new CursorPageResponseDto<>(
+                List.of(followerResponse),
+                "cursor123",
+                UUID.randomUUID(),
+                false,
+                1L,
+                "createdAt",
+                "ASC"
+            );
 
         given(followService.getFollowers(eq(userId), any(), any(), anyInt(), any(), any(), any()))
             .willReturn(mockResponse);
@@ -104,7 +115,7 @@ class FollowControllerTest {
             .id(UUID.randomUUID())
             .followingId(followingId)
             .nickname("팔로잉닉네임")
-            .profileImage("profile.png")
+            .profileImageUrl("profile.png")
             .createdAt(Instant.now())
             .build();
 
@@ -135,6 +146,26 @@ class FollowControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isNoContent());
     }
+
+    @Test
+    @DisplayName("언팔로우 실패 - Follow 관계 없음")
+    void deleteFollow_fail_followNotFound() throws Exception {
+        UUID followerId = UUID.randomUUID();
+        UUID followeeId = UUID.randomUUID();
+        FollowRequest request = new FollowRequest(followerId, followeeId);
+
+        doThrow(FollowNotFoundException.of(followerId, followeeId))
+            .when(followService).deleteFollow(any(FollowRequest.class));
+
+        mockMvc.perform(delete("/api/follows")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.exceptionName").value("FollowNotFoundException"))
+            .andExpect(jsonPath("$.message").value(
+                ErrorCode.FOLLOW_NOT_FOUND.getMessage()));
+    }
+
 
     @Test
     @DisplayName("팔로우 요약 조회 성공")
