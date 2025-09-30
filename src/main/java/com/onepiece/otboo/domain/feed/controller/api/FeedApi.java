@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.feed.controller.api;
 
 import com.onepiece.otboo.domain.feed.dto.request.FeedCreateRequest;
+import com.onepiece.otboo.domain.feed.dto.request.FeedUpdateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,22 +85,26 @@ public interface FeedApi {
     )
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
-        @ApiResponse(responseCode = "204",
+        @ApiResponse(
+            responseCode = "204",
             description = "피드 삭제 성공"
         ),
-        @ApiResponse(responseCode = "401",
+        @ApiResponse(
+            responseCode = "401",
             description = "인증 실패",
             content = @Content(
                 schema = @Schema(implementation = ErrorResponse.class
                 ))
         ),
-        @ApiResponse(responseCode = "403",
+        @ApiResponse(
+            responseCode = "403",
             description = "권한 부족/소유권 불일치",
             content = @Content(
                 schema = @Schema(implementation = ErrorResponse.class
                 ))
         ),
-        @ApiResponse(responseCode = "404",
+        @ApiResponse(
+            responseCode = "404",
             description = "존재하지 않는 피드",
             content = @Content(
                 schema = @Schema(implementation = ErrorResponse.class
@@ -107,4 +113,13 @@ public interface FeedApi {
     })
     @DeleteMapping(value = "/{feedId}")
     ResponseEntity<Void> deleteFeed(@PathVariable UUID feedId);
+
+    @Operation(summary = "피드 수정",
+        description = "작성자 본인이 피드 내용을 수정합니다."
+    )
+    @PatchMapping(value = "/{feedId}", consumes = "application/json", produces = "application/json")
+    ResponseEntity<FeedResponse> updateFeed(@PathVariable UUID feedId, @Valid @RequestBody FeedUpdateRequest req);
+
 }
+
+

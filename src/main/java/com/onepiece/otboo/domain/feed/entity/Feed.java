@@ -49,4 +49,8 @@ public class Feed extends BaseUpdatableEntity {
     public void updateContent(String content) {
         this.content = content;
     }
+
+    public void updateWeatherId(UUID weatherId) {
+        this.weatherId = weatherId;
+    }
 }

@@ -50,8 +50,8 @@ class WeatherControllerTest {
     @MockitoBean
     private WeatherService weatherService;
 
-    private double longitude = 126.8054724084087;
-    private double latitude = 37.43751196107601;
+    private double longitude;
+    private double latitude;
     private WeatherAPILocation location;
 
     @BeforeEach

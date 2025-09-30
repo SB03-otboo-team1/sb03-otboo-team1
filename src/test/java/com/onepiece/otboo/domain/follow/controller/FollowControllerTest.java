@@ -1,5 +1,17 @@
 package com.onepiece.otboo.domain.follow.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
@@ -10,6 +22,9 @@ import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.exception.ErrorCode;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,19 +33,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(FollowController.class)
 @AutoConfigureMockMvc(addFilters = false) // Security 무시
@@ -88,7 +90,7 @@ class FollowControllerTest {
             new CursorPageResponseDto<>(
                 List.of(followerResponse),
                 "cursor123",
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 false,
                 1L,
                 "createdAt",
@@ -118,7 +120,7 @@ class FollowControllerTest {
             .build();
 
         CursorPageResponseDto<FollowingResponse> mockResponse =
-            new CursorPageResponseDto<>(List.of(followingResponse), "cursor456", UUID.randomUUID().toString(),
+            new CursorPageResponseDto<>(List.of(followingResponse), "cursor456", UUID.randomUUID(),
                 false, 1L, "createdAt", "ASC");
 
         given(followService.getFollowings(eq(userId), any(), any(), anyInt(), any(), any(), any()))
