@@ -12,7 +12,9 @@ import com.onepiece.otboo.infra.api.mail.service.MailService;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
@@ -70,11 +73,22 @@ public class AuthController implements AuthApi {
             String tempPassword = authService.saveTemporaryPassword(request.email());
             User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> UserNotFoundException.byEmail(request.email()));
-            mailService.sendTemporaryPasswordEmail(
+            CompletableFuture<Boolean> mailResult = mailService.sendTemporaryPasswordEmail(
                 request.email(),
                 tempPassword,
                 user.getTemporaryPasswordExpirationTime()
             );
+            mailResult.whenComplete((success, throwable) -> {
+                if (throwable != null) {
+                    log.error("임시 비밀번호 이메일 발송 중 예외 발생 - 수신자: {}", request.email(),
+                        throwable);
+                    return;
+                }
+
+                if (!Boolean.TRUE.equals(success)) {
+                    log.warn("임시 비밀번호 이메일 발송에 실패했습니다 - 수신자: {}", request.email());
+                }
+            });
             return ResponseEntity.noContent().build();
         } catch (UserNotFoundException e) {
             return ResponseEntity.notFound().build();
