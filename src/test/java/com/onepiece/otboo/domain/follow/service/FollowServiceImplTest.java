@@ -1,10 +1,19 @@
 package com.onepiece.otboo.domain.follow.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
+import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
 import com.onepiece.otboo.domain.user.entity.User;
@@ -13,6 +22,11 @@ import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.exception.ErrorCode;
+import com.onepiece.otboo.global.storage.FileStorage;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,17 +34,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 class FollowServiceImplTest {
 
@@ -45,6 +48,9 @@ class FollowServiceImplTest {
 
     @InjectMocks
     private FollowServiceImpl followService;
+
+    @Mock
+    private FileStorage fileStorage;
 
     private User follower;
     private User following;
@@ -99,7 +105,8 @@ class FollowServiceImplTest {
             .createdAt(Instant.now())
             .build();
 
-        given(followMapper.toResponse(follow)).willReturn(mockResponse);
+        given(followMapper.toResponse(follow, fileStorage))
+            .willReturn(mockResponse);
 
         FollowResponse response = followService.createFollow(request);
 
@@ -138,7 +145,7 @@ class FollowServiceImplTest {
         UUID userId = following.getId();
         given(userRepository.findById(userId)).willReturn(Optional.of(following));
 
-        FollowResponse followResponse = FollowResponse.builder()
+        FollowerResponse followerResponse = FollowerResponse.builder()
             .id(UUID.randomUUID())
             .followerId(follower.getId())
             .nickname("팔로워닉네임")
@@ -148,7 +155,7 @@ class FollowServiceImplTest {
 
         given(followRepository.findFollowersWithProfileCursor(
             any(User.class), any(), any(), anyInt(), any(), any(), any()
-        )).willReturn(List.of(followResponse));
+        )).willReturn(List.of(followerResponse));
 
         var response = followService.getFollowers(userId, null, null, 10, null, "createdAt", "ASC");
 
@@ -167,7 +174,7 @@ class FollowServiceImplTest {
             .id(UUID.randomUUID())
             .followingId(following.getId())
             .nickname("팔로잉닉네임")
-            .profileImage("profile.png")
+            .profileImageUrl("profile.png")
             .createdAt(Instant.now())
             .build();
 
@@ -175,7 +182,8 @@ class FollowServiceImplTest {
             any(User.class), any(), any(), anyInt(), any(), any(), any()
         )).willReturn(List.of(followingResponse));
 
-        var response = followService.getFollowings(userId, null, null, 10, null, "createdAt", "ASC");
+        var response = followService.getFollowings(userId, null, null, 10, null, "createdAt",
+            "ASC");
 
         assertThat(response.data()).hasSize(1);
         assertThat(response.data().get(0).getNickname()).isEqualTo("팔로잉닉네임");
@@ -187,6 +195,7 @@ class FollowServiceImplTest {
         FollowRequest request = new FollowRequest(follower.getId(), following.getId());
         given(userRepository.findById(request.followerId())).willReturn(Optional.of(follower));
         given(userRepository.findById(request.followeeId())).willReturn(Optional.of(following));
+        given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(true); // ✅ 추가
 
         followService.deleteFollow(request);
 
@@ -203,6 +212,18 @@ class FollowServiceImplTest {
             .isInstanceOf(UserNotFoundException.class);
     }
 
+    @Test
+    @DisplayName("언팔로우 실패 - 팔로우 관계가 존재하지 않을 때")
+    void deleteFollow_fail_followNotFound() {
+        FollowRequest request = new FollowRequest(follower.getId(), following.getId());
+        given(userRepository.findById(request.followerId())).willReturn(Optional.of(follower));
+        given(userRepository.findById(request.followeeId())).willReturn(Optional.of(following));
+        given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(false);
+
+        assertThatThrownBy(() -> followService.deleteFollow(request))
+            .isInstanceOf(FollowNotFoundException.class)
+            .hasMessageContaining(ErrorCode.FOLLOW_NOT_FOUND.getMessage());
+    }
 
     @Test
     @DisplayName("팔로우 요약 조회 성공 - viewer가 팔로우 중일 때")

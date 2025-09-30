@@ -3,12 +3,19 @@ package com.onepiece.otboo.domain.weather.batch.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
 
 import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.location.fixture.LocationFixture;
 import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import com.onepiece.otboo.domain.weather.entity.Weather;
+import com.onepiece.otboo.domain.weather.fixture.KmaItemFixture;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
+import com.onepiece.otboo.infra.api.client.KmaClient;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -24,8 +31,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @ActiveProfiles("test-integration")
+@TestPropertySource(properties = "spring.cache.type=NONE")
 @SpringBatchTest
 @SpringBootTest
 class WeatherBatchConfigTest {
@@ -47,6 +57,9 @@ class WeatherBatchConfigTest {
     @Autowired
     private WeatherRepository weatherRepository;
 
+    @MockitoBean
+    private KmaClient kmaClient;
+
     private UUID savedLocationId;
 
     @BeforeEach
@@ -59,6 +72,15 @@ class WeatherBatchConfigTest {
 
         Location saved = locationRepository.save(LocationFixture.createLocation());
         savedLocationId = saved.getId();
+
+        given(kmaClient.getVillageForecast(anyInt(), anyInt(), any(LocalDate.class), anyString()))
+            .willAnswer(inv -> {
+                int nx = inv.getArgument(0, Integer.class);
+                int ny = inv.getArgument(1, Integer.class);
+                LocalDate baseDate = inv.getArgument(2, LocalDate.class);
+                String baseTime = inv.getArgument(3, String.class);
+                return KmaItemFixture.buildVillageItemsForFiveDays(nx, ny, baseDate, baseTime);
+            });
     }
 
     @Test
