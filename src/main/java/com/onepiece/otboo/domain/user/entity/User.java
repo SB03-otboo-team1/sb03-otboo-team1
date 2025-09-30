@@ -85,5 +85,8 @@ public class User extends BaseUpdatableEntity {
             .provider(provider)
             .providerUserId(providerUserId)
             .build();
+        if (!this.socialAccount.isValid()) {
+            throw new IllegalArgumentException("유효하지 않은 소셜 계정 정보입니다.");
+        }
     }
 }

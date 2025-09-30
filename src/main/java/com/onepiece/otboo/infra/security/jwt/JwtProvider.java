@@ -161,6 +161,7 @@ public class JwtProvider {
         refreshCookie.setSecure(true);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenExpirationMs / 1000);
+        refreshCookie.setAttribute("SameSite", "Lax");
         return refreshCookie;
     }
 
@@ -170,6 +171,7 @@ public class JwtProvider {
         refreshCookie.setSecure(true);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(0);
+        refreshCookie.setAttribute("SameSite", "Lax");
         return refreshCookie;
     }
 
