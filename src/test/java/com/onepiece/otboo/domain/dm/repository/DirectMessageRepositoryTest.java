@@ -90,12 +90,14 @@ class DirectMessageRepositoryTest {
         User sender = createUser("sender@test.com");
         User receiver = createUser("receiver@test.com");
 
+        Instant baseTime = Instant.now();
+
         DirectMessage dm1 = DirectMessage.builder()
             .sender(sender)
             .receiver(receiver)
             .content("메시지 1")
             .build();
-        ReflectionTestUtils.setField(dm1, "createdAt", Instant.now());
+        ReflectionTestUtils.setField(dm1, "createdAt", baseTime);
         directMessageRepository.save(dm1);
 
         DirectMessage dm2 = DirectMessage.builder()
@@ -103,7 +105,7 @@ class DirectMessageRepositoryTest {
             .receiver(receiver)
             .content("메시지 2")
             .build();
-        ReflectionTestUtils.setField(dm2, "createdAt", Instant.now().plusSeconds(1));
+        ReflectionTestUtils.setField(dm2, "createdAt", baseTime.plusSeconds(1));
         directMessageRepository.save(dm2);
 
         DirectMessage dm3 = DirectMessage.builder()
@@ -111,15 +113,15 @@ class DirectMessageRepositoryTest {
             .receiver(receiver)
             .content("메시지 3")
             .build();
-        ReflectionTestUtils.setField(dm3, "createdAt", Instant.now().plusSeconds(2));
+        ReflectionTestUtils.setField(dm3, "createdAt", baseTime.plusSeconds(2));
         directMessageRepository.save(dm3);
 
         List<DirectMessageResponse> result =
             directMessageRepository.findDirectMessages(sender.getId(), null, dm1.getId(), 10, null);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getContent()).isEqualTo("메시지 3");
-        assertThat(result.get(1).getContent()).isEqualTo("메시지 2");
+        assertThat(result).extracting(DirectMessageResponse::getContent)
+            .containsExactly("메시지 3", "메시지 2");
     }
 
     @Test
