@@ -1,4 +1,23 @@
 package com.onepiece.otboo.domain.clothes.entity;
 
-public class ClothesAttributeDefs {
+import com.onepiece.otboo.global.base.BaseUpdatableEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "clothes_attribute_defs")
+@Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class ClothesAttributeDefs extends BaseUpdatableEntity {
+
+    @Column(nullable = false, length = 100, unique = true)
+    private String name;
 }

@@ -1,12 +1,10 @@
 package com.onepiece.otboo.domain.clothes.dto.request;
 
+import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.*;
-
+import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
 
 /**
  * 의상 등록 요청 DTO
@@ -16,7 +14,7 @@ import java.util.UUID;
 public record ClothesCreateRequest(
     UUID ownerId,
     String name,
-    ClothesType type
-    // TODO : 의상 속성 추가해야 함
+    ClothesType type,
+    List<ClothesAttributeDto> attributes
 ) {
 }
