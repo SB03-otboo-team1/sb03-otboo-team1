@@ -7,6 +7,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
+      # Secrets
       JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
       JWT_ACCESS_EXPIRATION_MS: ${{ secrets.JWT_ACCESS_EXPIRATION_MS }}
       JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
@@ -27,6 +28,11 @@ jobs:
       PROFILE_PREFIX: ${{ secrets.PROFILE_PREFIX }}
       CLOTHES_PREFIX: ${{ secrets.CLOTHES_PREFIX }}
       DEFAULT_LOCATION_NAME: ${{ secrets.DEFAULT_LOCATION_NAME }}
+      # Variables
+      ASYNC_THREAD_POOL_DEFAULT_CORE_SIZE: ${{ vars.ASYNC_THREAD_POOL_DEFAULT_CORE_SIZE }}
+      ASYNC_THREAD_POOL_DEFAULT_MAX_SIZE: ${{ vars.ASYNC_THREAD_POOL_DEFAULT_CORE_SIZE }}
+      ASYNC_THREAD_POOL_DEFAULT_QUEUE_CAPACITY: ${{ vars.ASYNC_THREAD_POOL_DEFAULT_CORE_SIZE }}
+      ASYNC_THREAD_POOL_DEFAULT_KEEP_ALIVE: ${{ vars.ASYNC_THREAD_POOL_DEFAULT_CORE_SIZE }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
