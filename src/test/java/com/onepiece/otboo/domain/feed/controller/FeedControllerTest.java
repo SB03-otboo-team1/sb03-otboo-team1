@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.feed.dto.request.FeedCreateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
+import com.onepiece.otboo.domain.feed.service.FeedQueryService;
 import com.onepiece.otboo.domain.feed.service.FeedService;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
@@ -38,6 +39,8 @@ class FeedControllerTest {
     ObjectMapper objectMapper;
     @MockitoBean
     FeedService feedService;
+    @MockitoBean
+    FeedQueryService feedQueryService;
 
     @Test
     @WithMockUser
@@ -46,8 +49,7 @@ class FeedControllerTest {
 
         FeedResponse mocked = mock(FeedResponse.class);
         when(mocked.id()).thenReturn(id);
-        when(feedService.create(any(FeedCreateRequest.class)))
-            .thenReturn(mocked);
+        when(feedService.create(any(FeedCreateRequest.class))).thenReturn(mocked);
 
         var body = new FeedCreateRequest(
             UUID.randomUUID(),
@@ -57,18 +59,17 @@ class FeedControllerTest {
         );
 
         mockMvc.perform(
-                post("/api/feeds")
+                post(BASE_URL)
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(body))
             )
             .andExpect(status().isCreated())
-            .andExpect(header().string("Location", "/api/feeds/" + id));
+            .andExpect(header().string("Location", BASE_URL + "/" + id));
     }
 
     @Test
     @WithMockUser(username = "d290f1ee-6c54-4b01-90e6-d701748f0851")
-        // 컨트롤러가 auth.getName()을 UUID로 파싱
     void 피드_삭제_정상권한_요청시_204응답() throws Exception {
         UUID feedId = UUID.randomUUID();
 
