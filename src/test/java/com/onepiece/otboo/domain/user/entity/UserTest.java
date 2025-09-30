@@ -15,7 +15,6 @@ public class UserTest {
     @Test
     void user_객체_생성() {
         User user = UserFixture.createUser();
-        assertThat(user.getSocialAccount().getProvider()).isNotNull();
         assertThat(user.getEmail()).isEqualTo("test@example.com");
         assertThat(user.getPassword()).isEqualTo("password");
         assertThat(user.isLocked()).isFalse();

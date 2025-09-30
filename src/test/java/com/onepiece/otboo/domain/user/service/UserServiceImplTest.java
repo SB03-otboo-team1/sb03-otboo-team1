@@ -21,7 +21,6 @@ import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
@@ -104,7 +103,7 @@ class UserServiceImplTest {
             .name("test")
             .email("test@test.com")
             .role(Role.USER)
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(false)
             .build();
 

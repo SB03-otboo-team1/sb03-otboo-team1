@@ -21,10 +21,9 @@ import lombok.NoArgsConstructor;
 @Embeddable
 public class SocialAccount {
 
-    @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(name = "provider", nullable = false)
-    private Provider provider = Provider.LOCAL;
+    @Column(name = "provider")
+    private Provider provider;
 
     @Column(name = "provider_user_id")
     private String providerUserId;

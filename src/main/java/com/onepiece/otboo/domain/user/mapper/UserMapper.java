@@ -21,8 +21,10 @@ public interface UserMapper {
     @Mapping(target = "locked", source = "user.locked")
     UserDto toDto(User user, Profile profile);
 
-    // 필요 시 Provider 리스트 변환 로직
     default List<Provider> toProviders(User user) {
-        return List.of(user.getSocialAccount().getProvider()); // 단일 Provider만 갖는 경우
+        if (user.getSocialAccount() == null || user.getSocialAccount().getProvider() == null) {
+            return List.of();
+        }
+        return List.of(user.getSocialAccount().getProvider());
     }
 }
