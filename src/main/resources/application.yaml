@@ -103,3 +103,16 @@ aws:
     prefix:
       profile: ${PROFILE_PREFIX}
       clothes: ${CLOTHES_PREFIX}
+
+async:
+  executors:
+    default:
+      core-size: ${ASYNC_THREAD_POOL_DEFAULT_CORE_SIZE:2}
+      max-size: ${ASYNC_THREAD_POOL_DEFAULT_MAX_SIZE:10}
+      queue-capacity: ${ASYNC_THREAD_POOL_DEFAULT_QUEUE_CAPACITY:100}
+      keep-alive: ${ASYNC_THREAD_POOL_DEFAULT_KEEP_ALIVE:60}
+    mail-content:
+      core-size: ${ASYNC_THREAD_POOL_MAIL_CONTENT_CORE_SIZE:2}
+      max-size: ${ASYNC_THREAD_POOL_MAIL_CONTENT_MAX_SIZE:4}
+      queue-capacity: ${ASYNC_THREAD_POOL_MAIL_CONTENT_QUEUE_CAPACITY:50}
+      keep-alive: ${ASYNC_THREAD_POOL_MAIL_CONTENT_KEEP_ALIVE:60}
