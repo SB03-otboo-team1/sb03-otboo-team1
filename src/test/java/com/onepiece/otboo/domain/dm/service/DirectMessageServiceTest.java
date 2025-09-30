@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.dm.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
@@ -15,6 +16,7 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +68,6 @@ class DirectMessageServiceTest {
         ReflectionTestUtils.setField(sender, "id", senderId);
         ReflectionTestUtils.setField(receiver, "id", receiverId);
     }
-
 
     @Test
     @DisplayName("DM 생성 성공")
@@ -137,12 +138,14 @@ class DirectMessageServiceTest {
             .content("목록 조회 메시지")
             .build();
 
-        when(directMessageRepository.findDirectMessages(senderId, null, null, 10))
-            .thenReturn(java.util.List.of(mockResponse));
+        when(directMessageRepository.findDirectMessages(eq(senderId), eq(null), eq(null), eq(10),
+            eq(null)))
+            .thenReturn(List.of(mockResponse));
 
-        var result = directMessageService.getDirectMessages(senderId, null, null, 10);
+        var result = directMessageService.getDirectMessages(senderId, null, null, 10, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getContent()).isEqualTo("목록 조회 메시지");
     }
+
 }
