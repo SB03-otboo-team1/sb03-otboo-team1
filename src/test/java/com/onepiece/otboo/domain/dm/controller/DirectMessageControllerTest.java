@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.dm.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -77,12 +78,13 @@ class DirectMessageControllerTest {
             .build();
 
         org.mockito.Mockito.when(
-                directMessageService.getDirectMessages(eq(userId), any(), any(), anyInt()))
+                directMessageService.getDirectMessages(eq(userId), any(), any(), anyInt(), anyString()))
             .thenReturn(List.of(mockResponse));
 
         mockMvc.perform(get("/api/direct-messages")
                 .param("userId", userId.toString())
-                .param("limit", "5"))
+                .param("limit", "5")
+                .param("sort", "createdAt,DESC"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].content").value("조회 테스트"));
     }
