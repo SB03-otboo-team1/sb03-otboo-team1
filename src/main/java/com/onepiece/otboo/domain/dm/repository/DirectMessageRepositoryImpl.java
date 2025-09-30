@@ -2,11 +2,15 @@ package com.onepiece.otboo.domain.dm.repository;
 
 import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
 import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse.UserInfo;
+import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.dm.entity.QDirectMessage;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -17,26 +21,64 @@ import org.springframework.stereotype.Repository;
 public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
-
     private final QDirectMessage dm = QDirectMessage.directMessage;
 
     @Override
-    public List<DirectMessageResponse> findDirectMessages(UUID userId, String cursor, UUID idAfter,
-        int limit) {
+    public List<DirectMessageResponse> findDirectMessages(
+        UUID userId,
+        String cursor,
+        UUID idAfter,
+        int limit,
+        String sort
+    ) {
         BooleanBuilder whereBuilder = new BooleanBuilder();
-
         whereBuilder.and(dm.sender.id.eq(userId).or(dm.receiver.id.eq(userId)));
 
         if (cursor != null && !cursor.isEmpty()) {
-            Instant cursorTime = Instant.parse(cursor);
-            BooleanBuilder cursorCondition = new BooleanBuilder();
+            try {
+                Instant cursorTime = Instant.parse(cursor);
+                BooleanBuilder cursorCondition = new BooleanBuilder();
+                cursorCondition.and(dm.createdAt.lt(cursorTime));
 
-            cursorCondition.and(dm.createdAt.lt(cursorTime));
-
-            if (idAfter != null) {
-                cursorCondition.or(dm.createdAt.eq(cursorTime).and(dm.id.lt(idAfter)));
+                if (idAfter != null) {
+                    cursorCondition.or(dm.createdAt.eq(cursorTime).and(dm.id.lt(idAfter)));
+                }
+                whereBuilder.and(cursorCondition);
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException(
+                    "Invalid cursor format. Must be ISO-8601 datetime.");
             }
-            whereBuilder.and(cursorCondition);
+        } else if (idAfter != null) {
+            DirectMessage pivot = queryFactory.selectFrom(dm)
+                .where(dm.id.eq(idAfter))
+                .fetchOne();
+
+            if (pivot != null) {
+                BooleanBuilder afterCondition = new BooleanBuilder();
+                afterCondition.or(dm.createdAt.gt(pivot.getCreatedAt()));
+                afterCondition.or(
+                    dm.createdAt.eq(pivot.getCreatedAt())
+                        .and(dm.id.gt(pivot.getId()))
+                );
+                whereBuilder.and(afterCondition);
+            }
+        }
+
+        OrderSpecifier<?> orderSpecifier = dm.createdAt.desc();
+        if (sort != null && !sort.isEmpty()) {
+            String[] parts = sort.split(",");
+            String sortBy = parts[0];
+            String direction = parts.length > 1 ? parts[1].toUpperCase() : "DESC";
+
+            if ("createdAt".equals(sortBy)) {
+                orderSpecifier = direction.equals("ASC")
+                    ? new OrderSpecifier<>(Order.ASC, dm.createdAt)
+                    : new OrderSpecifier<>(Order.DESC, dm.createdAt);
+            } else if ("id".equals(sortBy)) {
+                orderSpecifier = direction.equals("ASC")
+                    ? new OrderSpecifier<>(Order.ASC, dm.id)
+                    : new OrderSpecifier<>(Order.DESC, dm.id);
+            }
         }
 
         return queryFactory
@@ -56,7 +98,7 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
             ))
             .from(dm)
             .where(whereBuilder)
-            .orderBy(dm.createdAt.desc(), dm.id.desc())
+            .orderBy(orderSpecifier)
             .limit(limit)
             .fetch();
     }

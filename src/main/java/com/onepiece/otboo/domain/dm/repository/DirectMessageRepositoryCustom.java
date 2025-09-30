@@ -7,5 +7,5 @@ import java.util.UUID;
 public interface DirectMessageRepositoryCustom {
 
     List<DirectMessageResponse> findDirectMessages(UUID userId, String cursor, UUID idAfter,
-        int limit);
+        int limit, String sort);
 }
