@@ -128,6 +128,13 @@ dependencies {
     // Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+    // https://mvnrepository.com/artifact/io.netty/netty-resolver-dns-native-macos
+    runtimeOnly('io.netty:netty-resolver-dns-native-macos') {
+        artifact {
+            classifier = 'osx-aarch_64'
+        }
+    }
+
     // ======================== Test ========================
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -138,6 +145,9 @@ dependencies {
     // Lombok
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // https://mvnrepository.com/artifact/io.netty/netty-resolver-dns-native-macos
+    runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.2.Final:osx-aarch_64'
 
     // =================== Integration test ===================
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'

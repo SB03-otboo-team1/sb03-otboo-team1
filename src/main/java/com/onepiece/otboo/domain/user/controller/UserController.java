@@ -1,8 +1,10 @@
 package com.onepiece.otboo.domain.user.controller;
 
+import com.onepiece.otboo.domain.profile.dto.request.ProfileUpdateRequest;
 import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
 import com.onepiece.otboo.domain.profile.service.ProfileService;
 import com.onepiece.otboo.domain.user.controller.api.UserApi;
+import com.onepiece.otboo.domain.user.dto.request.ChangePasswordRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
@@ -12,10 +14,12 @@ import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +29,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -113,5 +119,40 @@ public class UserController implements UserApi {
         }
 
         return ResponseEntity.ok(result);
+    }
+
+    @Override
+    @PreAuthorize("#userId == principal.userId")
+    @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{userId}/profiles")
+    public ResponseEntity<ProfileDto> updateUserProfile(
+        @PathVariable UUID userId,
+        @Valid @RequestPart ProfileUpdateRequest request,
+        @RequestPart(value = "image", required = false) MultipartFile profileImage)
+    throws IOException {
+
+        log.info("[UserController] 프로필 업데이트 요청 - userId: {}", userId);
+
+        ProfileDto result = profileService.update(userId, request, profileImage);
+
+        log.info("[UserController] 프로필 업데이트 성공 - userId: {}", userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @Override
+    @PreAuthorize("#userId == principal.userId")
+    @PatchMapping("/{userId}/password")
+    public ResponseEntity<Void> updatePassword(
+        @PathVariable UUID userId,
+        @Valid @RequestBody ChangePasswordRequest request
+    ) {
+
+        log.info("[UserController] 비밀번호 변경 요청 - userId: {}", userId);
+
+        userService.updatePassword(userId, request.password());
+
+        log.info("[UserController] 비밀번호 변경 성공 - userId: {}", userId);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

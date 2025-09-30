@@ -1,8 +1,6 @@
 package com.onepiece.otboo.domain.location.service;
 
-import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
-import com.onepiece.otboo.global.util.NumberConverter;
 import com.onepiece.otboo.infra.api.dto.KakaoLocationItem;
 import com.onepiece.otboo.infra.api.provider.LocationProvider;
 import com.onepiece.otboo.infra.converter.LatLonToXYConverter;
@@ -20,44 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class LocationServiceImpl implements LocationService {
 
     private final LocationProvider locationProvider;
-    private final LocationPersistenceService persistenceService;
 
     @Override
     @Transactional
     public WeatherAPILocation getLocation(double longitude, double latitude) {
 
-        double roundedLat = NumberConverter.round(latitude, 4);
-        double roundedLon = NumberConverter.round(longitude, 4);
-
-        // 저장된 위치가 있는지 먼저 조회
-        Location savedLocation = persistenceService.findByLatitudeAndLongitude(roundedLat,
-            roundedLon).orElseGet(() -> {
-            KakaoLocationItem item = locationProvider.getLocation(longitude, latitude);
-            // 위치 정보 저장
-            Location location = createLocationEntity(item, roundedLat, roundedLon);
-            return persistenceService.save(location);
-        });
-
-        String locationString = savedLocation.getLocationNames();
-        log.info("[LocationService] 위치 정보 조회 완료 - x: {}, y: {} locationNames: {}",
-            savedLocation.getXCoordinate(), savedLocation.getYCoordinate(), locationString);
-
-        List<String> locationNames = Arrays.stream(locationString.split(","))
-            .filter(s -> !s.isBlank())
-            .toList();
-
-        return new WeatherAPILocation(
-            latitude,
-            longitude,
-            savedLocation.getXCoordinate(),
-            savedLocation.getYCoordinate(),
-            locationNames
-        );
-    }
-
-    private Location createLocationEntity(KakaoLocationItem item, double latitude,
-        double longitude) {
-        String locationNames = String.join(",",
+        KakaoLocationItem item = locationProvider.getLocation(longitude, latitude);
+        String locationString = String.join(",",
             item.region1(),
             item.region2(),
             item.region3(),
@@ -67,12 +34,19 @@ public class LocationServiceImpl implements LocationService {
         // 위도, 경도를 x, y 좌표로 변환
         Point point = LatLonToXYConverter.latLonToXY(latitude, longitude);
 
-        return Location.builder()
-            .latitude(latitude)
-            .longitude(longitude)
-            .locationNames(locationNames)
-            .xCoordinate(point.x)
-            .yCoordinate(point.y)
-            .build();
+        log.info("[LocationService] 위치 정보 조회 완료 - x: {}, y: {} locationNames: {}",
+            point.x, point.y, locationString);
+
+        List<String> locationNames = Arrays.stream(locationString.split(","))
+            .filter(s -> !s.isBlank())
+            .toList();
+
+        return new WeatherAPILocation(
+            latitude,
+            longitude,
+            point.x,
+            point.y,
+            locationNames
+        );
     }
 }

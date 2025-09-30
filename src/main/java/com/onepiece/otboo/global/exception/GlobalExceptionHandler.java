@@ -2,8 +2,10 @@ package com.onepiece.otboo.global.exception;
 
 import com.onepiece.otboo.domain.auth.exception.TokenExpiredException;
 import com.onepiece.otboo.domain.auth.exception.TokenForgedException;
+import com.onepiece.otboo.domain.clothes.exception.InvalidClothesSortException;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import com.onepiece.otboo.infra.security.exception.SecurityForbiddenException;
+import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,8 +16,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
@@ -110,5 +114,52 @@ public class GlobalExceptionHandler {
                     "reason", "지원하지 않는 Content-Type",
                     "supported", String.valueOf(e.getSupportedMediaTypes())
                 )));
+    }
+
+    // 필수 파라미터 누락 시 400에러 발생
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+        MissingServletRequestParameterException e) {
+      return ResponseEntity
+          .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+          .body(ErrorResponse.of(
+              ErrorCode.INVALID_INPUT_VALUE, e,
+              Map.of("reason", "필수 파라미터 누락")
+          ));
+    }
+
+    // 유효하지 않은 Enum value 입력 시 400에러 발생
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+        MethodArgumentTypeMismatchException e) {
+      return ResponseEntity
+          .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+          .body(ErrorResponse.of(
+              ErrorCode.INVALID_INPUT_VALUE, e,
+              Map.of("reason", "유효하지 않은 Enum value 입력")
+          ));
+    }
+
+    // 유효하지 않은 limit value 입력 시 400에러 발생
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+        ConstraintViolationException e) {
+        return ResponseEntity
+            .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+            .body(ErrorResponse.of(
+                ErrorCode.INVALID_INPUT_VALUE, e,
+                Map.of("reason", "유효하지 않은 limit value 입력")
+            ));
+    }
+
+    // 잘못된 정렬 기준 입력 시 400에러 발생
+    @ExceptionHandler(InvalidClothesSortException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSort(InvalidClothesSortException e) {
+        return ResponseEntity
+            .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+            .body(ErrorResponse.of(
+                ErrorCode.INVALID_INPUT_VALUE, e,
+                Map.of("reason", "유효하지 않은 정렬 기준 입력")
+            ));
     }
 }
