@@ -2,8 +2,12 @@ package com.onepiece.otboo.domain.profile.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.ThrowableAssert.catchThrowable;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -30,7 +34,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,6 +61,9 @@ class ProfileServiceImplTest {
     @Mock
     private FileStorage storage;
 
+    @Mock
+    private ProfileImageAsyncService profileImageAsyncService;
+
     @InjectMocks
     private ProfileServiceImpl profileService;
 
@@ -75,14 +81,18 @@ class ProfileServiceImplTest {
 
     @Test
     void 프로필_조회_성공_테스트() {
+
+        // given
         ProfileDto profileDto = ProfileDtoFixture.createProfile(userId);
 
         stubUserFound();
         stubProfileFound();
         stubMapper(profileDto);
 
+        // when
         ProfileDto result = profileService.getUserProfile(userId);
 
+        // then
         assertNotNull(result);
         assertEquals(userId, result.userId());
         assertEquals("test", result.name());
@@ -94,28 +104,38 @@ class ProfileServiceImplTest {
 
     @Test
     void 존재하지_않는_사용자의_프로필_조회_요청시_예외() {
+
+        // given
         UUID notExistId = UUID.randomUUID();
         stubUserNotFound(notExistId);
 
+        // when
         Throwable thrown = catchThrowable(() -> profileService.getUserProfile(notExistId));
 
+        // then
         assertThat(thrown).isInstanceOf(UserNotFoundException.class).hasMessageContaining("사용자");
         verify(profileMapper, never()).toDto(any(), any(), any());
     }
 
     @Test
     void 특정_사용자의_프로필이_없으면_예외() {
+
+        // given
         stubUserFound();
         given(profileRepository.findByUserId(any())).willReturn(Optional.empty());
 
+        // when
         Throwable thrown = catchThrowable(() -> profileService.getUserProfile(userId));
 
+        // then
         assertThat(thrown).isInstanceOf(ProfileNotFoundException.class).hasMessageContaining("프로필");
         verify(profileMapper, never()).toDto(any(), any(), any());
     }
 
     @Test
     void 프로필_업데이트_성공_테스트() throws Exception {
+
+        // given
         ProfileUpdateRequest request = req(Gender.MALE, BIRTH, 2);
         MockMultipartFile newProfile = new MockMultipartFile("profileImage", "profile.png",
             "image/png", "dummy".getBytes());
@@ -127,23 +147,26 @@ class ProfileServiceImplTest {
 
         stubUserFound();
         stubProfileFound();
-        given(storage.uploadFile(any(), any())).willReturn("http://example.com/profile.png");
         stubSaveReturns(updated);
         stubMapper(dto);
 
+        // when
         ProfileDto result = profileService.update(userId, request, newProfile);
 
+        // then
         assertNotNull(result);
         assertEquals(userId, result.userId());
         assertEquals(NAME, result.name());
         assertEquals(Gender.MALE, result.gender());
         assertEquals(BIRTH, result.birthDate());
         assertEquals(2, result.temperatureSensitivity());
-        verify(storage).uploadFile(any(), any());
+        verify(profileImageAsyncService).replaceProfileImageAsync(eq(userId), any(), any(), any());
     }
 
     @Test
     void Location_이미_존재하면_재사용() throws Exception {
+
+        // given
         WeatherAPILocation wloc = locDto();
         ProfileUpdateRequest request = ProfileUpdateRequest.builder()
             .name(NAME).gender(Gender.MALE).birthDate(BIRTH).temperatureSensitivity(3)
@@ -160,8 +183,10 @@ class ProfileServiceImplTest {
         stubSaveReturns(updated);
         stubMapper(out);
 
+        // when
         ProfileDto dto = profileService.update(userId, request, null);
 
+        // then
         assertEquals(wloc, dto.location());
         verify(locationPersistenceService).findByLatitudeAndLongitude(anyDouble(), anyDouble());
         verify(locationPersistenceService, never()).save(any());
@@ -169,6 +194,8 @@ class ProfileServiceImplTest {
 
     @Test
     void Location_없으면_새로_생성() throws Exception {
+
+        // given
         WeatherAPILocation wloc = locDto();
         ProfileUpdateRequest request = ProfileUpdateRequest.builder()
             .name(NAME).gender(Gender.MALE).birthDate(BIRTH).temperatureSensitivity(3)
@@ -185,8 +212,10 @@ class ProfileServiceImplTest {
         stubSaveReturns(updated);
         stubMapper(out);
 
+        // when
         ProfileDto dto = profileService.update(userId, request, null);
 
+        // then
         assertEquals(wloc, dto.location());
         verify(locationPersistenceService).findByLatitudeAndLongitude(anyDouble(), anyDouble());
         verify(locationPersistenceService).save(any());
@@ -194,32 +223,42 @@ class ProfileServiceImplTest {
 
     @Test
     void 존재하지_않는_사용자_수정_요청시_예외() {
+
+        // given
         UUID notExistId = UUID.randomUUID();
         ProfileUpdateRequest request = req(Gender.MALE, BIRTH, 2);
 
         stubUserNotFound(notExistId);
 
+        // when
         Throwable thrown = catchThrowable(() -> profileService.update(notExistId, request, null));
 
+        // then
         assertThat(thrown).isInstanceOf(UserNotFoundException.class).hasMessageContaining("사용자");
         verify(profileMapper, never()).toDto(any(), any(), any());
     }
 
     @Test
     void 존재하지_않는_프로필_수정_요청시_예외() {
+
+        // given
         ProfileUpdateRequest request = req(Gender.MALE, BIRTH, 2);
 
         stubUserFound();
         stubProfileNotFound(userId);
 
+        // when
         Throwable thrown = catchThrowable(() -> profileService.update(userId, request, null));
 
+        // then
         assertThat(thrown).isInstanceOf(ProfileNotFoundException.class).hasMessageContaining("프로필");
         verify(profileMapper, never()).toDto(any(), any(), any());
     }
 
     @Test
     void 이미지_null_이면_변경없음() throws Exception {
+
+        // given
         ProfileDto out = dto(userId, NAME, Gender.MALE, BIRTH, 2, null);
 
         stubUserFound();
@@ -227,14 +266,18 @@ class ProfileServiceImplTest {
         stubSaveReturns(profile);
         stubMapper(out);
 
+        // when
         profileService.update(userId, req(Gender.MALE, BIRTH, 2), null);
 
+        // then
         verify(storage, never()).uploadFile(any(), any());
         verify(storage, never()).deleteFile(anyString());
     }
 
     @Test
     void 이미지_빈파일_이면_기존삭제_및_null() throws Exception {
+
+        // given
         MockMultipartFile empty = new MockMultipartFile("profileImage", "empty.png", "image/png",
             new byte[0]);
         ProfileDto out = dto(userId, NAME, Gender.MALE, BIRTH, 2, null);
@@ -244,30 +287,35 @@ class ProfileServiceImplTest {
         stubSaveReturns(profile);
         stubMapper(out);
 
+        // when
         profileService.update(userId, req(Gender.MALE, BIRTH, 2), empty);
 
+        // then
         verify(storage).deleteFile(anyString());
         verify(storage, never()).uploadFile(any(), any());
     }
 
     @Test
     void 이미지_신규파일_이면_업로드_후_기존삭제() throws Exception {
+
+        // given
         MockMultipartFile file = new MockMultipartFile("profileImage", "new.png", "image/png",
             "dummy".getBytes());
         Profile updated = ProfileFixture.createProfile(user);
         ReflectionTestUtils.setField(updated, "profileImageUrl", "new-key");
         ProfileDto out = dto(userId, NAME, Gender.MALE, BIRTH, 2, null);
 
-        given(storage.uploadFile(any(), any())).willReturn("new-key");
         stubUserFound();
         stubProfileFound();
         stubSaveReturns(updated);
         stubMapper(out);
 
+        // when
         profileService.update(userId, req(Gender.MALE, BIRTH, 2), file);
 
-        verify(storage).uploadFile(any(), any());
-        verify(storage).deleteFile(anyString());
+        // then
+        verify(profileImageAsyncService).replaceProfileImageAsync(eq(userId), any(), any(),
+            any());
     }
 
     private static final LocalDate BIRTH = LocalDate.of(1999, 7, 2);
