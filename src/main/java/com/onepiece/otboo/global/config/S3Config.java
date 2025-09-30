@@ -7,6 +7,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 /**
  * AWS S3 설정 클래스
@@ -15,13 +16,13 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 public class S3Config {
 
-    @Value("${aws.access-key}")
+    @Value("${aws.storage.access-key}")
     private String accessKey;
 
-    @Value("${aws.secret-key}")
+    @Value("${aws.storage.secret-key}")
     private String secretKey;
 
-    @Value("${aws.region:ap-northeast-2}")
+    @Value("${aws.storage.region}")
     private String region;
 
     /**
@@ -30,13 +31,26 @@ public class S3Config {
      * @return S3Client 인스턴스
      */
     @Bean
-    public S3Client s3Client() {
-        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
-        
+    public S3Client s3Client(AwsBasicCredentials awsBasicCredentials) {
         return S3Client.builder()
-                .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
-                .build();
+            .region(Region.of(region))
+            .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+            .build();
+    }
+
+    @Bean
+    public AwsBasicCredentials awsBasicCredentials() {
+        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(accessKey, secretKey);
+
+        return awsBasicCredentials;
+    }
+
+    @Bean
+    public S3Presigner s3Presigner(AwsBasicCredentials awsBasicCredentials) {
+        return S3Presigner.builder()
+            .region(Region.of(region))
+            .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+            .build();
     }
 }
 

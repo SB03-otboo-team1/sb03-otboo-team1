@@ -46,7 +46,7 @@ public interface ClothesApi {
       @Parameter(description = "의상 타입") @RequestParam(required = false) ClothesType typeEqual,
       @Parameter(description = "소유자 ID") @RequestParam(required = true) UUID ownerId,
       @Parameter(description = "정렬 기준") @RequestParam(required = true, defaultValue = "createdAt") String sortBy,
-      @Parameter(description = "정렬 방향") @RequestParam(required = true, defaultValue = "desc") String sortDirection
+      @Parameter(description = "정렬 방향") @RequestParam(required = true, defaultValue = "DESCENDING") String sortDirection
   );
 
 }

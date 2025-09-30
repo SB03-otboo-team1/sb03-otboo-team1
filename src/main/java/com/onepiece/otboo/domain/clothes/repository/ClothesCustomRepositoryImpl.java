@@ -7,7 +7,6 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +36,7 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
       }
 
       if (cursor != null && idAfter != null) {
-          boolean desc = sortDirection.equalsIgnoreCase("DESC");
+          boolean desc = sortDirection.equalsIgnoreCase("DESCENDING");
           switch (sortBy) {
               case "createdAt" -> {
                   Instant cAt = Instant.parse(cursor);
@@ -63,12 +62,12 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
 
       OrderSpecifier<?> primary = switch (sortBy) {
           case "createdAt" ->
-              (sortDirection != null && sortDirection.equalsIgnoreCase("desc") ? clothes.createdAt.desc() : clothes.createdAt.asc());
+              (sortDirection != null && sortDirection.equalsIgnoreCase("DESCENDING") ? clothes.createdAt.desc() : clothes.createdAt.asc());
           case "name" ->
-              (sortDirection != null && sortDirection.equalsIgnoreCase("desc") ? clothes.name.desc() : clothes.name.asc());
+              (sortDirection != null && sortDirection.equalsIgnoreCase("DESCENDING") ? clothes.name.desc() : clothes.name.asc());
           default -> throw new IllegalStateException("Unexpected value: " + sortBy);
       };
-      OrderSpecifier<?> tieBreaker = (sortDirection.equalsIgnoreCase("desc") ? clothes.id.desc(): clothes.id.asc());
+      OrderSpecifier<?> tieBreaker = (sortDirection.equalsIgnoreCase("DESCENDING") ? clothes.id.desc(): clothes.id.asc());
 
       List<Clothes> result = jpaQueryFactory
           .select(clothes)
