@@ -25,7 +25,11 @@ public record KakaoOAuth2UserInfo(Map<String, Object> attributes) implements OAu
                 return e.toString();
             }
         }
-        // 닉네임은 필수 동의이므로 반드시 존재
+        String providerUserId = getProviderUserId();
+        if (providerUserId != null) {
+            return "kakao_" + providerUserId + "@kakao.com";
+        }
+        // providerUserId도 없으면 닉네임 기반(이론상 거의 없음)
         return getNickname() + "@kakao.com";
     }
 

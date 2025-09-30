@@ -28,7 +28,7 @@ public class User extends BaseUpdatableEntity {
     @Embedded
     private SocialAccount socialAccount;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
