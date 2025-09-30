@@ -6,6 +6,7 @@ import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -137,59 +140,62 @@ public interface FeedApi {
     })
     @GetMapping(produces = "application/json")
     ResponseEntity<CursorPageResponseDto<FeedResponse>> listFeeds(
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Parameter(
             description = "다음 페이지 커서 (정렬키). sortBy=createdAt일 때 ISO-8601 시간",
             example = "2025-09-10T00:21:17.683Z"
         )
         @RequestParam(required = false) String cursor,
 
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Parameter(
             description = "다음 페이지 커서 (동률 우회 키). 마지막 항목의 UUID",
             schema = @Schema(format = "uuid")
         )
         @RequestParam(required = false) UUID idAfter,
 
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Parameter(
             description = "페이지 크기 (1~100)",
             example = "10"
         )
-        @RequestParam int limit,
 
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Min(1)
+        @Max(100)
+        @RequestParam(defaultValue = "20") int limit,
+
+        @Parameter(
             description = "정렬 기준",
             schema = @Schema(allowableValues = {"createdAt", "likeCount"}),
             example = "createdAt"
         )
         @RequestParam String sortBy,
 
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Parameter(
             description = "정렬 방향",
             schema = @Schema(allowableValues = {"ASCENDING", "DESCENDING"}),
             example = "DESCENDING"
         )
         @RequestParam String sortDirection,
 
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Parameter(
             description = "내용 키워드 (부분 일치)",
             example = "후드티"
         )
         @RequestParam(required = false) String keywordLike,
 
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Parameter(
             description = "하늘 상태",
             schema = @Schema(allowableValues = {"CLEAR", "MOSTLY_CLOUDY", "CLOUDY"}),
             example = "CLEAR"
         )
         @RequestParam(required = false) String skyStatusEqual,
 
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Parameter(
             description = "강수 유형",
             schema = @Schema(allowableValues = {"NONE", "RAIN", "RAIN_SNOW", "SNOW", "SHOWER"}),
             example = "NONE"
         )
         @RequestParam(required = false) String precipitationTypeEqual,
 
-        @io.swagger.v3.oas.annotations.Parameter(
+        @Parameter(
             description = "작성자 ID 필터",
             schema = @Schema(format = "uuid")
         )
