@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.feed.enums;
+package com.onepiece.otboo.global.enums;
 
 public enum SortDirection {
     ASCENDING, DESCENDING
