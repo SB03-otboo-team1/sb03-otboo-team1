@@ -28,28 +28,23 @@ class DirectMessageRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Test
-    @DisplayName("DM 목록 조회 - 커서 페이징 성공")
-    void findDirectMessages_success() {
-        User sender = User.builder()
+    private User createUser(String email) {
+        User user = User.builder()
             .provider(Provider.LOCAL)
-            .email("sender@test.com")
+            .email(email)
             .password("pw")
             .role(Role.USER)
             .locked(false)
             .build();
-        ReflectionTestUtils.setField(sender, "createdAt", Instant.now());
-        sender = userRepository.save(sender);
+        ReflectionTestUtils.setField(user, "createdAt", Instant.now());
+        return userRepository.save(user);
+    }
 
-        User receiver = User.builder()
-            .provider(Provider.LOCAL)
-            .email("receiver@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        ReflectionTestUtils.setField(receiver, "createdAt", Instant.now());
-        receiver = userRepository.save(receiver);
+    @Test
+    @DisplayName("DM 목록 조회 - 기본 조회 성공")
+    void findDirectMessages_success() {
+        User sender = createUser("sender@test.com");
+        User receiver = createUser("receiver@test.com");
 
         DirectMessage dm = DirectMessage.builder()
             .sender(sender)
@@ -57,11 +52,10 @@ class DirectMessageRepositoryTest {
             .content("첫 번째 DM")
             .build();
         ReflectionTestUtils.setField(dm, "createdAt", Instant.now());
-
         directMessageRepository.save(dm);
 
         List<DirectMessageResponse> result =
-            directMessageRepository.findDirectMessages(sender.getId(), null, null, 10);
+            directMessageRepository.findDirectMessages(sender.getId(), null, null, 10, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getContent()).isEqualTo("첫 번째 DM");
@@ -70,23 +64,8 @@ class DirectMessageRepositoryTest {
     @Test
     @DisplayName("DM 목록 조회 - Limit 적용 성공")
     void findDirectMessages_withLimit_success() {
-        User sender = User.builder()
-            .provider(Provider.LOCAL)
-            .email("sender@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        sender = userRepository.save(sender);
-
-        User receiver = User.builder()
-            .provider(Provider.LOCAL)
-            .email("receiver@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        receiver = userRepository.save(receiver);
+        User sender = createUser("sender@test.com");
+        User receiver = createUser("receiver@test.com");
 
         for (int i = 1; i <= 5; i++) {
             DirectMessage dm = DirectMessage.builder()
@@ -99,7 +78,7 @@ class DirectMessageRepositoryTest {
         }
 
         List<DirectMessageResponse> result =
-            directMessageRepository.findDirectMessages(sender.getId(), null, null, 3);
+            directMessageRepository.findDirectMessages(sender.getId(), null, null, 3, null);
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getContent()).isEqualTo("메시지 5");
@@ -108,23 +87,8 @@ class DirectMessageRepositoryTest {
     @Test
     @DisplayName("DM 목록 조회 - idAfter 기반 커서 페이징 성공")
     void findDirectMessages_withIdAfter_success() {
-        User sender = User.builder()
-            .provider(Provider.LOCAL)
-            .email("sender@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        sender = userRepository.save(sender);
-
-        User receiver = User.builder()
-            .provider(Provider.LOCAL)
-            .email("receiver@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        receiver = userRepository.save(receiver);
+        User sender = createUser("sender@test.com");
+        User receiver = createUser("receiver@test.com");
 
         DirectMessage dm1 = DirectMessage.builder()
             .sender(sender)
@@ -151,33 +115,18 @@ class DirectMessageRepositoryTest {
         directMessageRepository.save(dm3);
 
         List<DirectMessageResponse> result =
-            directMessageRepository.findDirectMessages(sender.getId(), null, dm1.getId(), 10);
+            directMessageRepository.findDirectMessages(sender.getId(), null, dm1.getId(), 10, null);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getContent()).isEqualTo("메시지 2");
-        assertThat(result.get(1).getContent()).isEqualTo("메시지 3");
+        assertThat(result.get(0).getContent()).isEqualTo("메시지 3");
+        assertThat(result.get(1).getContent()).isEqualTo("메시지 2");
     }
 
     @Test
     @DisplayName("DM 목록 조회 - DESC 정렬 성공")
     void findDirectMessages_descOrder_success() {
-        User sender = User.builder()
-            .provider(Provider.LOCAL)
-            .email("sender@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        sender = userRepository.save(sender);
-
-        User receiver = User.builder()
-            .provider(Provider.LOCAL)
-            .email("receiver@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        receiver = userRepository.save(receiver);
+        User sender = createUser("sender@test.com");
+        User receiver = createUser("receiver@test.com");
 
         for (int i = 1; i <= 3; i++) {
             DirectMessage dm = DirectMessage.builder()
@@ -190,7 +139,8 @@ class DirectMessageRepositoryTest {
         }
 
         List<DirectMessageResponse> result =
-            directMessageRepository.findDirectMessages(sender.getId(), "createdAt,DESC", null, 10);
+            directMessageRepository.findDirectMessages(sender.getId(), null, null, 10,
+                "createdAt,DESC");
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getContent()).isEqualTo("메시지 3");
@@ -200,23 +150,8 @@ class DirectMessageRepositoryTest {
     @Test
     @DisplayName("DM 목록 조회 - ASC 정렬 성공")
     void findDirectMessages_ascOrder_success() {
-        User sender = User.builder()
-            .provider(Provider.LOCAL)
-            .email("sender@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        sender = userRepository.save(sender);
-
-        User receiver = User.builder()
-            .provider(Provider.LOCAL)
-            .email("receiver@test.com")
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        receiver = userRepository.save(receiver);
+        User sender = createUser("sender@test.com");
+        User receiver = createUser("receiver@test.com");
 
         for (int i = 1; i <= 3; i++) {
             DirectMessage dm = DirectMessage.builder()
@@ -229,7 +164,8 @@ class DirectMessageRepositoryTest {
         }
 
         List<DirectMessageResponse> result =
-            directMessageRepository.findDirectMessages(sender.getId(), "createdAt,ASC", null, 10);
+            directMessageRepository.findDirectMessages(sender.getId(), null, null, 10,
+                "createdAt,ASC");
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getContent()).isEqualTo("메시지 1");
