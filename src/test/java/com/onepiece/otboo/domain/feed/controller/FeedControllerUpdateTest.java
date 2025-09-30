@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.feed.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.feed.dto.request.FeedUpdateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
+import com.onepiece.otboo.domain.feed.service.FeedQueryService;
 import com.onepiece.otboo.domain.feed.service.FeedService;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
@@ -13,10 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,6 +41,9 @@ class FeedControllerUpdateTest {
 
     @MockitoBean
     FeedService feedService;
+
+    @MockitoBean
+    FeedQueryService feedQueryService;
 
     @Test
     @WithMockUser(username = "11111111-1111-1111-1111-111111111111")
@@ -67,7 +74,11 @@ class FeedControllerUpdateTest {
 
         CustomUserDetails cud = Mockito.mock(CustomUserDetails.class);
         when(cud.getUserId()).thenReturn(requesterId);
-        var token = new TestingAuthenticationToken(cud, null);
+
+        // 권한을 가진 인증 토큰(ROLE_USER)으로 세팅해야 @PreAuthorize 등에 막히지 않음
+        var token = new TestingAuthenticationToken(
+            cud, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
         token.setAuthenticated(true);
 
         FeedResponse mocked = Mockito.mock(FeedResponse.class);
@@ -162,11 +173,15 @@ class FeedControllerUpdateTest {
         UUID feedId = UUID.randomUUID();
         var body = new FeedUpdateRequest("content");
 
+        // 잘못된 Basic 자격증명을 붙여 필터 레벨에서 즉시 401을 발생시키도록 함
         mockMvc.perform(
             patch(BASE_URL + "/{id}", feedId)
                 .with(csrf())
+                .with(httpBasic("bad-user", "bad-pass"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(body))
         ).andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(feedService);
     }
 }
