@@ -13,6 +13,7 @@ import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
 import com.onepiece.otboo.global.storage.FileStorage;
+import com.onepiece.otboo.global.storage.payload.UploadPayload;
 import com.onepiece.otboo.global.util.ArrayUtil;
 import com.onepiece.otboo.global.util.NumberConverter;
 import java.io.IOException;
@@ -34,6 +35,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileMapper profileMapper;
     private final LocationPersistenceService locationPersistenceService;
     private final FileStorage storage;
+    private final ProfileImageAsyncService profileImageAsyncService;
 
     @Value("${aws.storage.prefix.profile}")
     private String PROFILE_PREFIX;
@@ -75,7 +77,7 @@ public class ProfileServiceImpl implements ProfileService {
             profile.updateTempSensitivity(request.temperatureSensitivity());
         }
 
-        updateProfileImage(profile, profileImage);
+        updateProfileImageAsync(profile, profileImage);
 
         Profile updatedProfile = profileRepository.save(profile);
 
@@ -116,26 +118,37 @@ public class ProfileServiceImpl implements ProfileService {
             });
     }
 
-    private void updateProfileImage(Profile profile, MultipartFile profileImage)
+    private void updateProfileImageAsync(Profile profile, MultipartFile profileImage)
         throws IOException {
+        // 파일 파트가 아예 없으면 변경하지 않음
         if (profileImage == null) {
             return;
         }
+
         String currentKey = profile.getProfileImageUrl();
 
         if (profileImage.isEmpty()) {
             if (currentKey != null) {
+                // 동기로 바로 삭제/NULL 반영 (사용자 관점 즉시 반영)
                 storage.deleteFile(currentKey);
                 profile.updateProfileImageUrl(null);
+                log.info("[ProfileService] 프로필 이미지 제거 - userId: {}", profile.getUser().getId());
             }
             return;
         }
 
-        String newKey = storage.uploadFile(PROFILE_PREFIX, profileImage);
-        profile.updateProfileImageUrl(newKey);
+        UploadPayload payload = new UploadPayload(
+            profileImage.getBytes(),
+            profileImage.getOriginalFilename(),
+            profileImage.getContentType(),
+            profileImage.getSize()
+        );
 
-        if (currentKey != null && !currentKey.equals(newKey)) {
-            storage.deleteFile(currentKey);
-        }
+        UUID userId = profile.getUser().getId();
+        profileImageAsyncService.replaceProfileImageAsync(userId, PROFILE_PREFIX, payload,
+            currentKey);
+
+        log.info("[ProfileService] 프로필 이미지 교체 요청(비동기) - userId: {}, oldKey: {}", userId,
+            currentKey);
     }
 }

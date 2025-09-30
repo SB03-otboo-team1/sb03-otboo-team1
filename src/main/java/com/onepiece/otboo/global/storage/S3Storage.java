@@ -2,6 +2,7 @@ package com.onepiece.otboo.global.storage;
 
 import com.onepiece.otboo.domain.profile.exception.FileSizeExceededException;
 import com.onepiece.otboo.domain.profile.exception.InvalidFileTypeException;
+import com.onepiece.otboo.global.storage.payload.UploadPayload;
 import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
@@ -32,6 +33,8 @@ public class S3Storage implements FileStorage {
 
     private final String bucket;
 
+    private final long MAX_SIZE = 5 * 1024 * 1024;
+
     @Value("${aws.storage.presigned-url-expiration}")
     private long presignedExpiration;
 
@@ -53,8 +56,6 @@ public class S3Storage implements FileStorage {
         }
 
         // 파일 크기 검증 (예: 5MB 제한)
-        // 5MB
-        long MAX_SIZE = 5 * 1024 * 1024;
         if (image.getSize() > MAX_SIZE) {
             throw new FileSizeExceededException(image.getSize(), MAX_SIZE);
         }
@@ -79,6 +80,40 @@ public class S3Storage implements FileStorage {
             throw e;
         }
 
+        return key;
+    }
+
+    @Override
+    public String uploadBytes(String prefix, UploadPayload payload) throws IOException {
+        String contentType = payload.contentType();
+
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new InvalidFileTypeException(contentType);
+        }
+
+        if (payload.size() > MAX_SIZE) {
+            throw new FileSizeExceededException(payload.size(), MAX_SIZE);
+        }
+
+        String original = payload.originalFilename() != null ? payload.originalFilename() : "image";
+        String key = prefix + UUID.randomUUID() + "." + original;
+
+        PutObjectRequest putRequest = PutObjectRequest
+            .builder()
+            .bucket(bucket)
+            .key(key)
+            .contentType(contentType)
+            .build();
+
+        try {
+            s3Client.putObject(putRequest, RequestBody.fromBytes(payload.bytes()));
+        } catch (S3Exception e) {
+            log.error("S3 업로드 실패 - S3 서비스 오류 발생", e);
+            throw e;
+        } catch (Exception e) {
+            log.error("S3 업로드 실패 - 파일 업로드 오류 발생", e);
+            throw e;
+        }
         return key;
     }
 
