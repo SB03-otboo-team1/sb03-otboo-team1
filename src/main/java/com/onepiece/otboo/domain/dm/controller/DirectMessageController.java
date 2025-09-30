@@ -39,10 +39,11 @@ public class DirectMessageController {
         @RequestParam UUID userId,
         @RequestParam(required = false) String cursor,
         @RequestParam(required = false) UUID idAfter,
-        @RequestParam(defaultValue = "10") int limit
+        @RequestParam(defaultValue = "10") int limit,
+        @RequestParam(defaultValue = "createdAt,DESC") String sort
     ) {
         return ResponseEntity.ok(
-            directMessageService.getDirectMessages(userId, cursor, idAfter, limit)
+            directMessageService.getDirectMessages(userId, cursor, idAfter, limit, sort)
         );
     }
 }
