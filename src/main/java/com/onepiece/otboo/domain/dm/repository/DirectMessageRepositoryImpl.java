@@ -64,20 +64,26 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
             }
         }
 
-        OrderSpecifier<?> orderSpecifier = dm.createdAt.desc();
+        OrderSpecifier<?> primaryOrder = dm.createdAt.desc();
+        OrderSpecifier<?> secondaryOrder = dm.id.desc();
+
         if (sort != null && !sort.isEmpty()) {
             String[] parts = sort.split(",");
             String sortBy = parts[0];
             String direction = parts.length > 1 ? parts[1].toUpperCase() : "DESC";
 
             if ("createdAt".equals(sortBy)) {
-                orderSpecifier = direction.equals("ASC")
+                primaryOrder = direction.equals("ASC")
                     ? new OrderSpecifier<>(Order.ASC, dm.createdAt)
                     : new OrderSpecifier<>(Order.DESC, dm.createdAt);
-            } else if ("id".equals(sortBy)) {
-                orderSpecifier = direction.equals("ASC")
+                secondaryOrder = direction.equals("ASC")
                     ? new OrderSpecifier<>(Order.ASC, dm.id)
                     : new OrderSpecifier<>(Order.DESC, dm.id);
+            } else if ("id".equals(sortBy)) {
+                primaryOrder = direction.equals("ASC")
+                    ? new OrderSpecifier<>(Order.ASC, dm.id)
+                    : new OrderSpecifier<>(Order.DESC, dm.id);
+                secondaryOrder = null;
             }
         }
 
@@ -98,7 +104,11 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
             ))
             .from(dm)
             .where(whereBuilder)
-            .orderBy(orderSpecifier)
+            .orderBy(
+                secondaryOrder != null
+                    ? new OrderSpecifier[]{primaryOrder, secondaryOrder}
+                    : new OrderSpecifier[]{primaryOrder}
+            )
             .limit(limit)
             .fetch();
     }
