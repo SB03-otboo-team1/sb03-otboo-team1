@@ -2,18 +2,18 @@ package com.onepiece.otboo.global.storage;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.onepiece.otboo.domain.profile.exception.InvalidFileTypeException;
 import com.onepiece.otboo.domain.profile.exception.FileSizeExceededException;
+import com.onepiece.otboo.domain.profile.exception.InvalidFileTypeException;
+import com.onepiece.otboo.global.storage.payload.UploadPayload;
 import java.io.IOException;
 import java.net.URL;
-import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -146,7 +146,8 @@ class S3StorageTest {
         s3Storage.deleteFile(key);
 
         // then
-        ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
+        ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(
+            DeleteObjectRequest.class);
         verify(s3Client, times(1)).deleteObject(captor.capture());
         DeleteObjectRequest req = captor.getValue();
         assertEquals("test-bucket", req.bucket());
@@ -176,5 +177,29 @@ class S3StorageTest {
         assertEquals("https://test-bucket.s3.amazonaws.com/image/test.jpg", url);
         verify(s3Presigner, times(1)).presignGetObject(any(GetObjectPresignRequest.class));
         verify(utilities, times(1)).getUrl(any(GetUrlRequest.class));
+    }
+
+    @Test
+    void 바이트_단위_이미지_업로드_테스트() throws IOException {
+
+        // given
+        UploadPayload payload = new UploadPayload(
+            "testImage".getBytes(),
+            "testImage.jpg",
+            "image/jpeg",
+            "testImage".getBytes().length
+        );
+
+        // when
+        String key = s3Storage.uploadBytes(KEY, payload);
+
+        // then
+        ArgumentCaptor<PutObjectRequest> requestCaptor = ArgumentCaptor.forClass(
+            PutObjectRequest.class);
+        verify(s3Client).putObject(requestCaptor.capture(), any(RequestBody.class));
+        PutObjectRequest capturedRequest = requestCaptor.getValue();
+        assertThat(capturedRequest.bucket()).isEqualTo("test-bucket");
+        assertThat(capturedRequest.key()).startsWith("image/");
+        assertThat(key).isEqualTo(capturedRequest.key());
     }
 }

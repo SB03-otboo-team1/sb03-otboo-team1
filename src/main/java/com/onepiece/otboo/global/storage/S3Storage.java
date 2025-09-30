@@ -51,22 +51,12 @@ public class S3Storage implements FileStorage {
 
         // 파일 타입 검증
         String contentType = image.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new InvalidFileTypeException(contentType);
-        }
+        validateImage(contentType, image.getSize());
 
-        // 파일 크기 검증 (예: 5MB 제한)
-        if (image.getSize() > MAX_SIZE) {
-            throw new FileSizeExceededException(image.getSize(), MAX_SIZE);
-        }
-
-        String key = prefix + UUID.randomUUID() + "." + image.getOriginalFilename();
+        String key = buildKey(prefix, image.getOriginalFilename());
 
         // 메타 데이터 설정
-        PutObjectRequest putRequest = PutObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .build();
+        PutObjectRequest putRequest = buildPutRequest(key);
 
         try {
             s3Client.putObject(putRequest, RequestBody.fromBytes(image.getBytes()));
@@ -86,24 +76,11 @@ public class S3Storage implements FileStorage {
     @Override
     public String uploadBytes(String prefix, UploadPayload payload) throws IOException {
         String contentType = payload.contentType();
+        validateImage(contentType, payload.size());
 
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new InvalidFileTypeException(contentType);
-        }
+        String key = buildKey(prefix, payload.originalFilename());
 
-        if (payload.size() > MAX_SIZE) {
-            throw new FileSizeExceededException(payload.size(), MAX_SIZE);
-        }
-
-        String original = payload.originalFilename() != null ? payload.originalFilename() : "image";
-        String key = prefix + UUID.randomUUID() + "." + original;
-
-        PutObjectRequest putRequest = PutObjectRequest
-            .builder()
-            .bucket(bucket)
-            .key(key)
-            .contentType(contentType)
-            .build();
+        PutObjectRequest putRequest = buildPutRequest(key);
 
         try {
             s3Client.putObject(putRequest, RequestBody.fromBytes(payload.bytes()));
@@ -155,5 +132,28 @@ public class S3Storage implements FileStorage {
                 .build());
             return url.toString();
         }
+    }
+
+    private void validateImage(String contentType, long size) {
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new InvalidFileTypeException(contentType);
+        }
+        if (size > MAX_SIZE) {
+            throw new FileSizeExceededException(size, MAX_SIZE);
+        }
+    }
+
+    private String buildKey(String prefix, String originalFilename) {
+        String original = (originalFilename != null && !originalFilename.isBlank())
+            ? originalFilename
+            : "image";
+        return prefix + UUID.randomUUID() + "." + original;
+    }
+
+    private PutObjectRequest buildPutRequest(String key) {
+        return PutObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .build();
     }
 }
