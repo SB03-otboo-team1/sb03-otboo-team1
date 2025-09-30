@@ -106,4 +106,43 @@ class DirectMessageServiceTest {
         assertThatThrownBy(() -> directMessageService.getDirectMessageById(invalidId))
             .isInstanceOf(DirectMessageNotFoundException.class);
     }
+
+    @Test
+    @DisplayName("DM 단건 조회 성공")
+    void getDirectMessageById_success() {
+        DirectMessage dm = DirectMessage.builder()
+            .sender(sender)
+            .receiver(receiver)
+            .content("조회 성공 메시지")
+            .build();
+
+        ReflectionTestUtils.setField(dm, "id", UUID.randomUUID());
+
+        when(directMessageRepository.findById(dm.getId()))
+            .thenReturn(Optional.of(dm));
+
+        DirectMessageResponse response = directMessageService.getDirectMessageById(dm.getId());
+
+        assertThat(response.getContent()).isEqualTo("조회 성공 메시지");
+        assertThat(response.getSender().getEmail()).isEqualTo("sender@test.com");
+    }
+
+    @Test
+    @DisplayName("DM 목록 조회 성공")
+    void getDirectMessages_success() {
+        DirectMessageResponse mockResponse = DirectMessageResponse.builder()
+            .id(UUID.randomUUID())
+            .sender(new DirectMessageResponse.UserInfo(senderId, "sender@test.com"))
+            .receiver(new DirectMessageResponse.UserInfo(receiverId, "receiver@test.com"))
+            .content("목록 조회 메시지")
+            .build();
+
+        when(directMessageRepository.findDirectMessages(senderId, null, null, 10))
+            .thenReturn(java.util.List.of(mockResponse));
+
+        var result = directMessageService.getDirectMessages(senderId, null, null, 10);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getContent()).isEqualTo("목록 조회 메시지");
+    }
 }
