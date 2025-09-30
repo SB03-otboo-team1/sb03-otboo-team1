@@ -1,10 +1,10 @@
 package com.onepiece.otboo.infra.api.provider;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.global.util.ArrayUtil;
+import com.onepiece.otboo.infra.api.client.KmaClient;
 import com.onepiece.otboo.infra.api.dto.BaseDt;
 import com.onepiece.otboo.infra.api.dto.KmaItem;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -14,26 +14,24 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class KmaWeatherProvider implements WeatherProvider {
 
-    private final WebClient weatherApiClient;
-    private final ObjectMapper objectMapper;
+    private final KmaClient kmaClient;
+    private final CacheManager cacheManager;
+    private final Clock clock;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
-    private static final DateTimeFormatter DATE = DateTimeFormatter.BASIC_ISO_DATE; // yyyyMMdd
     private static final String[] BASE_TIMES = {"2300", "2000", "1700"};
-    private static final int NUM_ROWS = 1000;
+    private static final DateTimeFormatter DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
     @Override
     public List<KmaItem> fetchLatestItems(int x, int y) {
@@ -59,7 +57,7 @@ public class KmaWeatherProvider implements WeatherProvider {
         }
 
         // 2) 어제 fcstDate가 없으면, 어제 base도 1~2개 보완 조회
-        LocalDate today = ZonedDateTime.now(KST).toLocalDate();
+        LocalDate today = ZonedDateTime.now(clock).withZoneSameInstant(KST).toLocalDate();
         boolean hasYesterday = acc.stream().anyMatch(it ->
             LocalDate.parse(it.fcstDate(), DATE).isEqual(today.minusDays(1))
         );
@@ -115,7 +113,7 @@ public class KmaWeatherProvider implements WeatherProvider {
 
     // 오늘 기준으로 베이스 선택
     private BaseDt resolveLatestBaseToday() {
-        ZonedDateTime now = ZonedDateTime.now(KST);
+        ZonedDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(KST);
         LocalDate d = now.toLocalDate();
         LocalTime t = now.toLocalTime();
         for (String bt : BASE_TIMES) {
@@ -129,87 +127,20 @@ public class KmaWeatherProvider implements WeatherProvider {
 
 
     private List<KmaItem> callVillageOnce(int nx, int ny, LocalDate baseDate, String baseTime) {
-        try {
-            String json = weatherApiClient.get()
-                .uri(u -> u.path("/VilageFcstInfoService_2.0/getVilageFcst")
-                    .queryParam("numOfRows", NUM_ROWS)
-                    .queryParam("pageNo", 1)
-                    .queryParam("nx", nx)
-                    .queryParam("ny", ny)
-                    .queryParam("base_date", baseDate.format(DATE))
-                    .queryParam("base_time", baseTime)
-                    .build())
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, res ->
-                    res.bodyToMono(String.class).flatMap(b ->
-                        Mono.error(
-                            new RuntimeException("KMA HTTP " + res.statusCode() + " body=" + b))
-                    )
-                )
-                .bodyToMono(String.class)
-                .block();
+        List<KmaItem> items = kmaClient.getVillageForecast(nx, ny, baseDate, baseTime);
 
-            Root root = objectMapper.readValue(json, Root.class);
-            if (root == null || root.response == null || root.response.header == null) {
-                log.warn("KMA empty/invalid JSON nx={},ny={},base={}{}",
-                    nx, ny, baseDate.format(DATE), baseTime);
-                return List.of();
+        if (items == null || items.isEmpty()) {
+            Cache cache = cacheManager.getCache("kma:village");
+            if (cache != null) {
+                String key = cacheKey(nx, ny, baseDate, baseTime);
+                cache.evictIfPresent(key);
+                log.debug("[KMA] evicted empty cache entry key={}, cache='kma:village'", key);
             }
-            String code = root.response.header.resultCode;
-            String msg = root.response.header.resultMsg;
-            if (!"00".equals(code)) {
-                log.warn("KMA resultCode={} msg={} nx={},ny={},base={}{}",
-                    code, msg, nx, ny, baseDate.format(DATE), baseTime);
-                return List.of();
-            }
-
-            List<KmaItem> items = Optional.ofNullable(root.response.body)
-                .map(b -> b.items)
-                .map(i -> i.item)
-                .orElse(List.of());
-
-            String baseStr = baseDate.format(DATE);
-            List<KmaItem> out = new ArrayList<>(items.size());
-            for (KmaItem it : items) {
-                out.add(it.withBase(baseStr, baseTime));
-            }
-            return out;
-        } catch (Exception e) {
-            log.error("KMA call error nx={}, ny={}, base={}{}", nx, ny, baseDate.format(DATE),
-                baseTime, e);
-            return List.of();
         }
+        return items;
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class Root {
-
-        public Resp response;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class Resp {
-
-        public Header header;
-        public Body body;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class Header {
-
-        public String resultCode;
-        public String resultMsg;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class Body {
-
-        public Items items;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class Items {
-
-        public List<KmaItem> item;
+    private static String cacheKey(int nx, int ny, LocalDate baseDate, String baseTime) {
+        return String.format("%d:%d:%s:%s", nx, ny, baseDate.format(DATE), baseTime);
     }
 }
