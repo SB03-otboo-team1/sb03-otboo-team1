@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,9 @@ public class WeatherServiceImpl implements WeatherService {
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
+    @Value("${otboo.location.default}")
+    private String DEFAULT_LOCATION_NAME;
+
     @Override
     @Transactional(readOnly = true)
     public List<WeatherDto> getWeather(Double longitude, Double latitude) {
@@ -47,7 +51,8 @@ public class WeatherServiceImpl implements WeatherService {
 
         Location location = locationRepository.findByLatitudeAndLongitude(roundedLat, roundedLon)
             .or(() -> locationRepository.findNearest(roundedLat, roundedLon))
-            .orElseThrow(() -> new IllegalArgumentException("근처 좌표를 찾을 수 없습니다."));
+            .or(() -> locationRepository.findByLocationNames(DEFAULT_LOCATION_NAME))
+            .orElseThrow(() -> new IllegalArgumentException("DB에 기본 위치가 존재하지 않습니다."));
 
         // KST 기준 현재 시각의 "가까운 정시"
         ZonedDateTime nowKst = ZonedDateTime.now(KST);

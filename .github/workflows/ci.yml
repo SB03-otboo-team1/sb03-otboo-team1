@@ -26,6 +26,7 @@ jobs:
       AWS_PRESIGNED_URL_EXPIRATION: ${{ secrets.AWS_PRESIGNED_URL_EXPIRATION }}
       PROFILE_PREFIX: ${{ secrets.PROFILE_PREFIX }}
       CLOTHES_PREFIX: ${{ secrets.CLOTHES_PREFIX }}
+      DEFAULT_LOCATION_NAME: ${{ secrets.DEFAULT_LOCATION_NAME }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
