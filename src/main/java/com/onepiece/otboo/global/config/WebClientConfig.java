@@ -98,7 +98,7 @@ public class WebClientConfig {
                     .replaceQueryParam("dataType")
                     .queryParam("authKey", key)
                     .queryParam("dataType", "JSON")
-                    .build(true)
+                    .build(false)
                     .toUri();
                 ClientRequest newReq = ClientRequest.from(req).url(newUri).build();
                 return Mono.just(newReq);
