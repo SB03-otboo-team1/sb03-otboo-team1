@@ -23,6 +23,9 @@ public class DirectMessageServiceImpl implements DirectMessageService {
     private final DirectMessageRepository directMessageRepository;
     private final UserRepository userRepository;
 
+    /**
+     * DM 생성
+     */
     @Override
     public DirectMessageResponse createDirectMessage(DirectMessageRequest request) {
         if (request.getSenderId().equals(request.getReceiverId())) {
@@ -52,13 +55,24 @@ public class DirectMessageServiceImpl implements DirectMessageService {
             .build();
     }
 
+    /**
+     * DM 목록 조회 (커서 기반 페이징 + 정렬 지원)
+     */
     @Override
     @Transactional(readOnly = true)
-    public List<DirectMessageResponse> getDirectMessages(UUID userId, String cursor, UUID idAfter,
-        int limit) {
-        return directMessageRepository.findDirectMessages(userId, cursor, idAfter, limit);
+    public List<DirectMessageResponse> getDirectMessages(
+        UUID userId,
+        String cursor,
+        UUID idAfter,
+        int limit,
+        String sort
+    ) {
+        return directMessageRepository.findDirectMessages(userId, cursor, idAfter, limit, sort);
     }
 
+    /**
+     * DM 단건 조회
+     */
     @Override
     @Transactional(readOnly = true)
     public DirectMessageResponse getDirectMessageById(UUID id) {

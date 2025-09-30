@@ -11,7 +11,12 @@ public interface DirectMessageService {
 
     DirectMessageResponse getDirectMessageById(UUID id);
 
-    List<DirectMessageResponse> getDirectMessages(UUID userId, String cursor, UUID idAfter,
-        int limit);
+    List<DirectMessageResponse> getDirectMessages(
+        UUID userId,
+        String cursor,
+        UUID idAfter,
+        int limit,
+        String sort
+    );
 
 }
