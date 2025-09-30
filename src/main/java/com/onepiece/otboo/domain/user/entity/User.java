@@ -80,7 +80,20 @@ public class User extends BaseUpdatableEntity {
         this.role = role;
     }
 
+    /**
+     * 소셜 계정 연동
+     * <p>
+     * 현재 서비스의 구조는 소셜 로그인 또는 가입 시 고유한 이메일을 조회하여 신규 생성 또는 연동 업데이트 방식.
+     * <p>
+     * 하나의 계정에 여러 소셜 계정을 연결하는 것을 지원하지 않음.
+     */
     public void linkSocialAccount(Provider provider, String providerUserId) {
+        if (this.socialAccount != null && this.socialAccount.isValid()) {
+            if (!this.socialAccount.isSameProviderAndId(provider, providerUserId)) {
+                throw new IllegalStateException("이미 다른 소셜 계정이 연동되어 있습니다.");
+            }
+            return;
+        }
         this.socialAccount = SocialAccount.builder()
             .provider(provider)
             .providerUserId(providerUserId)
