@@ -1,9 +1,9 @@
 package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
@@ -14,12 +14,12 @@ import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.exception.ErrorCode;
+import com.onepiece.otboo.global.storage.FileStorage;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +29,7 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
+    private final FileStorage fileStorage;
 
     /**
      * 팔로우 생성
@@ -52,7 +53,7 @@ public class FollowServiceImpl implements FollowService {
                 .build()
         );
 
-        return followMapper.toResponse(saved);
+        return followMapper.toResponse(saved, fileStorage);
     }
 
     /**
@@ -119,7 +120,6 @@ public class FollowServiceImpl implements FollowService {
         User follower = userRepository.findById(followerId)
             .orElseThrow(() -> UserNotFoundException.byId(followerId));
 
-        // ✅ Repository에서 바로 DTO Projection 반환
         List<FollowingResponse> results = followRepository.findFollowingsWithProfileCursor(
             follower, cursor, idAfter, limit, nameLike, sortBy, sortDirection
         );
