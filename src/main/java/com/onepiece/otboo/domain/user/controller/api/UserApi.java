@@ -1,6 +1,8 @@
 package com.onepiece.otboo.domain.user.controller.api;
 
+import com.onepiece.otboo.domain.profile.dto.request.ProfileUpdateRequest;
 import com.onepiece.otboo.domain.profile.dto.response.ProfileDto;
+import com.onepiece.otboo.domain.user.dto.request.ChangePasswordRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
@@ -17,11 +19,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "프로필 관리", description = "프로필 관련 API")
 public interface UserApi {
@@ -70,7 +75,8 @@ public interface UserApi {
             )
         )
     })
-    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(@Valid @ModelAttribute UserGetRequest request);
+    ResponseEntity<CursorPageResponseDto<UserDto>> getUsers(
+        @Valid @ModelAttribute UserGetRequest request);
 
 
     @Operation(
@@ -146,4 +152,74 @@ public interface UserApi {
     })
     ResponseEntity<UserDto> updateUserLock(@PathVariable("userId") UUID userId,
         @Valid @RequestBody UserLockUpdateRequest request);
+
+    @Operation(
+        summary = "프로필 업데이트"
+        , description = "프로필 업데이트 API"
+        , security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", description = "프로필 업데이트 성공",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ProfileDto.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404", description = "프로필 업데이트 실패",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "403", description = "권한 부족",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    ResponseEntity<ProfileDto> updateUserProfile(
+        @PathVariable UUID userId,
+        @Valid @RequestPart ProfileUpdateRequest request,
+        @RequestPart(value = "image", required = false) MultipartFile profileImage
+    ) throws IOException;
+
+    @Operation(
+        summary = "비밀번호 변경",
+        description = "비밀번호 변경 API",
+        security = @SecurityRequirement(name = "CustomHeaderAuth")
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "204", description = "비밀번호 변경 성공"
+        ),
+        @ApiResponse(
+            responseCode = "400", description = "비밀번호 변경 실패(잘못된 요청)",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404", description = "비밀번호 변경 실패(사용자 없음)",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "403", description = "권한 부족",
+            content = @Content(
+                mediaType = "*/*",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    ResponseEntity<Void> updatePassword(
+        @PathVariable UUID userId,
+        @Valid @RequestBody ChangePasswordRequest request
+    );
 }

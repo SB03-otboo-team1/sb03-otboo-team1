@@ -31,6 +31,7 @@ spring:
           timeout: 5000
           starttls:
             enable: true
+
   security:
     oauth2:
       client:
@@ -64,6 +65,12 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 logging:
   level:
@@ -112,3 +119,14 @@ api:
   weather:
     service-api-key: ${SERVICE_API_KEY}
 
+aws:
+  storage:
+    type: ${STORAGE_TYPE:s3}
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+    region: ${AWS_REGION}
+    bucket: ${AWS_BUCKET}
+    presigned-url-expiration: ${AWS_PRESIGNED_URL_EXPIRATION:600}
+    prefix:
+      profile: ${PROFILE_PREFIX}
+      clothes: ${CLOTHES_PREFIX}

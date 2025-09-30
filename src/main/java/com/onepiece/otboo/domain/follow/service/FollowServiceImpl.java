@@ -81,11 +81,11 @@ public class FollowServiceImpl implements FollowService {
         }
 
         String nextCursor = null;
-        String nextIdAfter = null;
+        UUID nextIdAfter = null;
         if (!results.isEmpty()) {
             FollowResponse last = results.get(results.size() - 1);
             nextCursor = last.getCreatedAt().toString();
-            nextIdAfter = last.getId().toString();
+            nextIdAfter = last.getId();
         }
 
         long totalCount = followRepository.countByFollowing(followee);
@@ -128,11 +128,11 @@ public class FollowServiceImpl implements FollowService {
         }
 
         String nextCursor = null;
-        String nextIdAfter = null;
+        UUID nextIdAfter = null;
         if (!results.isEmpty()) {
             FollowingResponse last = results.get(results.size() - 1);
             nextCursor = last.getCreatedAt().toString();
-            nextIdAfter = last.getId().toString();
+            nextIdAfter = last.getId();
         }
 
         long totalCount = followRepository.countByFollower(follower);
