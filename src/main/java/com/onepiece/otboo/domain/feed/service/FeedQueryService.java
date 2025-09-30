@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.onepiece.otboo.domain.feed.enums.FeedSortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -33,9 +35,6 @@ public class FeedQueryService {
 
     private final JPAQueryFactory qf;
     private final FeedMapper feedMapper;
-
-    public enum FeedSortBy { createdAt, likeCount }
-    public enum SortDirection { ASCENDING, DESCENDING }
 
     @Transactional(readOnly = true)
     public CursorPageResponseDto<FeedResponse> listFeeds(
