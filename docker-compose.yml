@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
     image: otboo-app:latest
     restart: unless-stopped
+    env_file:
+      - ./.env.docker
     expose:
       - "8080"
     depends_on:
@@ -20,7 +22,7 @@ services:
 
   redis:
     image: redis:7.2-alpine
-    container_name: otboo-redis
+    container_name: redis
     ports:
       - "6379:6379"
     volumes:
@@ -37,10 +39,8 @@ services:
   db:
     image: postgres:17-alpine
     container_name: otboo-db
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${SPRING_DATASOURCE_USERNAME}
-      - POSTGRES_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+    env_file:
+      - ./.env.docker
     ports:
       - "5432:5432"
     volumes:

@@ -1,6 +1,9 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  h2:
+    console:
+      enabled: false
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     driver-class-name: org.postgresql.Driver

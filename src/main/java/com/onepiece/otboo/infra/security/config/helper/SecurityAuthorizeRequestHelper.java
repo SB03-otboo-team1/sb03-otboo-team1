@@ -10,8 +10,8 @@ public final class SecurityAuthorizeRequestHelper {
     private static final Endpoint[] COMMON_PUBLIC_ENDPOINTS = {
         new Endpoint(null, "/"),
         new Endpoint(null, "/index.html"),
-        new Endpoint(null, "logo_symbol.svg"),
-        new Endpoint(null, "vite.svg"),
+        new Endpoint(null, "/logo_symbol.svg"),
+        new Endpoint(null, "/vite.svg"),
         new Endpoint(null, "/error"),
         new Endpoint(null, "/favicon.ico"),
         new Endpoint(null, "/assets/**"),
