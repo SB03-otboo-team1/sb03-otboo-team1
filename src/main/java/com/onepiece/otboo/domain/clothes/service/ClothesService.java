@@ -15,4 +15,6 @@ public interface ClothesService {
 
     ClothesDto createClothes(ClothesCreateRequest request, MultipartFile imageFile)
         throws IOException;
+
+    void deleteClothes(UUID clothesId);
 }
