@@ -4,11 +4,13 @@ import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
+import com.onepiece.otboo.domain.clothes.dto.request.ClothesUpdateRequest;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
+import com.onepiece.otboo.domain.clothes.exception.ClothesNotFoundException;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
@@ -138,14 +140,13 @@ public class ClothesServiceImpl implements ClothesService {
               a -> {
                   ClothesAttributeDefs def = defRepository.findById(a.definitionId()).orElseThrow(IllegalArgumentException::new);
                   String value = a.value();
-                  ClothesAttributes result =
+                  ClothesAttributes attr =
                       ClothesAttributes.builder()
                       .clothes(clothes)
                       .definition(def)
                       .optionValue(value)
                       .build();
-                  attributeRepository.save(result);
-                  return result;
+                  return attributeRepository.save(attr);
               }
           ).toList();
 
@@ -161,4 +162,23 @@ public class ClothesServiceImpl implements ClothesService {
       // ClothesDto 반환
       return clothesMapper.toDto(clothes, clothesAttributeWithDefDto, fileStorage);
   }
+
+  @Override
+  public ClothesDto updateClothes(UUID clothesId, ClothesUpdateRequest request, MultipartFile imageFile)
+      throws IOException {
+
+      Clothes clothes = clothesRepository.findById(clothesId)
+          .orElseThrow(() -> new ClothesNotFoundException("의상 정보를 찾을 수 없습니다. id: " + clothesId));
+
+      String newName = request.name();
+      ClothesType newType = request.type();
+      String newImageUrl = fileStorage.uploadFile(CLOTHES_PREFIX, imageFile);
+
+      clothes.update(newName, newType, newImageUrl);
+
+      clothesRepository.save(clothes);
+
+      return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
+  }
+
 }

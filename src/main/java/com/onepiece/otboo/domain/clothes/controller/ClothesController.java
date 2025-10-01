@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.clothes.controller;
 import com.onepiece.otboo.domain.clothes.api.ClothesApi;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
+import com.onepiece.otboo.domain.clothes.dto.request.ClothesUpdateRequest;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.service.ClothesService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -17,7 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -68,4 +72,18 @@ public class ClothesController implements ClothesApi {
 
       return ResponseEntity.ok(clothes);
     }
+
+    @PatchMapping(path = "/{clothesId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<ClothesDto> updateClothes(
+        @PathVariable UUID clothesId,
+        @Valid @RequestPart ClothesUpdateRequest request,
+        @RequestPart(required = false) MultipartFile imageFile
+    ) throws IOException {
+      log.info("의상 수정 API 호출 - request: {}", request);
+
+      ClothesDto clothes = clothesService.updateClothes(clothesId, request, imageFile);
+
+      return ResponseEntity.ok(clothes);
+    }
+
 }
