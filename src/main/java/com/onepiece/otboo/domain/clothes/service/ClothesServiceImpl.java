@@ -1,11 +1,15 @@
 package com.onepiece.otboo.domain.clothes.service;
 
+import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
+import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
-import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
@@ -15,6 +19,7 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.storage.FileStorage;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -31,10 +36,10 @@ public class ClothesServiceImpl implements ClothesService {
 
     private final ClothesRepository clothesRepository;
     private final UserRepository userRepository;
-    private final ClothesAttributeDefRepository defRepository;
     private final ClothesAttributeOptionsRepository optionsRepository;
     private final ClothesAttributeRepository attributeRepository;
     private final ClothesMapper clothesMapper;
+    private final ClothesAttributeMapper clothesAttributeMapper;
     private final FileStorage fileStorage;
 
     @Value("${aws.storage.prefix.clothes}")
@@ -70,8 +75,22 @@ public class ClothesServiceImpl implements ClothesService {
       }
 
     Long totalCount = clothesRepository.countClothes(ownerId, typeEqual);
+    List<ClothesDto> data = clothes.stream().map(c -> {
+        // attribute 조회
+        List<ClothesAttributes> attributes = attributeRepository.findByClothesId(c.getId());
 
-    List<ClothesDto> data = clothesMapper.toDto(clothes, fileStorage, defRepository, optionsRepository, attributeRepository);
+        // def + options 붙여서 attributeWithDefDto로 변환
+        List<ClothesAttributeWithDefDto> attributeWithDefDtos =
+            attributes.stream().map(a -> {
+                ClothesAttributeDefs def = a.getDefinition();
+                List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(def.getId());
+                ClothesAttributeOptions option = a.getOption();
+                return clothesAttributeMapper.toAttributeWithDefDto(def, a, options, option);
+            }).toList();
+
+        // ClothesDto 생성
+        return clothesMapper.toDto(c, attributeWithDefDtos, fileStorage);
+    }).toList();
 
     log.info("옷 목록 조회 완료 - ownerId: {}, limit: {}, 전체 데이터 개수: {}", ownerId, limit, totalCount);
 
@@ -87,21 +106,30 @@ public class ClothesServiceImpl implements ClothesService {
   }
 
   @Override
-    public ClothesDto createClothes(ClothesCreateRequest request, MultipartFile imageFile) {
+    public ClothesDto createClothes(ClothesCreateRequest request, MultipartFile imageFile)
+      throws IOException {
 
       UUID ownerId = request.ownerId();
       User owner = userRepository.findById(ownerId).orElseThrow(UserNotFoundException::new);
       String name = request.name();
       ClothesType type = request.type();
+      String imageUrl = null;
+      if (imageFile != null) {
+          imageUrl = fileStorage.uploadFile(CLOTHES_PREFIX, imageFile);
+      }
 
+      // Clothes 엔티티 저장
       Clothes clothes = Clothes.builder()
           .owner(owner)
           .name(name)
           .type(type)
+          .imageUrl(imageUrl)
           .build();
 
       clothesRepository.save(clothes);
 
-      return clothesMapper.toDto(clothes, fileStorage, defRepository, optionsRepository, attributeRepository);
+      // Attributes 생성해서 저장
+
+      return null;
   }
 }

@@ -4,8 +4,6 @@ import com.onepiece.otboo.global.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +20,4 @@ public class ClothesAttributeDefs extends BaseUpdatableEntity {
 
     @Column(nullable = false, length = 100, unique = true)
     private String name;
-
-    private List<String> options = new ArrayList<>();
 }

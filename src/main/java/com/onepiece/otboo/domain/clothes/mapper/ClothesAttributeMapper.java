@@ -21,8 +21,8 @@ public interface ClothesAttributeMapper {
     ClothesAttributeWithDefDto toAttributeWithDefDto(
         ClothesAttributeDefs def,
         ClothesAttributes attribute,
-        ClothesAttributeOptions option,
-        List<ClothesAttributeOptions> options
+        List<ClothesAttributeOptions> options,
+        ClothesAttributeOptions option
     );
 
     @Mapping(target = "definitionId", source = "option.definition.id")

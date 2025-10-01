@@ -3,12 +3,6 @@ package com.onepiece.otboo.domain.clothes.mapper;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
-import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
-import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
-import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
-import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
-import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
-import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.global.storage.FileStorage;
 import com.onepiece.otboo.global.storage.S3Storage;
 import java.util.List;
@@ -24,13 +18,9 @@ public interface ClothesMapper {
     @Mapping(target = "imageUrl",
         source = "clothes.imageUrl",
         qualifiedByName = "toPublicUrl")
-    @Mapping(target = "attributes",
-        source = "attributes",
-        qualifiedByName = "mapAttributes")
+    @Mapping(target = "attributes", source = "attributeWithDefs")
     ClothesDto toDto(Clothes clothes,
-        @Context FileStorage fileStorage);
-
-    List<ClothesDto> toDto(List<Clothes> clothes,
+        List<ClothesAttributeWithDefDto> attributeWithDefs,
         @Context FileStorage fileStorage);
 
     @Named("toPublicUrl")
@@ -38,36 +28,12 @@ public interface ClothesMapper {
         if (key == null) {
             return null;
         }
+        if (key.startsWith("http://") || key.startsWith("https://")) {
+            return key;
+        }
         if (fileStorage instanceof S3Storage s3) {
             return s3.generatePresignedUrl(key);
         }
         return key;
-    }
-
-    @Named("mapAttributes")
-    static List<ClothesAttributeWithDefDto> mapAttributes(
-        List<ClothesAttributes> attributes
-    ) {
-        if (attributes == null || attributes.isEmpty()) {
-            return List.of();
-        }
-
-        return attributes.stream().map(attr -> {
-            ClothesAttributeDefs def = attr.getDefinition();
-            List<ClothesAttributeOptions> options =
-                optionsRepository.findByDefinitionId(attr.getDefinition().getId());
-
-            ClothesAttributeOptions option = optionsRepository.findById(attr.getOption().getId())
-                .orElseThrow(() -> new IllegalStateException("의상 속성값 없음: " + attr.getOption().getId()));
-
-            String value = option.getOptionValue();
-
-            return ClothesAttributeWithDefDto.builder()
-                .definitionId(def.getId())
-                .definitionName(def.getName())
-                .selectableValues(options.stream().map(ClothesAttributeOptions::getOptionValue).toList())
-                .value(value) // 실제 값 매핑
-                .build();
-        }).toList();
     }
 }
