@@ -81,7 +81,14 @@ public class RedisJwtRegistry implements JwtRegistry {
             }
 
             String tokenKey = tokenKey(tokenId);
-            TokenMeta tokenMeta = (TokenMeta) valueOps.get(tokenKey);
+            TokenMeta tokenMeta = null;
+            try {
+                Object raw = valueOps.get(tokenKey);
+                if (raw instanceof TokenMeta tm) {
+                    tokenMeta = tm;
+                }
+            } catch (Exception ignored) {
+            }
             redisTemplate.delete(tokenKey);
 
             Instant expiresAt =
