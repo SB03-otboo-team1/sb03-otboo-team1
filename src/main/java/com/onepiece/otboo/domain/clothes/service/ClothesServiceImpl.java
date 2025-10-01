@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.clothes.service;
 
+import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
@@ -10,6 +11,7 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
+import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
@@ -36,6 +38,7 @@ public class ClothesServiceImpl implements ClothesService {
 
     private final ClothesRepository clothesRepository;
     private final UserRepository userRepository;
+    private final ClothesAttributeDefRepository defRepository;
     private final ClothesAttributeOptionsRepository optionsRepository;
     private final ClothesAttributeRepository attributeRepository;
     private final ClothesMapper clothesMapper;
@@ -84,8 +87,8 @@ public class ClothesServiceImpl implements ClothesService {
             attributes.stream().map(a -> {
                 ClothesAttributeDefs def = a.getDefinition();
                 List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(def.getId());
-                ClothesAttributeOptions option = a.getOption();
-                return clothesAttributeMapper.toAttributeWithDefDto(def, a, options, option);
+                String value = a.getOptionValue();
+                return clothesAttributeMapper.toAttributeWithDefDto(def, a, options, value);
             }).toList();
 
         // ClothesDto 생성
@@ -129,7 +132,33 @@ public class ClothesServiceImpl implements ClothesService {
       clothesRepository.save(clothes);
 
       // Attributes 생성해서 저장
+      List<ClothesAttributeDto> attrDto = request.attributes();
+      List<ClothesAttributes> attributes =
+          attrDto.stream().map(
+              a -> {
+                  ClothesAttributeDefs def = defRepository.findById(a.definitionId()).orElseThrow(IllegalArgumentException::new);
+                  String value = a.value();
+                  ClothesAttributes result =
+                      ClothesAttributes.builder()
+                      .clothes(clothes)
+                      .definition(def)
+                      .optionValue(value)
+                      .build();
+                  attributeRepository.save(result);
+                  return result;
+              }
+          ).toList();
 
-      return null;
+      // ClothesDto 생성용 ClothesAttributeWithDefDto 생성
+      List<ClothesAttributeWithDefDto> clothesAttributeWithDefDto =
+          attributes.stream().map(a -> {
+              ClothesAttributeDefs def = a.getDefinition();
+              List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(def.getId());
+              String value = a.getOptionValue();
+              return clothesAttributeMapper.toAttributeWithDefDto(def, a, options, value);
+          }).toList();
+
+      // ClothesDto 반환
+      return clothesMapper.toDto(clothes, clothesAttributeWithDefDto, fileStorage);
   }
 }

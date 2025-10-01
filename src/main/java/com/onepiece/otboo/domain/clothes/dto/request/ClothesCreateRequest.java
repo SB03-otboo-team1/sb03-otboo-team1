@@ -2,7 +2,7 @@ package com.onepiece.otboo.domain.clothes.dto.request;
 
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
-import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -15,6 +15,6 @@ public record ClothesCreateRequest(
     UUID ownerId,
     String name,
     ClothesType type,
-    CursorPageResponseDto<ClothesAttributeDto> attributes
+    List<ClothesAttributeDto> attributes
 ) {
 }
