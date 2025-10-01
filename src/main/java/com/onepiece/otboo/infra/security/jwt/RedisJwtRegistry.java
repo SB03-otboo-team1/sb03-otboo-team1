@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
@@ -24,7 +25,8 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
-@Profile({"dev", "prod"})
+@Primary
+@Profile("!test & !test-integration")
 @RequiredArgsConstructor
 public class RedisJwtRegistry implements JwtRegistry {
 

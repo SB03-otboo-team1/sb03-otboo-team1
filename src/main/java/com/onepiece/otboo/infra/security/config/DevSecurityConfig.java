@@ -21,7 +21,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@Profile({"dev", "test-security"})
+@Profile("!prod & !test")
 @RequiredArgsConstructor
 public class DevSecurityConfig {
 
