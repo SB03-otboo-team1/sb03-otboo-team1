@@ -88,7 +88,7 @@ public class WebClientConfig {
     ) {
         DefaultUriBuilderFactory builder =
             new DefaultUriBuilderFactory(
-                "api.openweathermap.org/data/2.5/forecast");
+                "api.openweathermap.org");
         builder.setEncodingMode(EncodingMode.VALUES_ONLY);
 
         ExchangeFilterFunction appendFixedParams =
@@ -97,6 +97,7 @@ public class WebClientConfig {
                     .replaceQueryParam("appid")
                     .queryParam("appid", key)
                     .queryParam("lang", "kr")
+                    .queryParam("units", "metric")
                     .build(false)
                     .toUri();
                 ClientRequest newReq = ClientRequest.from(req).url(newUri).build();
