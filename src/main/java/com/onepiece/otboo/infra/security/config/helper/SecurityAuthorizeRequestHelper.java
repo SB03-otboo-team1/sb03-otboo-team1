@@ -20,8 +20,7 @@ public final class SecurityAuthorizeRequestHelper {
         new Endpoint(HttpMethod.POST, "/api/auth/refresh"),
         new Endpoint(HttpMethod.POST, "/api/auth/reset-password"),
         new Endpoint(HttpMethod.POST, "/api/auth/sign-in"),
-        new Endpoint(HttpMethod.POST, "/api/users"),
-        new Endpoint(HttpMethod.POST, "/api/clothes")
+        new Endpoint(HttpMethod.POST, "/api/users")
     };
 
     private static final Endpoint[] SWAGGER_ENDPOINTS = {

@@ -29,8 +29,6 @@ public interface ClothesApi {
      * @param limit 페이지 크기
      * @param typeEqual 의상 타입 (선택사항)
      * @param ownerId 소유자 ID
-     * @param sortBy 정렬 기준
-     * @param sortDirection 정렬 방향
      * @return 의상 목록
      */
     @Operation(summary = "의상 조회", description = "사용자의 의상을 조회합니다.")
@@ -44,9 +42,7 @@ public interface ClothesApi {
       @Parameter(description = "다음 ID 커서") @RequestParam(required = false) UUID idAfter,
       @Parameter(description = "페이지 크기") @RequestParam(required = true, defaultValue = "15") @Positive @Min(1) int limit,
       @Parameter(description = "의상 타입") @RequestParam(required = false) ClothesType typeEqual,
-      @Parameter(description = "소유자 ID") @RequestParam(required = true) UUID ownerId,
-      @Parameter(description = "정렬 기준") @RequestParam(required = true, defaultValue = "createdAt") String sortBy,
-      @Parameter(description = "정렬 방향") @RequestParam(required = true, defaultValue = "DESCENDING") String sortDirection
+      @Parameter(description = "소유자 ID") @RequestParam(required = true) UUID ownerId
   );
 
 }

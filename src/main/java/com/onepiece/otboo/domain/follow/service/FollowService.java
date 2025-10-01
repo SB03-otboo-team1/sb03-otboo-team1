@@ -2,11 +2,11 @@ package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
-
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.UUID;
 
 public interface FollowService {
@@ -19,7 +19,7 @@ public interface FollowService {
         int limit,
         String nameLike,
         String sortBy,
-        String sortDirection
+        SortDirection sortDirection
     );
 
     CursorPageResponseDto<FollowingResponse> getFollowings(
@@ -29,7 +29,7 @@ public interface FollowService {
         int limit,
         String nameLike,
         String sortBy,
-        String sortDirection
+        SortDirection sortDirection
     );
 
     void deleteFollow(FollowRequest request);

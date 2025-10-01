@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.clothes.repository;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.entity.QClothes;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -22,7 +23,7 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
 
   @Override
   public List<Clothes> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter,
-      int limit, String sortBy, String sortDirection, ClothesType typeEqual) {
+      int limit, String sortBy, SortDirection sortDirection, ClothesType typeEqual) {
 
       QClothes clothes = QClothes.clothes;
 
@@ -36,11 +37,10 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
       }
 
       if (cursor != null && idAfter != null) {
-          boolean desc = sortDirection.equalsIgnoreCase("DESCENDING");
           switch (sortBy) {
               case "createdAt" -> {
                   Instant cAt = Instant.parse(cursor);
-                  if (desc) {
+                  if (sortDirection.equals(SortDirection.DESCENDING)) {
                       where.and(clothes.createdAt.lt(cAt)
                           .or(clothes.createdAt.eq(cAt).and(clothes.id.lt(idAfter))));
                   } else {
@@ -49,7 +49,7 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
                   }
               }
               case "name" -> {
-                  if (!desc) {
+                  if (sortDirection.equals(SortDirection.ASCENDING)) {
                       where.and(clothes.name.gt(cursor)
                           .or(clothes.name.eq(cursor).and(clothes.id.gt(idAfter))));
                   } else {
@@ -62,12 +62,12 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
 
       OrderSpecifier<?> primary = switch (sortBy) {
           case "createdAt" ->
-              (sortDirection != null && sortDirection.equalsIgnoreCase("DESCENDING") ? clothes.createdAt.desc() : clothes.createdAt.asc());
+              (sortDirection != null && sortDirection.equals(SortDirection.DESCENDING) ? clothes.createdAt.desc() : clothes.createdAt.asc());
           case "name" ->
-              (sortDirection != null && sortDirection.equalsIgnoreCase("DESCENDING") ? clothes.name.desc() : clothes.name.asc());
+              (sortDirection != null && sortDirection.equals(SortDirection.DESCENDING) ? clothes.name.desc() : clothes.name.asc());
           default -> throw new IllegalStateException("Unexpected value: " + sortBy);
       };
-      OrderSpecifier<?> tieBreaker = (sortDirection.equalsIgnoreCase("DESCENDING") ? clothes.id.desc(): clothes.id.asc());
+      OrderSpecifier<?> tieBreaker = (sortDirection.equals(SortDirection.DESCENDING) ? clothes.id.desc(): clothes.id.asc());
 
       List<Clothes> result = jpaQueryFactory
           .select(clothes)

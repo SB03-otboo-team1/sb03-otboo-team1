@@ -1,33 +1,32 @@
 package com.onepiece.otboo.domain.feed.service;
 
+import static com.onepiece.otboo.domain.feed.entity.QFeed.feed;
+import static com.onepiece.otboo.domain.weather.entity.QWeather.weather;
+
 import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.domain.feed.dto.response.OotdDto;
+import com.onepiece.otboo.domain.feed.entity.Feed;
+import com.onepiece.otboo.domain.feed.enums.FeedSortBy;
+import com.onepiece.otboo.domain.feed.mapper.FeedMapper;
 import com.onepiece.otboo.domain.weather.dto.response.PrecipitationDto;
 import com.onepiece.otboo.domain.weather.dto.response.TemperatureDto;
 import com.onepiece.otboo.domain.weather.dto.response.WeatherSummaryDto;
-import com.onepiece.otboo.domain.feed.entity.Feed;
-import com.onepiece.otboo.domain.feed.mapper.FeedMapper;
 import com.onepiece.otboo.domain.weather.enums.PrecipitationType;
 import com.onepiece.otboo.domain.weather.enums.SkyStatus;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.RequiredArgsConstructor;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import com.onepiece.otboo.domain.feed.enums.FeedSortBy;
-import com.onepiece.otboo.global.enums.SortDirection;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import static com.onepiece.otboo.domain.feed.entity.QFeed.feed;
-import static com.onepiece.otboo.domain.weather.entity.QWeather.weather;
+import lombok.RequiredArgsConstructor;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -98,7 +97,7 @@ public class FeedQueryService {
                     final long key;
                     try { key = Long.parseLong(cursor); }
                     catch (Exception e) { throw new IllegalArgumentException("Invalid cursor for likeCount: " + cursor); }
-                    if (sd == SortDirection.ASCENDING) {
+                    if (sd.equals(SortDirection.ASCENDING)) {
                         where.and(feed.likeCount.gt(key).or(feed.likeCount.eq(key).and(feed.id.gt(idAfter))));
                     } else {
                         where.and(feed.likeCount.lt(key).or(feed.likeCount.eq(key).and(feed.id.lt(idAfter))));
@@ -136,7 +135,7 @@ public class FeedQueryService {
         }
 
         long totalCount = countAllWithoutCursor(keywordLike, skyStatusEqual, precipitationTypeEqual, authorIdEqual, joinWeather);
-        return new CursorPageResponseDto<>(data, nextCursor, nextIdAfter, hasNext, totalCount, sb.name(), sd.name());
+        return new CursorPageResponseDto<>(data, nextCursor, nextIdAfter, hasNext, totalCount, sb.name(), sd);
     }
 
     private FeedResponse ensureDefaults(FeedResponse r) {

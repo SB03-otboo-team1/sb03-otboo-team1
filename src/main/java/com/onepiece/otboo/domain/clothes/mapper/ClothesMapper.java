@@ -25,19 +25,13 @@ public interface ClothesMapper {
         source = "clothes.imageUrl",
         qualifiedByName = "toPublicUrl")
     @Mapping(target = "attributes",
-        source = "clothes",
+        source = "attributes",
         qualifiedByName = "mapAttributes")
     ClothesDto toDto(Clothes clothes,
-        @Context FileStorage fileStorage,
-        @Context ClothesAttributeDefRepository defsRepository,
-        @Context ClothesAttributeOptionsRepository optionsRepository,
-        @Context ClothesAttributeRepository attributesRepository);
+        @Context FileStorage fileStorage);
 
     List<ClothesDto> toDto(List<Clothes> clothes,
-        @Context FileStorage fileStorage,
-        @Context ClothesAttributeDefRepository defsRepository,
-        @Context ClothesAttributeOptionsRepository optionsRepository,
-        @Context ClothesAttributeRepository attributesRepository);
+        @Context FileStorage fileStorage);
 
     @Named("toPublicUrl")
     default String toPublicUrl(String key, @Context FileStorage fileStorage) {
@@ -52,17 +46,14 @@ public interface ClothesMapper {
 
     @Named("mapAttributes")
     static List<ClothesAttributeWithDefDto> mapAttributes(
-        Clothes clothes,
-        @Context ClothesAttributeDefRepository defsRepository,
-        @Context ClothesAttributeOptionsRepository optionsRepository,
-        @Context ClothesAttributeRepository attributesRepository
+        List<ClothesAttributes> attributes
     ) {
-        List<ClothesAttributes> attrs = attributesRepository.findByClothesId(clothes.getId());
+        if (attributes == null || attributes.isEmpty()) {
+            return List.of();
+        }
 
-        return attrs.stream().map(attr -> {
-            ClothesAttributeDefs def = defsRepository.findById(attr.getDefinition().getId())
-                .orElseThrow(() -> new IllegalStateException("의상 속성 정의 없음: " + attr.getDefinition().getId()));
-
+        return attributes.stream().map(attr -> {
+            ClothesAttributeDefs def = attr.getDefinition();
             List<ClothesAttributeOptions> options =
                 optionsRepository.findByDefinitionId(attr.getDefinition().getId());
 

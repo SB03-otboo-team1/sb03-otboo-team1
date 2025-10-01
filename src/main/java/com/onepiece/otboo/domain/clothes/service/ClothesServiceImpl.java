@@ -13,6 +13,7 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.storage.FileStorage;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +41,7 @@ public class ClothesServiceImpl implements ClothesService {
     private String CLOTHES_PREFIX;
 
   @Override
-  public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, String sortBy, String sortDirection, ClothesType typeEqual) {
+  public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, String sortBy, SortDirection sortDirection, ClothesType typeEqual) {
 
     List<Clothes> clothes =
         clothesRepository.getClothesWithCursor(ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);

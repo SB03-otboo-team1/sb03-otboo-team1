@@ -1,12 +1,12 @@
 package com.onepiece.otboo.domain.user.dto.request;
 
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.global.enums.SortDirection;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -20,7 +20,7 @@ public record UserGetRequest(
     @Pattern(regexp = "email|createdAt", message = "정렬 조건은 email과 createdAt만 가능합니다.")
     String sortBy,
     @Pattern(regexp = "ASCENDING|DESCENDING", message = "정렬 방향은 ASCENDING과 DESCENDING만 가능합니다.")
-    String sortDirection,
+    SortDirection sortDirection,
     String emailLike,
     Role roleEqual,
     Boolean locked
@@ -36,7 +36,7 @@ public record UserGetRequest(
             sortBy = "createdAt";
         }
         if (sortDirection == null) {
-            sortDirection = "DESCENDING";
+            sortDirection = SortDirection.DESCENDING;
         }
     }
 
@@ -45,7 +45,7 @@ public record UserGetRequest(
     }
 
     public boolean isAscending() {
-        return "ASCENDING".equals(sortDirection);
+        return sortDirection.equals(SortDirection.ASCENDING);
     }
 
     public SortBy sortByEnum() {

@@ -1,5 +1,6 @@
 package com.onepiece.otboo.global.dto.response;
 
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,7 +11,7 @@ public record CursorPageResponseDto<T>(
     Boolean hasNext,
     Long totalCount,
     String sortBy,
-    String sortDirection
+    SortDirection sortDirection
 ) {
 
 }
