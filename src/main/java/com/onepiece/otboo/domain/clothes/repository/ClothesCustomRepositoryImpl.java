@@ -29,7 +29,7 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
       // 기본 조건
       BooleanBuilder where = new BooleanBuilder();
 
-      where.and(clothes.ownerId.eq(ownerId));
+      where.and(clothes.owner.id.eq(ownerId));
 
       if (typeEqual != null) {
           where.and(clothes.type.eq(typeEqual));
@@ -86,7 +86,7 @@ public class ClothesCustomRepositoryImpl implements ClothesCustomRepository{
         QClothes clothes = QClothes.clothes;
 
         BooleanBuilder where = new BooleanBuilder();
-        where.and(clothes.ownerId.eq(ownerId));
+        where.and(clothes.owner.id.eq(ownerId));
         if (typeEqual != null) {
             where.and(clothes.type.eq(typeEqual));
         }

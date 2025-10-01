@@ -1,5 +1,7 @@
 package com.onepiece.otboo.domain.clothes.mapper;
 
+import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDefDto;
+import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
@@ -13,12 +15,26 @@ import org.mapstruct.Named;
 public interface ClothesAttributeMapper {
 
     @Mapping(target = "definitionId", source = "def.id")
-    @Mapping(target = "attributeId", source = "attribute.id")
+    @Mapping(target = "definitionName", source = "def.name")
     @Mapping(target = "selectableValues", source = "options", qualifiedByName = "optionsToValues")
-    @Mapping(target = "value", source = "attribute.value")
+    @Mapping(target = "value", source = "option.optionValue")
     ClothesAttributeWithDefDto toAttributeWithDefDto(
         ClothesAttributeDefs def,
         ClothesAttributes attribute,
+        ClothesAttributeOptions option,
+        List<ClothesAttributeOptions> options
+    );
+
+    @Mapping(target = "definitionId", source = "option.definition.id")
+    @Mapping(target = "value", source = "option.optionValue")
+    ClothesAttributeDto toAttributeDto(
+        ClothesAttributeOptions option
+    );
+
+    @Mapping(target = "name", source = "def.name")
+    @Mapping(target = "selectableValues", source = "options", qualifiedByName = "optionsToValues")
+    ClothesAttributeDefDto toAttributeDefDto(
+        ClothesAttributeDefs def,
         List<ClothesAttributeOptions> options
     );
 

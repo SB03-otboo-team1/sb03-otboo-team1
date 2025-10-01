@@ -3,6 +3,8 @@ package com.onepiece.otboo.domain.clothes.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -22,9 +24,11 @@ public class ClothesAttributeOptions {
     @Id
     public UUID id;
 
+    @ManyToOne
+    @JoinColumn(name = "definition_id", columnDefinition = "uuid", nullable = false)
+    private ClothesAttributeDefs definition;
+
     @Column(nullable = false, length = 50)
     public String optionValue;
 
-    @Column(nullable = false)
-    public UUID definitionId;
 }
