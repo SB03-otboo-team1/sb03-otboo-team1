@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.clothes.entity;
 
 import com.onepiece.otboo.global.base.BaseUpdatableEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -27,8 +28,7 @@ public class ClothesAttributes extends BaseUpdatableEntity {
     @JoinColumn(name = "definition_id", columnDefinition = "uuid", nullable = false)
     private ClothesAttributeDefs definition;
 
-    @ManyToOne
-    @JoinColumn(name = "option_id", columnDefinition = "uuid", nullable = false)
-    private ClothesAttributeOptions option;
+    @Column(name = "option_value", nullable = false)
+    private String optionValue;
 
 }

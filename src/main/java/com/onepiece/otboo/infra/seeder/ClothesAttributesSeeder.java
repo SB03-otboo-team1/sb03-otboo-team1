@@ -29,7 +29,7 @@ public class ClothesAttributesSeeder implements DataSeeder {
 
         List<String> clothesIds = fetchIds(jdbcTemplate, "clothes");
         List<Map<String, Object>> defOpt = jdbcTemplate.queryForList(
-            "SELECT d.id AS def_id, o.id AS opt_id FROM clothes_attribute_defs d JOIN clothes_attribute_options o ON o.definition_id = d.id"
+            "SELECT d.id AS def_id, o.option_value AS opt_val FROM clothes_attribute_defs d JOIN clothes_attribute_options o ON o.definition_id = d.id"
         );
         if (clothesIds.isEmpty() || defOpt.isEmpty()) {
             return;
@@ -39,10 +39,10 @@ public class ClothesAttributesSeeder implements DataSeeder {
             UUID cId = UUID.fromString(cIdStr);
             for (Map<String, Object> row : defOpt) {
                 UUID defId = (UUID) row.get("def_id");
-                UUID optId = (UUID) row.get("opt_id");
+                String optVal = (String) row.get("opt_val");
                 jdbcTemplate.update(
-                    "INSERT INTO clothes_attributes (id, clothes_id, definition_id, option_id, created_at) VALUES (?,?,?,?,now())",
-                    uuid(), cId, defId, optId
+                    "INSERT INTO clothes_attributes (id, clothes_id, definition_id, option_value, created_at) VALUES (?,?,?,?,now())",
+                    uuid(), cId, defId, optVal
                 );
                 count++;
             }
