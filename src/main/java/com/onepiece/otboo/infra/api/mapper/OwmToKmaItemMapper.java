@@ -141,12 +141,12 @@ public class OwmToKmaItemMapper {
             case 520, 521, 522, 531 -> "4"; // shower rain
 
             // Snow group: 600–622
-            case 600, 601, 602, 615, 616, 620, 621, 622 -> "3";
-            case 611, 612, 613 -> "2"; // sleet
+            case 600, 601, 602, 620, 621, 622 -> "3";
+            case 611, 612, 613, 615, 616 -> "2";
 
             // Atmosphere group: 701–781 → 없음
             case 701, 711, 721, 731, 741, 751, 761, 762, 771, 781 -> "0";
-            
+
             // Default
             default -> "0";
         };
