@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.weather.support;
 
+import com.onepiece.otboo.global.util.DateTimeStringUtil;
 import com.onepiece.otboo.infra.api.dto.KmaItem;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -13,39 +14,13 @@ public class ForecastGrouping {
 
     private static final DateTimeFormatter DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
-    private static String normalizeDate(String s) {
-        // 숫자만 남기고 앞 8자리(yyyyMMdd)만 사용
-        if (s == null) {
-            return null;
-        }
-        String digits = s.replaceAll("\\D", ""); // "+0900" 같은 비숫자 제거
-        return digits.length() >= 8 ? digits.substring(0, 8) : digits;
-    }
-
-    private static String padHHmm(String s) {
-        if (s == null) {
-            return null;
-        }
-        String digits = s.replaceAll("\\D", "");
-        if (digits.length() == 1) {
-            return "000" + digits;
-        }
-        if (digits.length() == 2) {
-            return "00" + digits;
-        }
-        if (digits.length() == 3) {
-            return "0" + digits;
-        }
-        return digits.substring(0, 4);
-    }
-
     public static Extremes collectDailyExtremes(List<KmaItem> items, LocalDate start,
         LocalDate end) {
         Map<String, Double> tmxByDate = new HashMap<>();
         Map<String, Double> tmnByDate = new HashMap<>();
 
         for (KmaItem it : items) {
-            String dStr = normalizeDate(it.fcstDate());   // ★ 동일하게 정규화
+            String dStr = DateTimeStringUtil.normalizeDate(it.fcstDate());   // ★ 동일하게 정규화
             LocalDate d = LocalDate.parse(dStr, DATE);
             if (d.isBefore(start.minusDays(1)) || d.isAfter(end)) {
                 continue;
@@ -65,8 +40,8 @@ public class ForecastGrouping {
 
         Map<ForecastKey, Map<String, KmaItem>> bucket = new LinkedHashMap<>();
         for (KmaItem it : items) {
-            String dStr = normalizeDate(it.fcstDate());   // ★ 오프셋 제거
-            String tStr = padHHmm(it.fcstTime());         // ★ 4자리 보장
+            String dStr = DateTimeStringUtil.normalizeDate(it.fcstDate());   // ★ 오프셋 제거
+            String tStr = DateTimeStringUtil.padHHmm(it.fcstTime());         // ★ 4자리 보장
 
             LocalDate d = LocalDate.parse(dStr, DATE);
             if (d.isBefore(start.minusDays(1)) || d.isAfter(end)) {
