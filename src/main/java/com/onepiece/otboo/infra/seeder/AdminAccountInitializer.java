@@ -1,7 +1,7 @@
 package com.onepiece.otboo.infra.seeder;
 
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
@@ -31,7 +31,7 @@ public class AdminAccountInitializer {
         User admin;
         if (adminOpt.isEmpty()) {
             admin = User.builder()
-                .provider(Provider.LOCAL)
+                .socialAccount(SocialAccount.builder().build())
                 .email(adminEmail)
                 .password(passwordEncoder.encode(adminPassword))
                 .role(Role.ADMIN)
