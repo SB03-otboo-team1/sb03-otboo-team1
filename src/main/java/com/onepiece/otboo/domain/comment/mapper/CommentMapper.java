@@ -12,6 +12,6 @@ public interface CommentMapper {
 
     @Mapping(target = "feedId", expression = "java(comment.getFeed().getId())")
     @Mapping(target = "author", expression =
-        "java(new AuthorDto(comment.getAuthor().getId(), \"\", null))")
+        "java(new AuthorDto(comment.getAuthor().getId(), comment.getAuthor().getNickname(), comment.getAuthor().getProfileImage()))")
     CommentDto toDto(Comment comment);
 }
