@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.profile.exception;
+package com.onepiece.otboo.global.storage.exception;
 
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;

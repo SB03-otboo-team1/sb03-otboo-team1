@@ -129,12 +129,11 @@ CREATE TABLE IF NOT EXISTS clothes_attributes
     id            uuid PRIMARY KEY,
     clothes_id    uuid                     NOT NULL,
     definition_id uuid                     NOT NULL,
-    option_id     uuid                     NOT NULL,
+    option_value     varchar(50)                     NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at    TIMESTAMP WITH TIME ZONE,
     FOREIGN KEY (clothes_id) REFERENCES clothes (id) ON DELETE CASCADE,
     FOREIGN KEY (definition_id) REFERENCES clothes_attribute_defs (id) ON DELETE CASCADE,
-    FOREIGN KEY (option_id) REFERENCES clothes_attribute_options (id) ON DELETE CASCADE,
     UNIQUE (clothes_id, definition_id)
 );
 
