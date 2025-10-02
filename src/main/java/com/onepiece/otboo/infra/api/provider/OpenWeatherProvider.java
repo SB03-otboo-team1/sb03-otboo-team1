@@ -6,7 +6,6 @@ import com.onepiece.otboo.infra.api.dto.KmaItem;
 import com.onepiece.otboo.infra.api.mapper.OwmToKmaItemMapper;
 import com.onepiece.otboo.infra.converter.LatLonXYConverter;
 import com.onepiece.otboo.infra.converter.LatLonXYConverter.Point;
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,7 +23,6 @@ public class OpenWeatherProvider implements WeatherProvider {
 
     private final OpenWeatherClient owmClient;
     private final CacheManager cacheManager;
-    private final Clock clock;
 
     @Override
     public List<KmaItem> fetchLatestItems(double latitude, double longitude) {
