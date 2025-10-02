@@ -20,7 +20,7 @@ package com.onepiece.otboo.infra.converter;
  *
  *
  */
-public class LatLonToXYConverter {
+public class LatLonXYConverter {
 
     // Lambert Conformal Conic (LCC) 투영법 파라미터
     private static final double RE = 6371.00877; // 지구 반경 (km)
@@ -58,8 +58,7 @@ public class LatLonToXYConverter {
     }
 
     /**
-     * 주어진 위도와 경도를 Lambert Conformal Conic 투영법을 사용하여
-     * 기상청 격자 좌표(X, Y)로 변환합니다.
+     * 주어진 위도와 경도를 Lambert Conformal Conic 투영법을 사용하여 기상청 격자 좌표(X, Y)로 변환합니다.
      *
      * @param lat 위도 값 (단위: degree, -90 ~ 90 권장)
      * @param lon 경도 값 (단위: degree, -180 ~ 180 권장)
@@ -84,14 +83,7 @@ public class LatLonToXYConverter {
         return new Point(x, y);
     }
 
-    public static class Point {
+    public record Point(int x, int y) {
 
-        public final int x;
-        public final int y;
-
-        public Point(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
     }
 }

@@ -3,8 +3,8 @@ package com.onepiece.otboo.domain.location.service;
 import com.onepiece.otboo.domain.weather.dto.data.WeatherAPILocation;
 import com.onepiece.otboo.infra.api.dto.KakaoLocationItem;
 import com.onepiece.otboo.infra.api.provider.LocationProvider;
-import com.onepiece.otboo.infra.converter.LatLonToXYConverter;
-import com.onepiece.otboo.infra.converter.LatLonToXYConverter.Point;
+import com.onepiece.otboo.infra.converter.LatLonXYConverter;
+import com.onepiece.otboo.infra.converter.LatLonXYConverter.Point;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +32,10 @@ public class LocationServiceImpl implements LocationService {
         );
 
         // 위도, 경도를 x, y 좌표로 변환
-        Point point = LatLonToXYConverter.latLonToXY(latitude, longitude);
+        Point point = LatLonXYConverter.latLonToXY(latitude, longitude);
 
         log.info("[LocationService] 위치 정보 조회 완료 - x: {}, y: {} locationNames: {}",
-            point.x, point.y, locationString);
+            point.x(), point.y(), locationString);
 
         List<String> locationNames = Arrays.stream(locationString.split(","))
             .filter(s -> !s.isBlank())
@@ -44,8 +44,8 @@ public class LocationServiceImpl implements LocationService {
         return new WeatherAPILocation(
             latitude,
             longitude,
-            point.x,
-            point.y,
+            point.x(),
+            point.y(),
             locationNames
         );
     }
