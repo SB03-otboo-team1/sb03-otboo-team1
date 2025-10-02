@@ -107,7 +107,7 @@ public class ClothesController implements ClothesApi {
     public ResponseEntity<ClothesDto> updateClothes(
         @PathVariable UUID clothesId,
         @Valid @RequestPart ClothesUpdateRequest request,
-        @RequestPart(required = false) MultipartFile imageFile
+        @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) throws IOException {
         // 인증된 사용자 ID 가져오기
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
