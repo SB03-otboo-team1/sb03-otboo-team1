@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -160,7 +159,7 @@ class ProfileServiceImplTest {
         assertEquals(Gender.MALE, result.gender());
         assertEquals(BIRTH, result.birthDate());
         assertEquals(2, result.temperatureSensitivity());
-        verify(profileImageEventPublisher).replaceProfileImageAsync(eq(userId), any(), any(),
+        verify(profileImageEventPublisher).publishReplace(any(), any(), any(),
             any());
     }
 
@@ -315,7 +314,7 @@ class ProfileServiceImplTest {
         profileService.update(userId, req(Gender.MALE, BIRTH, 2), file);
 
         // then
-        verify(profileImageEventPublisher).replaceProfileImageAsync(eq(userId), any(), any(),
+        verify(profileImageEventPublisher).publishReplace(any(), any(), any(),
             any());
     }
 
