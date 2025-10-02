@@ -1,22 +1,20 @@
 package com.onepiece.otboo.domain.follow.entity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.UUID;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class FollowTest {
 
     private User createUser(String email) {
         return User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email(email)
             .password("password")
             .locked(false)

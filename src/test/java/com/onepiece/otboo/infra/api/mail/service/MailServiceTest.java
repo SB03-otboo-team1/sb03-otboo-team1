@@ -1,11 +1,10 @@
-package com.onepiece.otboo.domain.auth.service;
+package com.onepiece.otboo.infra.api.mail.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
 
 import com.onepiece.otboo.domain.auth.dto.request.ResetPasswordRequest;
-import com.onepiece.otboo.infra.api.mail.service.MailService;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ActiveProfiles;

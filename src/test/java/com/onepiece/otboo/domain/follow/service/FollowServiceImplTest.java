@@ -16,8 +16,8 @@ import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
@@ -61,8 +61,7 @@ class FollowServiceImplTest {
         MockitoAnnotations.openMocks(this);
 
         follower = User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email("follower@test.com")
             .password("pwd123")
             .locked(false)
@@ -70,8 +69,7 @@ class FollowServiceImplTest {
             .build();
 
         following = User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email("following@test.com")
             .password("pwd123")
             .locked(false)

@@ -5,8 +5,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import java.util.Optional;
@@ -46,7 +46,7 @@ class AdminAccountInitializerTest {
     @Test
     void 어드민_계정_있으면_초기화() {
         User admin = User.builder()
-            .provider(Provider.LOCAL)
+            .socialAccount(SocialAccount.builder().build())
             .email("admin@example.com")
             .password("old")
             .role(Role.USER)
