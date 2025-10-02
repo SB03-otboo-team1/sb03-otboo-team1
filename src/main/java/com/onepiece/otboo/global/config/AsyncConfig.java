@@ -35,6 +35,7 @@ public class AsyncConfig implements AsyncConfigurer {
     private static final int DEFAULT_AWAIT_TERMINATION_SECONDS = 20;
     private static final boolean DEFAULT_WAIT_FOR_TASKS_TO_COMPLETE_ON_SHUTDOWN = true;
 
+    private static final String BINARY_THREAD_PREFIX = "binaryContent-exec";
     private static final String MAIL_THREAD_PREFIX = "mail-exec";
 
     @Bean(name = "binaryContentExecutor")
@@ -44,7 +45,7 @@ public class AsyncConfig implements AsyncConfigurer {
         @Value("${async.executors.binary-content.queue-capacity}") int queue,
         @Value("${async.executors.binary-content.keep-alive}") int keepAlive
     ) {
-        return buildExecutor(core, max, queue, keepAlive, "binaryContent-exec");
+        return buildExecutor(core, max, queue, keepAlive, BINARY_THREAD_PREFIX);
     }
 
     @Bean(name = "mailTaskExecutor")
