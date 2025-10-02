@@ -10,8 +10,8 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
-import com.onepiece.otboo.domain.clothes.exception.ClothesNotFoundException;
 import com.onepiece.otboo.domain.clothes.exception.ClothesAttributeDefNotFoundException;
+import com.onepiece.otboo.domain.clothes.exception.ClothesNotFoundException;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
@@ -56,7 +56,7 @@ public class ClothesServiceImpl implements ClothesService {
     private String CLOTHES_PREFIX;
 
   @Override
-  public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
+  public CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
 
     List<Clothes> clothes =
         clothesRepository.getClothesWithCursor(ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
@@ -131,6 +131,13 @@ public class ClothesServiceImpl implements ClothesService {
         sortBy,
         sortDirection
     );
+  }
+
+  @Override
+  public ClothesDto getClothes(UUID clothesId) {
+      Clothes clothes = clothesRepository.findById(clothesId)
+          .orElseThrow(() -> new ClothesNotFoundException("해당 옷 정보를 찾을 수 없습니다."));
+      return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
   }
 
   @Override

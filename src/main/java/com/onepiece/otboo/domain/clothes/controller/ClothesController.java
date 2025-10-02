@@ -62,7 +62,7 @@ public class ClothesController implements ClothesApi {
     SortBy sortBy = SortBy.CREATED_AT;
     SortDirection sortDirection = SortDirection.DESCENDING;
 
-    CursorPageResponseDto<ClothesDto> response = clothesService.getClothes(
+    CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
         ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
 
     return ResponseEntity.ok(response);
@@ -109,9 +109,22 @@ public class ClothesController implements ClothesApi {
         @Valid @RequestPart ClothesUpdateRequest request,
         @RequestPart(required = false) MultipartFile imageFile
     ) throws IOException {
+        // 인증된 사용자 ID 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID authenticatedUserId = resolveRequesterId(auth);
+
       log.info("의상 수정 API 호출 - request: {}", request);
 
-      ClothesDto clothes = clothesService.updateClothes(clothesId, request, imageFile);
+      ClothesDto oldClothes = clothesService.getClothes(clothesId);
+      UUID ownerId = oldClothes.ownerId();
+
+        // request의 ownerId와 인증된 사용자 ID 비교
+        if (ownerId.equals(authenticatedUserId)) {
+            log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", ownerId, authenticatedUserId);
+            throw new GlobalException(ErrorCode.FORBIDDEN);
+        }
+
+        ClothesDto clothes = clothesService.updateClothes(clothesId, request, imageFile);
 
       return ResponseEntity.ok(clothes);
     }
