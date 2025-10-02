@@ -4,6 +4,8 @@ import com.onepiece.otboo.global.util.ArrayUtil;
 import com.onepiece.otboo.infra.api.client.KmaClient;
 import com.onepiece.otboo.infra.api.dto.BaseDt;
 import com.onepiece.otboo.infra.api.dto.KmaItem;
+import com.onepiece.otboo.infra.converter.LatLonXYConverter;
+import com.onepiece.otboo.infra.converter.LatLonXYConverter.Point;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,10 +20,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 public class KmaWeatherProvider implements WeatherProvider {
 
@@ -34,9 +35,11 @@ public class KmaWeatherProvider implements WeatherProvider {
     private static final DateTimeFormatter DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
     @Override
-    public List<KmaItem> fetchLatestItems(int x, int y) {
+    public List<KmaItem> fetchLatestItems(double latitude, double longitude) {
         BaseDt latestBase = resolveLatestBaseToday(); // 오늘 기준으로 잡기
         List<KmaItem> acc = new ArrayList<>();
+
+        Point p = LatLonXYConverter.latLonToXY(latitude, longitude);
 
         int startIdx = ArrayUtil.indexOf(BASE_TIMES, latestBase.time());
         if (startIdx < 0) {
@@ -45,14 +48,14 @@ public class KmaWeatherProvider implements WeatherProvider {
         }
         for (int i = startIdx; i < BASE_TIMES.length; i++) {
             BaseDt tb = new BaseDt(latestBase.date(), BASE_TIMES[i]);
-            List<KmaItem> items = callVillageOnce(x, y, tb.date(), tb.time());
+            List<KmaItem> items = callVillageOnce(p.x(), p.y(), tb.date(), tb.time());
             if (!items.isEmpty()) {
                 acc.addAll(items);
                 break;
             }
         }
         if (acc.isEmpty()) {
-            log.warn("[KMA] no data for today base nx={}, ny={}", x, y);
+            log.warn("[KMA] no data for today base nx={}, ny={}", p.x(), p.y());
             return List.of();
         }
 
@@ -66,7 +69,7 @@ public class KmaWeatherProvider implements WeatherProvider {
             int[] prevCandidates = {2300, 2000}; // 필요시 1700까지
             for (int bt : prevCandidates) {
                 String baseTime = String.format("%04d", bt);
-                List<KmaItem> prev = callVillageOnce(x, y, prevDate, baseTime);
+                List<KmaItem> prev = callVillageOnce(p.x(), p.y(), prevDate, baseTime);
                 if (!prev.isEmpty()) {
                     acc.addAll(prev);
                     break;
