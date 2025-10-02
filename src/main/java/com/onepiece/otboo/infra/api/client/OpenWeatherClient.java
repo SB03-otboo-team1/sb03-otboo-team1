@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -27,11 +28,11 @@ public class OpenWeatherClient {
     private static final DateTimeFormatter DATE = DateTimeFormatter.BASIC_ISO_DATE; // yyyyMMdd
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HHmm");
 
-    //    @Cacheable(
-//        cacheNames = "owm:forecast",
-//        key = "T(java.lang.String).format('%f:%f', #latitude, #longitude)",
-//        sync = true
-//    )
+    @Cacheable(
+        cacheNames = "owm:forecast",
+        key = "T(java.lang.String).format('%f:%f', #latitude, #longitude)",
+        sync = true
+    )
     public Root get5Day3HourForecast(double latitude, double longitude) {
         try {
             String json = openWeatherApiClient.get()

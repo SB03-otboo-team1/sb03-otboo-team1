@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -21,7 +23,7 @@ import org.springframework.stereotype.Component;
 public class OpenWeatherProvider implements WeatherProvider {
 
     private final OpenWeatherClient owmClient;
-    //private final CacheManager cacheManager;
+    private final CacheManager cacheManager;
     private final Clock clock;
 
     @Override
@@ -31,13 +33,13 @@ public class OpenWeatherProvider implements WeatherProvider {
 
         if (root == null || root.list == null || root.list.isEmpty()) {
             log.warn("[OpenWeatherProvider] 날씨 데이터가 없습니다 - 위도: {}, 경도: {}", latitude, longitude);
-//            // 비어있으면 캐시 제거 (옵션)
-//            Cache cache = cacheManager.getCache("owm:forecast");
-//            if (cache != null) {
-//                String key = String.format("%f:%f", latLon.lat(), latLon.lon());
-//                cache.evictIfPresent(key);
-//                log.debug("[OWM] evicted empty cache entry key={}, cache='owm:forecast'", key);
-//            }
+
+            Cache cache = cacheManager.getCache("owm:forecast");
+            if (cache != null) {
+                String key = String.format("%f:%f", latitude, longitude);
+                cache.evictIfPresent(key);
+                log.debug("[OWM] evicted empty cache entry key: {}, cache: 'owm:forecast'", key);
+            }
             return List.of();
         }
 
