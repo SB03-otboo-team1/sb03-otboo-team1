@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
-class DateTimeStringUtilsTest {
+class DateTimeStringUtilTest {
 
     @Test
     void 날짜_문자열_정규화_테스트() {
