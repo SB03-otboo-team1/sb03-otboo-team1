@@ -4,7 +4,6 @@ import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -27,7 +26,6 @@ public record ClothesCreateRequest(
     ClothesType type,
 
     @Valid
-    @NotEmpty(message = "최소 하나의 속성이 필요합니다")
     @Size(max = 50, message = "속성은 최대 50개까지 등록 가능합니다")
     List<ClothesAttributeDto> attributes
 ) {
