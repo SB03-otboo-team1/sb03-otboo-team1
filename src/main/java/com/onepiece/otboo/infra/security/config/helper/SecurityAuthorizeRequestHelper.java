@@ -24,8 +24,9 @@ public final class SecurityAuthorizeRequestHelper {
     };
 
     private static final Endpoint[] SWAGGER_ENDPOINTS = {
-        new Endpoint(null, "/swagger-ui/**"),
-        new Endpoint(null, "/v3/api-docs/**")
+        new Endpoint(null, "/api/swagger-ui/**"),
+        new Endpoint(null, "/api/v3/api-docs"),
+        new Endpoint(null, "/api/v3/api-docs/**")
     };
 
     public static Endpoint[] commonPublicEndpoints() {

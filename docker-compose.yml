@@ -64,6 +64,7 @@ services:
     volumes:
       - ./src/main/resources/static:/usr/share/nginx/html:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/proxy_headers.conf:/etc/nginx/proxy_headers.conf:ro
     networks:
       - otboo-network
 
