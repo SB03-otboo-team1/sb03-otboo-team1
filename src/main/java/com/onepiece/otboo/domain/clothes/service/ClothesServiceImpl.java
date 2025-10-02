@@ -74,12 +74,10 @@ public class ClothesServiceImpl implements ClothesService {
           clothes = clothes.subList(0, limit);
           Clothes lastClothes = clothes.get(limit - 1);
           switch (sortBy) {
-              case CREATED_AT -> {
+              case CREATED_AT ->
                   nextCursor = lastClothes.getCreatedAt().toString();
-              }
-              case NAME -> {
+              case NAME ->
                   nextCursor = lastClothes.getName();
-              }
           }
           nextIdAfter = lastClothes.getId();
       }
@@ -105,13 +103,13 @@ public class ClothesServiceImpl implements ClothesService {
 
       List<ClothesDto> data = clothes.stream().map(c -> {
         // attribute 조회
-        List<ClothesAttributes> attr = attributeRepository.findByClothesId(c.getId());
+        List<ClothesAttributes> attr = attributesByClothesId.getOrDefault(c.getId(), List.of());
 
         // def + options 붙여서 attributeWithDefDto로 변환
         List<ClothesAttributeWithDefDto> attributeWithDefDtos =
             attr.stream().map(a -> {
                 ClothesAttributeDefs def = a.getDefinition();
-                List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(def.getId());
+                List<ClothesAttributeOptions> options = optionsByDefId.getOrDefault(def.getId(), List.of());
                 String value = a.getOptionValue();
                 return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
             }).toList();
@@ -172,15 +170,16 @@ public class ClothesServiceImpl implements ClothesService {
                       () -> ClothesAttributeDefNotFoundException.byId(a.definitionId())
                   );
                   String value = a.value();
-                  ClothesAttributes attr =
+                  return
                       ClothesAttributes.builder()
                       .clothes(clothes)
                       .definition(def)
                       .optionValue(value)
                       .build();
-                  return attributeRepository.save(attr);
               }
           ).toList();
+
+      attributeRepository.saveAll(attributes);
 
       // ClothesDto 생성용 ClothesAttributeWithDefDto 생성
       List<ClothesAttributeWithDefDto> clothesAttributeWithDefDto =
