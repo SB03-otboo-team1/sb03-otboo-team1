@@ -60,7 +60,7 @@ public class ClothesController implements ClothesApi {
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ClothesDto> createClothes(
         @Valid @RequestPart ClothesCreateRequest request,
-        @RequestPart(required = false) MultipartFile imageFile
+        @RequestPart(value= "image", required = false) MultipartFile imageFile
     ) throws IOException {
       log.info("의상 등록 API 호출 - request: {}", request);
 
