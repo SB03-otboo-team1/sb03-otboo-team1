@@ -11,10 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ClothesService {
 
-  CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, String sortBy, SortDirection sortDirection, ClothesType typeEqual);
+    CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, String sortBy, SortDirection sortDirection, ClothesType typeEqual);
 
     ClothesDto createClothes(ClothesCreateRequest request, MultipartFile imageFile)
         throws IOException;
-
-    void deleteClothes(UUID clothesId);
 }

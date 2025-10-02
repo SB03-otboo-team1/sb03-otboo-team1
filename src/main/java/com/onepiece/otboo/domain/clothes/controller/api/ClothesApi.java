@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.clothes.api;
+package com.onepiece.otboo.domain.clothes.controller.api;
 
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
