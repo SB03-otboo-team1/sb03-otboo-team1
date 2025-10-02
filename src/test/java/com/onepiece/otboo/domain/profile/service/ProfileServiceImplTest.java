@@ -62,7 +62,7 @@ class ProfileServiceImplTest {
     private FileStorage storage;
 
     @Mock
-    private ProfileImageAsyncService profileImageAsyncService;
+    private ProfileImageEventPublisher profileImageEventPublisher;
 
     @InjectMocks
     private ProfileServiceImpl profileService;
@@ -160,7 +160,8 @@ class ProfileServiceImplTest {
         assertEquals(Gender.MALE, result.gender());
         assertEquals(BIRTH, result.birthDate());
         assertEquals(2, result.temperatureSensitivity());
-        verify(profileImageAsyncService).replaceProfileImageAsync(eq(userId), any(), any(), any());
+        verify(profileImageEventPublisher).replaceProfileImageAsync(eq(userId), any(), any(),
+            any());
     }
 
     @Test
@@ -314,7 +315,7 @@ class ProfileServiceImplTest {
         profileService.update(userId, req(Gender.MALE, BIRTH, 2), file);
 
         // then
-        verify(profileImageAsyncService).replaceProfileImageAsync(eq(userId), any(), any(),
+        verify(profileImageEventPublisher).replaceProfileImageAsync(eq(userId), any(), any(),
             any());
     }
 

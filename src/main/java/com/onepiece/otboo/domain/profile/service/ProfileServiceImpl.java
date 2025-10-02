@@ -35,7 +35,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileMapper profileMapper;
     private final LocationPersistenceService locationPersistenceService;
     private final FileStorage storage;
-    private final ProfileImageAsyncService profileImageAsyncService;
+    private final ProfileImageEventPublisher profileImageEventPublisher;
 
     @Value("${aws.storage.prefix.profile}")
     private String PROFILE_PREFIX;
@@ -144,11 +144,9 @@ public class ProfileServiceImpl implements ProfileService {
             profileImage.getSize()
         );
 
-        UUID userId = profile.getUser().getId();
-        profileImageAsyncService.replaceProfileImageAsync(userId, PROFILE_PREFIX, payload,
-            currentKey);
+        profileImageEventPublisher.publishReplace(profile, PROFILE_PREFIX, payload, currentKey);
 
-        log.info("[ProfileService] 프로필 이미지 교체 요청(비동기) - userId: {}, oldKey: {}", userId,
-            currentKey);
+        log.info("[ProfileService] 프로필 이미지 교체 이벤트 발행 - userId: {}, oldKey: {}",
+            profile.getUser().getId(), currentKey);
     }
 }
