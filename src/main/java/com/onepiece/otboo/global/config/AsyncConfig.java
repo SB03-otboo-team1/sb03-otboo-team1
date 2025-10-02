@@ -37,6 +37,16 @@ public class AsyncConfig implements AsyncConfigurer {
 
     private static final String MAIL_THREAD_PREFIX = "mail-exec";
 
+    @Bean(name = "binaryContentExecutor")
+    public ThreadPoolTaskExecutor binaryContentExecutor(
+        @Value("${async.executors.binary-content.core-size}") int core,
+        @Value("${async.executors.binary-content.max-size}") int max,
+        @Value("${async.executors.binary-content.queue-capacity}") int queue,
+        @Value("${async.executors.binary-content.keep-alive}") int keepAlive
+    ) {
+        return buildExecutor(core, max, queue, keepAlive, "binaryContent-exec");
+    }
+
     @Bean(name = "mailTaskExecutor")
     public ThreadPoolTaskExecutor mailTaskExecutor(
         @Value("${async.executors.mail-content.core-size}") int core,

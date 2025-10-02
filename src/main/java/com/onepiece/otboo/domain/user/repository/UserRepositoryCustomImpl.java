@@ -68,7 +68,8 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
             : user.id.desc());
 
         return queryFactory.select(Projections.constructor(UserDto.class,
-                user.id, user.createdAt, user.email, profile.nickname, user.role, user.provider,
+                user.id, user.createdAt, user.email, profile.nickname, user.role,
+                user.socialAccount.provider,
                 user.locked))
             .from(user)
             .leftJoin(profile).on(profile.user.id.eq(user.id))

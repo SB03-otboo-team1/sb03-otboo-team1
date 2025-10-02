@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.MailSendException;
@@ -47,7 +48,7 @@ class MailServiceTest {
 
         AtomicReference<String> executingThreadName = new AtomicReference<>();
         // 실제 메일 전송 mock
-        org.mockito.Mockito.doAnswer(invocation -> {
+        Mockito.doAnswer(invocation -> {
             executingThreadName.set(Thread.currentThread().getName());
             return null;
         }).when(mailSender).send(mimeMessage);
@@ -69,7 +70,7 @@ class MailServiceTest {
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         given(mailSender.createMimeMessage()).willReturn(mimeMessage);
 
-        org.mockito.Mockito.doThrow(new MailSendException("메일 발송 실패"))
+        Mockito.doThrow(new MailSendException("메일 발송 실패"))
             .when(mailSender).send(any(MimeMessage.class));
 
         CompletableFuture<Boolean> resultFuture = mailService.sendTemporaryPasswordEmail(
