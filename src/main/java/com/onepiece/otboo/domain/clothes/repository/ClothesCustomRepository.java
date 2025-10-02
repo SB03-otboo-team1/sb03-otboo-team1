@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.clothes.repository;
 
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
+import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +23,7 @@ public interface ClothesCustomRepository {
    * @return 커서 페이징된 의상 목록
    */
   List<Clothes> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter,
-                                               int limit, String sortBy, SortDirection sortDirection,
+                                               int limit, SortBy sortBy, SortDirection sortDirection,
                                                ClothesType typeEqual);
   Long countClothes(UUID ownerId, ClothesType typeEqual);
 }
