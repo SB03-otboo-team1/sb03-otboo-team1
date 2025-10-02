@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
 import com.onepiece.otboo.global.exception.ErrorCode;
+import com.onepiece.otboo.infra.security.lock.AdminAccountLock;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +33,8 @@ class SecurityExceptionHandlingTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @MockitoBean
+    private AdminAccountLock adminAccountLock;
 
     @Test
     void 인증되지_않은_요청은_JSON_401을_반환한다() throws Exception {

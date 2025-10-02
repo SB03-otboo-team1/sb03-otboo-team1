@@ -4,8 +4,7 @@ import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
-import com.onepiece.otboo.infra.redis.RedisLockProvider;
-import com.onepiece.otboo.infra.redis.exception.RedisLockAcquisitionException;
+import com.onepiece.otboo.infra.security.lock.AdminAccountLock;
 import jakarta.annotation.PostConstruct;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,7 @@ public class AdminAccountInitializer {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RedisLockProvider redisLockProvider;
+    private final AdminAccountLock adminAccountLock;
 
     @Value("${otboo.admin.email}")
     protected String adminEmail;
@@ -33,14 +32,7 @@ public class AdminAccountInitializer {
     @PostConstruct
     public void initializeAdminAccount() {
 
-        try {
-            redisLockProvider.acquireLock(ADMIN_LOCK_KEY);
-        } catch (RedisLockAcquisitionException e) {
-            // 다른 인스턴스가 이미 초기화를 수행 중이거나 완료함
-            log.info("관리자 계정 초기화 건너뜀: 다른 인스턴스가 락을 보유 중");
-            return;
-        }
-
+        adminAccountLock.acquireLock(ADMIN_LOCK_KEY);
         try {
             Optional<User> adminOpt = userRepository.findByEmail(adminEmail);
             User admin;
@@ -65,7 +57,7 @@ public class AdminAccountInitializer {
             userRepository.save(admin);
             log.debug("관리자 계정 초기화 완료 (email: {})", adminEmail);
         } finally {
-            redisLockProvider.releaseLock(ADMIN_LOCK_KEY);
+            adminAccountLock.releaseLock(ADMIN_LOCK_KEY);
         }
     }
 }
