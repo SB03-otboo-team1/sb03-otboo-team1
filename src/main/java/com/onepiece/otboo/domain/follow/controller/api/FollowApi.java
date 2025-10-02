@@ -33,7 +33,9 @@ public interface FollowApi {
         @RequestParam(required = false) String cursor,
         @RequestParam(required = false) UUID idAfter,
         @RequestParam(defaultValue = "10") int limit,
-        @RequestParam(required = false) String nameLike
+        @RequestParam(required = false) String nameLike,
+        @RequestParam(defaultValue = "createdAt") String sortBy,
+        @RequestParam(defaultValue = "ASC") String sortDirection
     );
 
     @Operation(summary = "팔로잉 목록 조회", description = "특정 사용자가 팔로우하는 사용자 목록을 조회합니다.")
@@ -43,7 +45,9 @@ public interface FollowApi {
         @RequestParam(required = false) String cursor,
         @RequestParam(required = false) UUID idAfter,
         @RequestParam(defaultValue = "10") int limit,
-        @RequestParam(required = false) String nameLike
+        @RequestParam(required = false) String nameLike,
+        @RequestParam(defaultValue = "createdAt") String sortBy,
+        @RequestParam(defaultValue = "ASC") String sortDirection
     );
 
     @Operation(summary = "언팔로우", description = "사용자가 특정 사용자를 언팔로우합니다.")

@@ -11,6 +11,7 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.exception.ClothesNotFoundException;
+import com.onepiece.otboo.domain.clothes.exception.ClothesAttributeDefNotFoundException;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
@@ -21,12 +22,16 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.storage.FileStorage;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +56,7 @@ public class ClothesServiceImpl implements ClothesService {
     private String CLOTHES_PREFIX;
 
   @Override
-  public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, String sortBy, SortDirection sortDirection, ClothesType typeEqual) {
+  public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
 
     List<Clothes> clothes =
         clothesRepository.getClothesWithCursor(ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
@@ -60,7 +65,7 @@ public class ClothesServiceImpl implements ClothesService {
           clothes = Collections.emptyList();
       }
 
-    boolean hasNext = clothes.size() > limit;
+      boolean hasNext = clothes.size() > limit;
 
       String nextCursor = null;
       UUID nextIdAfter = null;
@@ -69,10 +74,10 @@ public class ClothesServiceImpl implements ClothesService {
           clothes = clothes.subList(0, limit);
           Clothes lastClothes = clothes.get(limit - 1);
           switch (sortBy) {
-              case "createdAt" -> {
+              case CREATED_AT -> {
                   nextCursor = lastClothes.getCreatedAt().toString();
               }
-              case "name" -> {
+              case NAME -> {
                   nextCursor = lastClothes.getName();
               }
           }
@@ -80,17 +85,35 @@ public class ClothesServiceImpl implements ClothesService {
       }
 
     Long totalCount = clothesRepository.countClothes(ownerId, typeEqual);
-    List<ClothesDto> data = clothes.stream().map(c -> {
+
+    List<UUID> clothesIds = clothes.stream().map(Clothes::getId).toList();
+
+    // 등록된 의상의 attribute 조회
+    List<ClothesAttributes> attributes = attributeRepository.findByClothesIdIn(clothesIds);
+    Map<UUID, List<ClothesAttributes>> attributesByClothesId =
+        attributes.stream().collect(Collectors.groupingBy(a -> a.getClothes().getId()));
+
+    // defId 수집
+    Set<UUID> defIds = attributes.stream()
+        .map(a -> a.getDefinition().getId())
+        .collect(Collectors.toSet());
+
+    // options 조회
+    List<ClothesAttributeOptions> allOptions = optionsRepository.findByDefinitionIdIn(defIds);
+    Map<UUID, List<ClothesAttributeOptions>> optionsByDefId =
+        allOptions.stream().collect(Collectors.groupingBy(o -> o.getDefinition().getId()));
+
+      List<ClothesDto> data = clothes.stream().map(c -> {
         // attribute 조회
-        List<ClothesAttributes> attributes = attributeRepository.findByClothesId(c.getId());
+        List<ClothesAttributes> attr = attributeRepository.findByClothesId(c.getId());
 
         // def + options 붙여서 attributeWithDefDto로 변환
         List<ClothesAttributeWithDefDto> attributeWithDefDtos =
-            attributes.stream().map(a -> {
+            attr.stream().map(a -> {
                 ClothesAttributeDefs def = a.getDefinition();
                 List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(def.getId());
                 String value = a.getOptionValue();
-                return clothesAttributeMapper.toAttributeWithDefDto(def, a, options, value);
+                return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
             }).toList();
 
         // ClothesDto 생성
@@ -138,7 +161,9 @@ public class ClothesServiceImpl implements ClothesService {
       List<ClothesAttributes> attributes =
           attrDto.stream().map(
               a -> {
-                  ClothesAttributeDefs def = defRepository.findById(a.definitionId()).orElseThrow(IllegalArgumentException::new);
+                  ClothesAttributeDefs def = defRepository.findById(a.definitionId()).orElseThrow(
+                      () -> ClothesAttributeDefNotFoundException.byId(a.definitionId())
+                  );
                   String value = a.value();
                   ClothesAttributes attr =
                       ClothesAttributes.builder()
@@ -156,7 +181,7 @@ public class ClothesServiceImpl implements ClothesService {
               ClothesAttributeDefs def = a.getDefinition();
               List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(def.getId());
               String value = a.getOptionValue();
-              return clothesAttributeMapper.toAttributeWithDefDto(def, a, options, value);
+              return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
           }).toList();
 
       // ClothesDto 반환
