@@ -38,10 +38,15 @@ public class CommentService {
             throw new EntityNotFoundException("존재하지 않는 사용자(authorId)입니다.");
         }
 
+        String trimmedContent = req.content().trim();
+        if (trimmedContent.isEmpty()) {
+            throw new IllegalArgumentException("댓글 내용은 공백만으로 구성될 수 없습니다.");
+        }
+
         Comment comment = Comment.builder()
             .feed(feed)
             .author(author)
-            .content(req.content().trim())
+            .content(trimmedContent)
             .build();
 
         repository.save(comment);
