@@ -5,7 +5,9 @@ import java.util.UUID;
 
 public interface JwtRegistry {
 
-    void invalidateAllTokens(UUID userId, Instant invalidatedAt);
+    void registerToken(UUID userId, String tokenId, Instant expiresAt);
 
-    Instant getInvalidatedAt(UUID userId);
+    void blacklistAllTokens(UUID userId);
+
+    boolean isBlacklisted(String tokenId);
 }

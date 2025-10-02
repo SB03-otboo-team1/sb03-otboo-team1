@@ -19,8 +19,8 @@ import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.DuplicateEmailException;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
@@ -78,7 +78,7 @@ class UserServiceImplTest {
     @BeforeEach
     void setUp() {
         user = User.builder()
-            .provider(Provider.LOCAL)
+            .socialAccount(SocialAccount.builder().build())
             .email("test@test.com")
             .password("encodedPassword")
             .locked(false)
@@ -103,7 +103,7 @@ class UserServiceImplTest {
             .name("test")
             .email("test@test.com")
             .role(Role.USER)
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(false)
             .build();
 
@@ -236,7 +236,7 @@ class UserServiceImplTest {
         assertThat(user.getRole()).isEqualTo(Role.ADMIN);
         verify(userRepository).findById(userId);
         verify(userRepository).save(user);
-        verify(jwtRegistry).invalidateAllTokens(eq(userId), any(Instant.class));
+        verify(jwtRegistry).blacklistAllTokens(eq(userId));
     }
 
     @Test
@@ -252,7 +252,7 @@ class UserServiceImplTest {
         assertThat(thrown).isInstanceOf(UserNotFoundException.class);
         verify(userRepository).findById(notExistId);
         verify(userRepository, never()).save(any());
-        verify(jwtRegistry, never()).invalidateAllTokens(any(UUID.class), any(Instant.class));
+        verify(jwtRegistry, never()).blacklistAllTokens(eq(userId));
     }
 
     @Test
@@ -268,7 +268,7 @@ class UserServiceImplTest {
         // then
         assertThat(user.getRole()).isEqualTo(Role.ADMIN);
         assertThat(user.getRole()).isNotEqualTo(oldRole);
-        verify(jwtRegistry).invalidateAllTokens(eq(userId), any(Instant.class));
+        verify(jwtRegistry).blacklistAllTokens(eq(userId));
         verify(userRepository).findById(userId);
         verify(userRepository).save(user);
     }
@@ -286,7 +286,7 @@ class UserServiceImplTest {
         assertThat(user.isLocked()).isTrue();
         verify(userRepository).findById(userId);
         verify(userRepository).save(user);
-        verify(jwtRegistry).invalidateAllTokens(eq(userId), any(Instant.class));
+        verify(jwtRegistry).blacklistAllTokens(eq(userId));
     }
 
     @Test
@@ -302,7 +302,7 @@ class UserServiceImplTest {
         assertThat(thrown).isInstanceOf(UserNotFoundException.class);
         verify(userRepository).findById(notExistId);
         verify(userRepository, never()).save(any());
-        verify(jwtRegistry, never()).invalidateAllTokens(any(UUID.class), any(Instant.class));
+        verify(jwtRegistry, never()).blacklistAllTokens(eq(userId));
     }
 
     @Test
@@ -320,7 +320,7 @@ class UserServiceImplTest {
         verify(userRepository).findById(userId);
         verify(userRepository).save(user);
         // 계정 해제 시에는 토큰 무효화 불필요
-        verify(jwtRegistry, never()).invalidateAllTokens(any(UUID.class), any(Instant.class));
+        verify(jwtRegistry, never()).blacklistAllTokens(eq(userId));
     }
 
     @Test

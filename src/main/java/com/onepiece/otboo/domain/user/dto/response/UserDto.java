@@ -20,6 +20,7 @@ public record UserDto(
 
     public UserDto(UUID id, Instant createdAt, String email, String name, Role role,
         Provider provider, boolean locked) {
-        this(id, createdAt, email, name, role, List.of(provider), locked);
+        this(id, createdAt, email, name, role, provider == null ? List.of() : List.of(provider),
+            locked);
     }
 }

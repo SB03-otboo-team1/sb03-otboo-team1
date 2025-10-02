@@ -12,6 +12,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetailsService;
 import jakarta.servlet.http.Cookie;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -107,7 +108,14 @@ public class JwtProvider {
         );
 
         signedJWT.sign(signer);
-        return signedJWT.serialize();
+        String token = signedJWT.serialize();
+
+        try {
+            jwtRegistry.registerToken(userDetails.getUserId(), tokenId, expiryDate.toInstant());
+        } catch (Exception ignored) {
+        }
+
+        return token;
     }
 
     public boolean validateAccessToken(String token) {
@@ -136,26 +144,9 @@ public class JwtProvider {
                 return false;
             }
 
-            // 무효화 시각 기반 토큰 검증
-            String subject = signedJWT.getJWTClaimsSet().getSubject();
-            Date issuedAt = signedJWT.getJWTClaimsSet().getIssueTime();
-            if (subject != null && issuedAt != null) {
-                CustomUserDetails userDetails = null;
-
-                try {
-                    userDetails = userDetailsService.loadUserByUsername(subject);
-                } catch (Exception e) {
-                    return false;
-                }
-
-                if (userDetails != null) {
-                    UUID userId = userDetails.getUserId();
-                    java.time.Instant invalidatedAt = jwtRegistry.getInvalidatedAt(userId);
-                    if (invalidatedAt != null && issuedAt.toInstant().isBefore(invalidatedAt)) {
-                        // 토큰 발급 시각이 무효화 시각 이전이면 무효
-                        return false;
-                    }
-                }
+            String jti = signedJWT.getJWTClaimsSet().getJWTID();
+            if (jti != null && jwtRegistry.isBlacklisted(jti)) {
+                return false;
             }
 
             return true;
@@ -170,6 +161,7 @@ public class JwtProvider {
         refreshCookie.setSecure(true);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenExpirationMs / 1000);
+        refreshCookie.setAttribute("SameSite", "Lax");
         return refreshCookie;
     }
 
@@ -179,6 +171,7 @@ public class JwtProvider {
         refreshCookie.setSecure(true);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(0);
+        refreshCookie.setAttribute("SameSite", "Lax");
         return refreshCookie;
     }
 
@@ -186,6 +179,41 @@ public class JwtProvider {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
             return signedJWT.getJWTClaimsSet().getSubject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    public String getTokenId(String token) {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            return signedJWT.getJWTClaimsSet().getJWTID();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * JWT에서 subject(email)로 userId(UUID) 조회
+     */
+    public UUID getUserIdFromToken(String token) {
+        String email = getEmailFromToken(token);
+        if (email == null) {
+            return null;
+        }
+        try {
+            return userDetailsService.loadUserByUsername(email).getUserId();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public Instant getExpirationInstant(String token) {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            Date exp = signedJWT.getJWTClaimsSet().getExpirationTime();
+            return exp != null ? exp.toInstant() : null;
         } catch (Exception e) {
             return null;
         }

@@ -25,7 +25,6 @@ import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.fixture.UserDtoFixture;
@@ -91,7 +90,7 @@ class UserControllerTest {
             .email("test@test.com")
             .name("test")
             .role(Role.USER)
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(false)
             .build();
 
@@ -307,7 +306,7 @@ class UserControllerTest {
             .email(user.getEmail())
             .name("test")
             .role(user.getRole())
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(true)
             .build();
         given(userService.lockUser(any(UUID.class))).willReturn(lockedDto);
@@ -332,7 +331,7 @@ class UserControllerTest {
             .email(user.getEmail())
             .name("test")
             .role(user.getRole())
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(false)
             .build();
         given(userService.unlockUser(any(UUID.class))).willReturn(unlockedDto);

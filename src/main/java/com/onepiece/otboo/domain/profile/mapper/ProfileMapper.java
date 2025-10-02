@@ -38,6 +38,9 @@ public interface ProfileMapper {
         if (key == null) {
             return null;
         }
+        if (key.startsWith("http://") || key.startsWith("https://")) {
+            return key;
+        }
         if (storage instanceof S3Storage s3) {
             return s3.generatePresignedUrl(key);
         }
