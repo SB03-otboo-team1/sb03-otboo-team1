@@ -144,3 +144,11 @@ springdoc:
     path: /api/swagger-ui
   api-docs:
     path: /api/v3/api-docs
+
+async:
+  executors:
+    binary-content:
+      core-size: ${MAX_CORE_SIZE:4}
+      max-size: ${MAX_SIZE:8}
+      queue-capacity: ${QUEUE_CAPACITY:200}
+      keep-alive: ${KEEP_ALIVE:60}
