@@ -6,9 +6,12 @@ import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.UUID;
 
 public interface FollowService {
+
     FollowResponse createFollow(FollowRequest request);
 
     CursorPageResponseDto<FollowerResponse> getFollowers(
@@ -17,8 +20,8 @@ public interface FollowService {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
-        String sortDirection
+        SortBy sortBy,
+        SortDirection sortDirection
     );
 
     CursorPageResponseDto<FollowingResponse> getFollowings(
@@ -27,8 +30,8 @@ public interface FollowService {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
-        String sortDirection
+        SortBy sortBy,
+        SortDirection sortDirection
     );
 
     void deleteFollow(FollowRequest request);

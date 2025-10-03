@@ -32,6 +32,8 @@ import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.user.service.UserService;
 import com.onepiece.otboo.global.config.JpaConfig;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.util.TestUtils;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -179,7 +181,7 @@ class UserControllerTest {
 
         // given
         CursorPageResponseDto<UserDto> page = new CursorPageResponseDto<>(dummyUsers, null,
-            null, false, 5L, "email", "ASCENDING");
+            null, false, 5L, SortBy.EMAIL, SortDirection.ASCENDING);
 
         given(userService.getUsers(any(UserGetRequest.class))).willReturn(page);
 
@@ -196,15 +198,15 @@ class UserControllerTest {
             .andExpect(jsonPath("$.data.length()").value(5))
             .andExpect(jsonPath("$.data[0].email").value("han@test.com"))
             .andExpect(jsonPath("$.hasNext").value(false))
-            .andExpect(jsonPath("$.sortBy").value("email"))
-            .andExpect(jsonPath("$.sortDirection").value("ASCENDING"));
+            .andExpect(jsonPath("$.sortBy").value(SortBy.EMAIL))
+            .andExpect(jsonPath("$.sortDirection").value(SortDirection.ASCENDING));
         // DTO 바인딩 값 검증
         ArgumentCaptor<UserGetRequest> captor = ArgumentCaptor.forClass(UserGetRequest.class);
         verify(userService).getUsers(captor.capture());
         UserGetRequest request = captor.getValue();
         assertEquals(10, request.limit());
-        assertEquals("email", request.sortBy());
-        assertEquals("ASCENDING", request.sortDirection());
+        assertEquals(SortBy.EMAIL, request.sortBy());
+        assertEquals(SortDirection.DESCENDING, request.sortDirection());
     }
 
     @Test

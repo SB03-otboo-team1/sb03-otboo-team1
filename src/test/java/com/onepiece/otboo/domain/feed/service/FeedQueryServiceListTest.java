@@ -1,5 +1,18 @@
 package com.onepiece.otboo.domain.feed.service;
 
+import static com.onepiece.otboo.domain.feed.entity.QFeed.feed;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.domain.feed.mapper.FeedMapper;
@@ -8,30 +21,24 @@ import com.onepiece.otboo.domain.weather.dto.response.TemperatureDto;
 import com.onepiece.otboo.domain.weather.dto.response.WeatherSummaryDto;
 import com.onepiece.otboo.domain.weather.enums.PrecipitationType;
 import com.onepiece.otboo.domain.weather.enums.SkyStatus;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import static com.onepiece.otboo.domain.feed.entity.QFeed.feed;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 /**
- * FeedQueryService#listFeeds 유닛 테스트 완성본
- * - leftJoin().on() 체인까지 모두 self-return 스텁 → NPE 제거
- * - 커서/정렬/필터 분기 + ensureDefaults + hasNext/totalCount 커버
- * - 테스트 메서드명 한글화
+ * FeedQueryService#listFeeds 유닛 테스트 완성본 - leftJoin().on() 체인까지 모두 self-return 스텁 → NPE 제거 -
+ * 커서/정렬/필터 분기 + ensureDefaults + hasNext/totalCount 커버 - 테스트 메서드명 한글화
  */
 class FeedQueryServiceListTest {
 
@@ -52,7 +59,7 @@ class FeedQueryServiceListTest {
     @DisplayName("잘못된 sortBy → IllegalArgumentException")
     void 잘못된_sortBy_예외() {
         assertThrows(IllegalArgumentException.class, () ->
-            sut.listFeeds(null, null, 10, "CREATED_AT", "DESCENDING",
+            sut.listFeeds(null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING,
                 null, null, null, null, null));
     }
 
@@ -60,7 +67,7 @@ class FeedQueryServiceListTest {
     @DisplayName("잘못된 sortDirection → IllegalArgumentException")
     void 잘못된_sortDirection_예외() {
         assertThrows(IllegalArgumentException.class, () ->
-            sut.listFeeds(null, null, 10, "createdAt", "DESC",
+            sut.listFeeds(null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING,
                 null, null, null, null, null));
     }
 
@@ -68,7 +75,8 @@ class FeedQueryServiceListTest {
     @DisplayName("createdAt 정렬인데 커서가 Instant가 아님 → IllegalArgumentException")
     void 커서형식오류_createdAt_예외() {
         assertThrows(IllegalArgumentException.class, () ->
-            sut.listFeeds("NOT_INSTANT", UUID.randomUUID(), 10, "createdAt", "DESCENDING",
+            sut.listFeeds("NOT_INSTANT", UUID.randomUUID(), 10, SortBy.CREATED_AT,
+                SortDirection.DESCENDING,
                 null, null, null, null, null));
     }
 
@@ -76,7 +84,7 @@ class FeedQueryServiceListTest {
     @DisplayName("likeCount 정렬인데 커서가 숫자가 아님 → IllegalArgumentException")
     void 커서형식오류_likeCount_예외() {
         assertThrows(IllegalArgumentException.class, () ->
-            sut.listFeeds("NaN", UUID.randomUUID(), 10, "likeCount", "ASCENDING",
+            sut.listFeeds("NaN", UUID.randomUUID(), 10, SortBy.LIKE_COUNT, SortDirection.ASCENDING,
                 null, null, null, null, null));
     }
 
@@ -84,7 +92,7 @@ class FeedQueryServiceListTest {
     @DisplayName("skyStatusEqual 파싱 실패 → IllegalArgumentException")
     void skyStatus_파싱실패_예외() {
         assertThrows(IllegalArgumentException.class, () ->
-            sut.listFeeds(null, null, 10, "createdAt", "DESCENDING",
+            sut.listFeeds(null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING,
                 null, "SUNNY", null, null, null));
     }
 
@@ -92,13 +100,13 @@ class FeedQueryServiceListTest {
     @DisplayName("precipitationTypeEqual 파싱 실패 → IllegalArgumentException")
     void precipitationType_파싱실패_예외() {
         assertThrows(IllegalArgumentException.class, () ->
-            sut.listFeeds(null, null, 10, "createdAt", "DESCENDING",
+            sut.listFeeds(null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING,
                 null, null, "RAINNY", null, null));
     }
 
     // -------------------- 정상 케이스 --------------------
 
-    @SuppressWarnings({"rawtypes","unchecked"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     @DisplayName("createdAt/DESC, limit=2 → fetch 3개(=limit+1)면 hasNext=true & totalCount=42, next 계산 OK")
     void 정상_createdAt_DESC_hasNext_true() {
@@ -106,7 +114,8 @@ class FeedQueryServiceListTest {
         JPAQuery feedQuery = mock(JPAQuery.class);
         doReturn(feedQuery).when(qf).selectFrom(feed);
         doReturn(feedQuery).when(feedQuery).where(any(Predicate.class));
-        doReturn(feedQuery).when(feedQuery).orderBy(any(OrderSpecifier.class), any(OrderSpecifier.class));
+        doReturn(feedQuery).when(feedQuery)
+            .orderBy(any(OrderSpecifier.class), any(OrderSpecifier.class));
         doReturn(feedQuery).when(feedQuery).limit(anyLong());
         // joinWeather=false여도 안전하게 leftJoin/on 스텁(호출돼도 self-return)
         doReturn(feedQuery).when(feedQuery).leftJoin(any(EntityPath.class));
@@ -148,7 +157,7 @@ class FeedQueryServiceListTest {
         ));
 
         var res = sut.listFeeds(
-            null, null, 2, "createdAt", "DESCENDING",
+            null, null, 2, SortBy.CREATED_AT, SortDirection.DESCENDING,
             null, null, null, null, null
         );
 
@@ -156,8 +165,8 @@ class FeedQueryServiceListTest {
         assertEquals(2, res.data().size());
         assertTrue(res.hasNext());
         assertEquals(42L, res.totalCount());
-        assertEquals("createdAt", res.sortBy());
-        assertEquals("DESCENDING", res.sortDirection());
+        assertEquals(SortBy.CREATED_AT, res.sortBy());
+        assertEquals(SortDirection.DESCENDING, res.sortDirection());
 
         // ensureDefaults 확인
         var first = res.data().get(0);
@@ -166,7 +175,7 @@ class FeedQueryServiceListTest {
         assertNotNull(first.ootds());
     }
 
-    @SuppressWarnings({"rawtypes","unchecked"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     @DisplayName("likeCount/ASC + sky/precip 필터 → joinWeather=true, fetch=limit → hasNext=false & next=null")
     void 정상_likeCount_ASC_joinWeather_hasNext_false() {
@@ -174,7 +183,8 @@ class FeedQueryServiceListTest {
         JPAQuery feedQuery = mock(JPAQuery.class);
         doReturn(feedQuery).when(qf).selectFrom(feed);
         doReturn(feedQuery).when(feedQuery).where(any(Predicate.class));
-        doReturn(feedQuery).when(feedQuery).orderBy(any(OrderSpecifier.class), any(OrderSpecifier.class));
+        doReturn(feedQuery).when(feedQuery)
+            .orderBy(any(OrderSpecifier.class), any(OrderSpecifier.class));
         doReturn(feedQuery).when(feedQuery).limit(anyLong());
         doReturn(feedQuery).when(feedQuery).leftJoin(any(EntityPath.class));
         doReturn(feedQuery).when(feedQuery).on(any(Predicate.class));
@@ -202,7 +212,7 @@ class FeedQueryServiceListTest {
         ));
 
         var res = sut.listFeeds(
-            "123", null, 2, "likeCount", "ASCENDING",
+            "123", null, 2, SortBy.LIKE_COUNT, SortDirection.ASCENDING,
             "키워드", "CLEAR", "NONE", UUID.randomUUID(), UUID.randomUUID()
         );
 
@@ -211,7 +221,7 @@ class FeedQueryServiceListTest {
         assertFalse(res.hasNext());
         assertNull(res.nextCursor());
         assertNull(res.nextIdAfter());
-        assertEquals("likeCount", res.sortBy());
-        assertEquals("ASCENDING", res.sortDirection());
+        assertEquals(SortBy.LIKE_COUNT, res.sortBy());
+        assertEquals(SortDirection.ASCENDING, res.sortDirection());
     }
 }
