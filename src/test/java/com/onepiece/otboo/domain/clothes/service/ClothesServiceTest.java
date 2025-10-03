@@ -9,6 +9,8 @@ import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
+import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
+import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.fixture.UserFixture;
@@ -33,6 +35,12 @@ class ClothesServiceTest {
 
     @Mock
     private ClothesRepository clothesRepository;
+
+    @Mock
+    private ClothesAttributeRepository attributeRepository;
+
+    @Mock
+    private ClothesAttributeOptionsRepository optionsRepository;
 
     @Mock
     private ClothesMapper clothesMapper;

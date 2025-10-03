@@ -66,8 +66,8 @@ class FeedControllerListTest {
             .andExpect(jsonPath("$.data").isArray())
             .andExpect(jsonPath("$.hasNext").value(false))
             .andExpect(jsonPath("$.totalCount").value(0))
-            .andExpect(jsonPath("$.sortBy").value(SortBy.CREATED_AT))
-            .andExpect(jsonPath("$.sortDirection").value(SortDirection.DESCENDING));
+            .andExpect(jsonPath("$.sortBy").value("CREATED_AT"))
+            .andExpect(jsonPath("$.sortDirection").value("DESCENDING"));
 
         ArgumentCaptor<UUID> meCap = ArgumentCaptor.forClass(UUID.class);
         verify(feedQueryService).listFeeds(
@@ -102,8 +102,8 @@ class FeedControllerListTest {
             .andExpect(status().isOk())
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.data").isArray())
-            .andExpect(jsonPath("$.sortBy").value(SortBy.CREATED_AT)) // 빈응답()의 값
-            .andExpect(jsonPath("$.sortDirection").value(SortDirection.DESCENDING));
+            .andExpect(jsonPath("$.sortBy").value("CREATED_AT")) // 빈응답()의 값
+            .andExpect(jsonPath("$.sortDirection").value("DESCENDING"));
 
         ArgumentCaptor<String> cursorCap = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<UUID> idAfterCap = ArgumentCaptor.forClass(UUID.class);
@@ -132,8 +132,8 @@ class FeedControllerListTest {
         assert cursorCap.getValue().equals(cursor);
         assert idAfterCap.getValue().toString().equals(idAfter);
         assert limitCap.getValue() == 10;
-        assert sortByCap.getValue().equals("likeCount");
-        assert sortDirCap.getValue().equals("ASCENDING");
+        assert sortByCap.getValue() == SortBy.LIKE_COUNT;
+        assert sortDirCap.getValue() == SortDirection.ASCENDING;
         assert keywordCap.getValue().equals("후드티");
         assert skyCap.getValue().equals("CLEAR");
         assert precipCap.getValue().equals("NONE");

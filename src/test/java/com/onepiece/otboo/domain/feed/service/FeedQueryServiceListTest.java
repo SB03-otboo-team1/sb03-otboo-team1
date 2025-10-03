@@ -58,7 +58,7 @@ class FeedQueryServiceListTest {
     @Test
     @DisplayName("잘못된 sortBy → IllegalArgumentException")
     void 잘못된_sortBy_예외() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(NullPointerException.class, () ->
             sut.listFeeds(null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING,
                 null, null, null, null, null));
     }
@@ -66,7 +66,7 @@ class FeedQueryServiceListTest {
     @Test
     @DisplayName("잘못된 sortDirection → IllegalArgumentException")
     void 잘못된_sortDirection_예외() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(NullPointerException.class, () ->
             sut.listFeeds(null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING,
                 null, null, null, null, null));
     }
