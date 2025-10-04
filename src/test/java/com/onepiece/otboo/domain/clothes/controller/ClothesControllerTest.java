@@ -129,61 +129,61 @@ class ClothesControllerTest {
             .andExpect(jsonPath("$.totalCount").value(1));
     }
 
-//    @Test
-//    void 의상_목록_조회_커서_페이징_성공() throws Exception {
-//        // given
-//        UUID ownerId = UUID.randomUUID();
-//        UUID clothesId1 = UUID.randomUUID();
-//        UUID clothesId2 = UUID.randomUUID();
-//        UUID idAfter = UUID.randomUUID();
-//
-//        ClothesDto clothesDto1 = ClothesDto.builder()
-//            .id(clothesId1)
-//            .ownerId(ownerId)
-//            .name("첫 번째 옷")
-//            .imageUrl("https://test-bucket.s3.ap-northeast-2.amazonaws.com/test-key-1")
-//            .type(ClothesType.TOP)
-//            .build();
-//
-//        ClothesDto clothesDto2 = ClothesDto.builder()
-//            .id(clothesId2)
-//            .ownerId(ownerId)
-//            .name("두 번째 옷")
-//            .imageUrl("https://test-bucket.s3.ap-northeast-2.amazonaws.com/test-key-2")
-//            .type(ClothesType.BOTTOM)
-//            .build();
-//
-//        CursorPageResponseDto<ClothesDto> response = new CursorPageResponseDto<>(
-//            List.of(clothesDto1, clothesDto2),
-//            "next-cursor",
-//            clothesId2,
-//            true,
-//            10L,
-//            "id",
-//            SortDirection.DESCENDING
-//        );
-//
-//        given(clothesService.getClothes(eq(ownerId), eq("test-cursor"), eq(idAfter), eq(5),
-//            eq(SortBy.CREATED_AT), eq(SortDirection.DESCENDING), any()))
-//            .willReturn(response);
-//
-//        // when & then
-//        mockMvc.perform(get("/api/clothes")
-//                .param("ownerId", ownerId.toString())
-//                .param("cursor", "test-cursor")
-//                .param("idAfter", idAfter.toString())
-//                .param("limit", "5")
-//                .param("sortBy", "CREATED_AT")
-//                .param("sortDirection", "DESCENDING")
-//                .contentType(MediaType.APPLICATION_JSON))
-//            .andExpect(status().isOk())
-//            .andExpect(jsonPath("$.data").isArray())
-//            .andExpect(jsonPath("$.data.length()").value(2))
-//            .andExpect(jsonPath("$.nextCursor").value("next-cursor"))
-//            .andExpect(jsonPath("$.nextIdAfter").value(clothesId2.toString()))
-//            .andExpect(jsonPath("$.hasNext").value(true))
-//            .andExpect(jsonPath("$.totalCount").value(10));
-//    }
+    @Test
+    void 의상_목록_조회_커서_페이징_성공() throws Exception {
+        // given
+        UUID ownerId = UUID.randomUUID();
+        UUID clothesId1 = UUID.randomUUID();
+        UUID clothesId2 = UUID.randomUUID();
+        UUID idAfter = UUID.randomUUID();
+
+        ClothesDto clothesDto1 = ClothesDto.builder()
+            .id(clothesId1)
+            .ownerId(ownerId)
+            .name("첫 번째 옷")
+            .imageUrl("https://test-bucket.s3.ap-northeast-2.amazonaws.com/test-key-1")
+            .type(ClothesType.TOP)
+            .build();
+
+        ClothesDto clothesDto2 = ClothesDto.builder()
+            .id(clothesId2)
+            .ownerId(ownerId)
+            .name("두 번째 옷")
+            .imageUrl("https://test-bucket.s3.ap-northeast-2.amazonaws.com/test-key-2")
+            .type(ClothesType.BOTTOM)
+            .build();
+
+        CursorPageResponseDto<ClothesDto> response = new CursorPageResponseDto<>(
+            List.of(clothesDto1, clothesDto2),
+            "next-cursor",
+            clothesId2,
+            true,
+            10L,
+            SortBy.CREATED_AT,
+            SortDirection.DESCENDING
+        );
+
+        given(clothesService.getClothes(eq(ownerId), eq("test-cursor"), eq(idAfter), eq(5),
+            eq(SortBy.CREATED_AT), eq(SortDirection.DESCENDING), any()))
+            .willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/clothes")
+                .param("ownerId", ownerId.toString())
+                .param("cursor", "test-cursor")
+                .param("idAfter", idAfter.toString())
+                .param("limit", "5")
+                .param("sortBy", "CREATED_AT")
+                .param("sortDirection", "DESCENDING")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data.length()").value(2))
+            .andExpect(jsonPath("$.nextCursor").value("next-cursor"))
+            .andExpect(jsonPath("$.nextIdAfter").value(clothesId2.toString()))
+            .andExpect(jsonPath("$.hasNext").value(true))
+            .andExpect(jsonPath("$.totalCount").value(10));
+    }
 
     @Test
     void 의상_목록_조회_빈_목록_성공() throws Exception {
