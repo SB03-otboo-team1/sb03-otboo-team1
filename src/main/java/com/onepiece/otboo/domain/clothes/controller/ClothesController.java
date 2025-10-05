@@ -140,18 +140,19 @@ public class ClothesController implements ClothesApi {
 
         log.info("의상 삭제 API 호출 - clothesId: {}", clothesId);
 
-        ClothesDto oldClothes = clothesService.getClothes(clothesId);
-        UUID ownerId = oldClothes.ownerId();
+        ClothesDto clothes = clothesService.getClothes(clothesId);
+        UUID ownerId = clothes.ownerId();
 
         // request의 ownerId와 인증된 사용자 ID 비교
-        if (ownerId.equals(authenticatedUserId)) {
+        if (!ownerId.equals(authenticatedUserId)) {
             log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", ownerId, authenticatedUserId);
             throw new GlobalException(ErrorCode.FORBIDDEN);
         }
 
         clothesService.deleteClothes(clothesId);
 
-        return ResponseEntity.ok("의상 삭제 성공");
-    }
+        log.info("의상 삭제 작업 완료 - clothesId: {}", clothesId);
 
+        return ResponseEntity.ok("의상 삭제 완료");
+    }
 }
