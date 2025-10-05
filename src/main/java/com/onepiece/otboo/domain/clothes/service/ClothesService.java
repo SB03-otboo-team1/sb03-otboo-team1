@@ -23,4 +23,6 @@ public interface ClothesService {
 
     ClothesDto updateClothes(UUID clothesId, @Valid ClothesUpdateRequest request, MultipartFile imageFile)
         throws IOException;
+
+    void deleteClothes(UUID clothesId);
 }
