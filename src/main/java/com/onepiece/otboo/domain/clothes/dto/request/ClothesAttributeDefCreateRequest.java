@@ -1,5 +1,8 @@
 package com.onepiece.otboo.domain.clothes.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.Builder;
 
@@ -10,8 +13,15 @@ import lombok.Builder;
 @Builder
 public record ClothesAttributeDefCreateRequest(
 
+    @NotBlank(message = "속성 이름은 필수입니다")
+    @Size(max = 100, message = "속성 이름은 100자를 초과할 수 없습니다")
     String name,
-    List<String> selectableValues
+
+    @NotEmpty(message = "속성값은 비어있을 수 없습니다")
+    List<
+        @NotBlank(message = "속성값은 빈 값일 수 없습니다")
+        @Size(max = 50, message = "각 선택값은 50자를 초과할 수 없습니다")
+            String> selectableValues
 ) {
 
 }
