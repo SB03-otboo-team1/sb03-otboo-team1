@@ -9,6 +9,7 @@ import com.onepiece.otboo.domain.clothes.exception.ClothesAttributeDefNotFoundEx
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
+import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import jakarta.transaction.Transactional;
@@ -26,6 +27,7 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
 
     private final ClothesAttributeDefRepository clothesAttributeDefRepository;
     private final ClothesAttributeOptionsRepository clothesAttributeOptionsRepository;
+    private final ClothesAttributeRepository clothesAttributeRepository;
     private final ClothesAttributeMapper clothesAttributeMapper;
 
 
@@ -64,7 +66,7 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
         String name = request.name();
         List<String> selectableValues = request.selectableValues();
 
-        log.debug("[의상 속성 정의] 의상 속성 정의 생성");
+        log.debug("의상 속성 정의 생성");
         ClothesAttributeDefs def =
             ClothesAttributeDefs.builder()
                 .name(name)
@@ -87,7 +89,7 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
         log.debug("의상 속성값 저장");
         clothesAttributeOptionsRepository.saveAll(options);
 
-        log.debug("의상 속성값 저장 완료 - definitionId: {}, countOptions: {}", def.getId(), options.size());
+        log.info("[의상 속성 정의] 등록 작업 완료 - definitionId: {}, countOptions: {}", def.getId(), options.size());
 
         return clothesAttributeMapper.toAttributeDefDto(def, options);
     }
@@ -137,9 +139,29 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
         List<ClothesAttributeOptions> newOptions = clothesAttributeOptionsRepository.findByDefinitionId(
             definitionId);
 
-        log.debug("의상 속성 정의 수정 완료 - definitionId: {}, countOptions: {}", newDef.getId(),
+        log.info("[의상 속성 정의] 수정 작업 완료 - definitionId: {}, countOptions: {}", newDef.getId(),
             newOptions.size());
 
         return clothesAttributeMapper.toAttributeDefDto(newDef, newOptions);
+    }
+
+    @Override
+    public void deleteClothesAttributeDef(UUID definitionId) {
+
+        log.info("[의상 속성 정의] 삭제 작업 시작 - definitionId: {}", definitionId);
+
+        clothesAttributeDefRepository.findById(definitionId)
+                .orElseThrow(() -> new ClothesAttributeDefNotFoundException("의상 속성을 찾을 수 없습니다"));
+
+        clothesAttributeRepository.deleteByDefinitionId(definitionId);
+        log.debug("의상 속성 삭제 완료");
+
+        clothesAttributeOptionsRepository.deleteByDefinitionId(definitionId);
+        log.debug("의상 속성값 삭제 완료");
+
+        clothesAttributeDefRepository.deleteById(definitionId);
+        log.debug("의상 속성 정의 삭제 완료");
+
+        log.info("[의상 속성 정의] 삭제 작업 완료 - definitionId: {}", definitionId);
     }
 }

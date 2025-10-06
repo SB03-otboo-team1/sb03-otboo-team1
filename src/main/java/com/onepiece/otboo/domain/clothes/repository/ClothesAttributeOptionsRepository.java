@@ -14,4 +14,6 @@ public interface ClothesAttributeOptionsRepository extends
     List<ClothesAttributeOptions> findByDefinitionId(UUID definitionId);
 
     List<ClothesAttributeOptions> findByDefinitionIdIn(Set<UUID> defIds);
+
+    void deleteByDefinitionId(UUID definitionId);
 }

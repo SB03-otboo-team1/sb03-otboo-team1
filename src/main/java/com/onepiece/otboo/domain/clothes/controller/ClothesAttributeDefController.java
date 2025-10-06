@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,7 +67,7 @@ public class ClothesAttributeDefController implements ClothesAttributeDefApi {
 
     @PatchMapping(path = "/{definitionId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public  ResponseEntity<ClothesAttributeDefDto> updateClothesAttributeDef(
+    public ResponseEntity<ClothesAttributeDefDto> updateClothesAttributeDef(
         @PathVariable UUID definitionId,
         @Valid @RequestBody ClothesAttributeDefUpdateRequest request
     ) {
@@ -76,5 +77,17 @@ public class ClothesAttributeDefController implements ClothesAttributeDefApi {
             clothesAttributeDefService.updateClothesAttributeDef(definitionId, request);
 
         return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping(path = "/{definitionId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deleteClothesAttributeDef(
+        @PathVariable UUID definitionId
+    ) {
+        log.info("의상 속성 정의 삭제 API 실행 - definitionId: {}", definitionId);
+
+        clothesAttributeDefService.deleteClothesAttributeDef(definitionId);
+
+        return ResponseEntity.ok("의상 속성 정의 삭제 완료");
     }
 }
