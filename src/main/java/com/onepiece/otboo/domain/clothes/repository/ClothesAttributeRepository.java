@@ -4,7 +4,9 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface ClothesAttributeRepository extends JpaRepository<ClothesAttributes, UUID> {
 
     List<ClothesAttributes> findByClothesId(UUID clothesId);
