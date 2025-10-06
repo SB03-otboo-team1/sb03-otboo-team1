@@ -35,19 +35,10 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
                 sortBy, sortDirection, keywordLike
             );
 
-        List<ClothesAttributeDefDto> result =
-            defs.stream().map(
-                def ->
-                    clothesAttributeMapper.toAttributeDefDto(
-                        def,
-                        clothesAttributeOptionsRepository.findByDefinitionId(def.getId())
-                    )
-            ).toList();
-
         Long totalCount = clothesAttributeDefRepository.countClothesAttributeDefs(keywordLike);
 
         log.info("의상 속성 목록 조회 완료 - sortBy: {}, sortDirection: {}, keywordLike: {}, 전체 데이터 개수: {}", sortBy, sortDirection, keywordLike, totalCount);
 
-        return result;
+        return clothesAttributeMapper.toAttributeDefDto(defs);
     }
 }
