@@ -33,7 +33,7 @@ public class Weather5DayProcessor implements ItemProcessor<Location, List<Weathe
     @Override
     public List<Weather> process(Location location) {
         List<KmaItem> items = weatherProvider.fetchLatestItems(
-            location.getXCoordinate(), location.getYCoordinate()
+            location.getLatitude(), location.getLongitude()
         );
 
         if (items.isEmpty()) {
@@ -45,9 +45,10 @@ public class Weather5DayProcessor implements ItemProcessor<Location, List<Weathe
         LocalDate end = today.plusDays(4);
 
         Extremes extremes = ForecastGrouping.collectDailyExtremes(items, today, end);
-        Map<ForecastKey, Map<String, KmaItem>> bucket = ForecastGrouping.groupByForecastKey(items, today, end);
+        Map<ForecastKey, Map<String, KmaItem>> bucket = ForecastGrouping.groupByForecastKey(items,
+            today, end);
         Indices indices = ForecastGrouping.buildIndices(bucket);
-
+        
         List<Weather> result = bucket.entrySet().stream()
             .map(e -> WeatherFactory.buildWeather(
                 e.getKey(), e.getValue(), extremes, indices, location, today, end

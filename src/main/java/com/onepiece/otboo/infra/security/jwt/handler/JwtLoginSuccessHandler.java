@@ -1,4 +1,4 @@
-package com.onepiece.otboo.infra.security.handler;
+package com.onepiece.otboo.infra.security.jwt.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.auth.dto.response.JwtDto;
@@ -10,7 +10,9 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.exception.SecurityUnauthorizedException;
+import com.onepiece.otboo.infra.security.handler.SecurityErrorResponseHandler;
 import com.onepiece.otboo.infra.security.jwt.JwtProvider;
+import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,9 +30,11 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final ObjectMapper objectMapper;
     private final JwtProvider jwtProvider;
+    private final JwtRegistry jwtRegistry;
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final UserMapper userMapper;
+    private final SecurityErrorResponseHandler responseHandler;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -38,8 +42,11 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         Object principal = authentication.getPrincipal();
 
         if (!(principal instanceof CustomUserDetails userDetails)) {
-            throw new SecurityUnauthorizedException();
+            responseHandler.handle(response, new SecurityUnauthorizedException());
+            return;
         }
+
+        jwtRegistry.blacklistAllTokens(userDetails.getUserId());
 
         String accessToken;
         String refreshToken;
@@ -48,13 +55,18 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
             accessToken = jwtProvider.generateAccessToken(userDetails);
             refreshToken = jwtProvider.generateRefreshToken(userDetails);
         } catch (Exception e) {
-            throw new TokenCreateFailedException(e);
+            responseHandler.handle(response, new TokenCreateFailedException(e));
+            return;
         }
 
         response.addCookie(jwtProvider.generateRefreshTokenCookie(refreshToken));
 
         User user = userRepository.findById(userDetails.getUserId())
-            .orElseThrow(SecurityUnauthorizedException::new);
+            .orElse(null);
+        if (user == null) {
+            responseHandler.handle(response, new SecurityUnauthorizedException());
+            return;
+        }
         Profile profile = profileRepository.findByUserId(userDetails.getUserId()).orElse(null);
         UserDto userDto = userMapper.toDto(user, profile);
         JwtDto jwtDto = new JwtDto(accessToken, userDto);

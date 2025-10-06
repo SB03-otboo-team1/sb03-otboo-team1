@@ -49,38 +49,6 @@ public class WebClientConfig {
     }
 
     @Bean
-    public WebClient weatherApiClient(
-        @Value("${api.weather.service-api-key}") String key,
-        HttpClient commonHttpClient
-    ) {
-        DefaultUriBuilderFactory builder =
-            new DefaultUriBuilderFactory("https://apis.data.go.kr/1360000");
-        builder.setEncodingMode(EncodingMode.VALUES_ONLY);
-
-        // 모든 요청에 serviceKey, dataType 쿼리 파라미터 자동 추가
-        ExchangeFilterFunction appendFixedParams =
-            ExchangeFilterFunction.ofRequestProcessor(req -> {
-                URI newUri = UriComponentsBuilder.fromUri(req.url())
-                    .replaceQueryParam("serviceKey")
-                    .replaceQueryParam("dataType")
-                    .queryParam("serviceKey", key)
-                    .queryParam("dataType", "JSON")
-                    .build(false)
-                    .toUri();
-                ClientRequest newReq = ClientRequest.from(req).url(newUri).build();
-                return Mono.just(newReq);
-            });
-
-        return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(commonHttpClient))
-            .uriBuilderFactory(builder)
-            .baseUrl("https://apis.data.go.kr/1360000")
-            .filter(appendFixedParams)
-            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-            .build();
-    }
-
-    @Bean
     public WebClient kmaApiClient(
         @Value("${api.weather.service-api-key}") String key,
         HttpClient commonHttpClient
@@ -108,6 +76,38 @@ public class WebClientConfig {
             .clientConnector(new ReactorClientHttpConnector(commonHttpClient))
             .uriBuilderFactory(builder)
             .baseUrl("https://apihub.kma.go.kr")
+            .filter(appendFixedParams)
+            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+            .build();
+    }
+
+    @Bean
+    public WebClient openWeatherApiClient(
+        @Value("${api.weather.service-api-key}") String key,
+        HttpClient commonHttpClient
+    ) {
+        DefaultUriBuilderFactory builder =
+            new DefaultUriBuilderFactory(
+                "api.openweathermap.org");
+        builder.setEncodingMode(EncodingMode.VALUES_ONLY);
+
+        ExchangeFilterFunction appendFixedParams =
+            ExchangeFilterFunction.ofRequestProcessor(req -> {
+                URI newUri = UriComponentsBuilder.fromUri(req.url())
+                    .replaceQueryParam("appid")
+                    .queryParam("appid", key)
+                    .queryParam("lang", "kr")
+                    .queryParam("units", "metric")
+                    .build(false)
+                    .toUri();
+                ClientRequest newReq = ClientRequest.from(req).url(newUri).build();
+                return Mono.just(newReq);
+            });
+
+        return WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(commonHttpClient))
+            .uriBuilderFactory(builder)
+            .baseUrl("api.openweathermap.org/data/2.5/forecast")
             .filter(appendFixedParams)
             .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
             .build();

@@ -14,6 +14,7 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.storage.FileStorage;
@@ -69,7 +70,7 @@ public class FollowServiceImpl implements FollowService {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
+        SortBy sortBy,
         SortDirection sortDirection
     ) {
         User followee = userRepository.findById(followeeId)
@@ -116,7 +117,7 @@ public class FollowServiceImpl implements FollowService {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
+        SortBy sortBy,
         SortDirection sortDirection
     ) {
         User follower = userRepository.findById(followerId)

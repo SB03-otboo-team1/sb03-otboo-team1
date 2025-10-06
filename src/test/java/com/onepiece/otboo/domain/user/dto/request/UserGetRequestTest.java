@@ -2,9 +2,13 @@ package com.onepiece.otboo.domain.user.dto.request;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -19,13 +23,13 @@ class UserGetRequestTest {
 
         // then
         assertEquals(20, request.limit());
-        assertEquals("createdAt", request.sortBy());
-        assertEquals("DESCENDING", request.sortDirection());
+        assertEquals(SortBy.CREATED_AT, request.sortBy());
+        assertEquals(SortDirection.DESCENDING, request.sortDirection());
     }
 
     @Test
     void builder로_값을_주면_그대로_반영된다() {
-        
+
         // given
         UUID id = UUID.randomUUID();
 
@@ -34,8 +38,8 @@ class UserGetRequestTest {
             .cursor("cursor123")
             .idAfter(id)
             .limit(50)
-            .sortBy("email")
-            .sortDirection("ASCENDING")
+            .sortBy(SortBy.EMAIL)
+            .sortDirection(SortDirection.ASCENDING)
             .emailLike("test")
             .roleEqual(Role.USER)
             .locked(true)
@@ -45,8 +49,8 @@ class UserGetRequestTest {
         assertEquals("cursor123", request.cursor());
         assertEquals(id, request.idAfter());
         assertEquals(50, request.limit());
-        assertEquals("email", request.sortBy());
-        assertEquals("ASCENDING", request.sortDirection());
+        assertEquals(SortBy.EMAIL, request.sortBy());
+        assertEquals(SortDirection.ASCENDING, request.sortDirection());
         assertEquals("test", request.emailLike());
         assertEquals(Role.USER, request.roleEqual());
         assertTrue(request.locked());
@@ -55,21 +59,23 @@ class UserGetRequestTest {
 
     @Test
     void sortBy관련_헬퍼메서드_검증() {
-        UserGetRequest request1 = UserGetRequest.builder().sortBy("createdAt").build();
+        UserGetRequest request1 = UserGetRequest.builder().sortBy(SortBy.CREATED_AT).build();
         assertTrue(request1.sortByCreatedAt());
-        assertEquals(UserGetRequest.SortBy.CREATED_AT, request1.sortByEnum());
+        assertEquals(SortBy.CREATED_AT, request1.sortByEnum());
 
-        UserGetRequest request2 = UserGetRequest.builder().sortBy("email").build();
+        UserGetRequest request2 = UserGetRequest.builder().sortBy(SortBy.EMAIL).build();
         assertFalse(request2.sortByCreatedAt());
-        assertEquals(UserGetRequest.SortBy.EMAIL, request2.sortByEnum());
+        assertEquals(SortBy.EMAIL, request2.sortByEnum());
     }
 
     @Test
     void sortDirection관련_헬퍼메서드_검증() {
-        UserGetRequest asc = UserGetRequest.builder().sortDirection("ASCENDING").build();
+        UserGetRequest asc = UserGetRequest.builder().sortDirection(SortDirection.ASCENDING)
+            .build();
         assertTrue(asc.isAscending());
 
-        UserGetRequest desc = UserGetRequest.builder().sortDirection("DESCENDING").build();
+        UserGetRequest desc = UserGetRequest.builder().sortDirection(SortDirection.DESCENDING)
+            .build();
         assertFalse(desc.isAscending());
     }
 
@@ -83,7 +89,7 @@ class UserGetRequestTest {
         Instant instant = UserGetRequest.parseCreatedAtStrict(iso);
 
         // then
-        assertEquals(iso ,instant.toString());
+        assertEquals(iso, instant.toString());
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.dto.request.UserCreateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
@@ -13,16 +14,17 @@ import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +54,7 @@ public class UserServiceImpl implements UserService {
         String encodedPassword = passwordEncoder.encode(userCreateRequest.password());
 
         User user = User.builder()
-            .provider(Provider.LOCAL)
+            .socialAccount(SocialAccount.builder().build())
             .email(email)
             .password(encodedPassword)
             .role(Role.USER)
@@ -71,7 +73,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public CursorPageResponseDto<UserDto> getUsers(UserGetRequest userGetRequest) {
-        String sortBy = userGetRequest.sortBy();
+        SortBy sortBy = userGetRequest.sortBy();
         SortDirection sortDirection = userGetRequest.sortDirection();
         String emailLike = userGetRequest.emailLike();
         Role roleEqual = userGetRequest.roleEqual();
@@ -126,7 +128,7 @@ public class UserServiceImpl implements UserService {
         user.updateRole(role);
         userRepository.save(user);
 
-        jwtRegistry.invalidateAllTokens(userId, Instant.now());
+        jwtRegistry.blacklistAllTokens(userId);
 
         log.info("[UserService] 사용자 권한 변경 - userId: {}, role: {}, 토큰 무효화 완료", userId, role);
 
@@ -140,7 +142,7 @@ public class UserServiceImpl implements UserService {
         user.updateLocked(true);
         userRepository.save(user);
 
-        jwtRegistry.invalidateAllTokens(userId, Instant.now());
+        jwtRegistry.blacklistAllTokens(userId);
 
         log.info("[UserService] 사용자 계정 잠금 완료 - userId: {}, 토큰 무효화 완료", userId);
 
@@ -179,5 +181,62 @@ public class UserServiceImpl implements UserService {
     private User findUser(UUID userId) {
         return userRepository.findById(userId)
             .orElseThrow(() -> UserNotFoundException.byId(userId));
+    }
+
+    @Transactional
+    public User updateSocialAccountAndProfile(User user, Provider provider, String providerUserId,
+        String nickname, String profileImageUrl) {
+        if (user.isLocked()) {
+            throw new OAuth2AuthenticationException("접근 거부되었습니다.");
+        }
+        var socialAccount = user.getSocialAccount();
+        if (socialAccount == null || !socialAccount.isValid() || !socialAccount.isSameProviderAndId(
+            provider, providerUserId)) {
+            user.linkSocialAccount(provider, providerUserId);
+            user = userRepository.save(user);
+        }
+        Profile profile = profileRepository.findByUserId(user.getId()).orElse(null);
+        if (profile == null) {
+            profile = Profile.builder()
+                .user(user)
+                .nickname(nickname)
+                .profileImageUrl(profileImageUrl)
+                .build();
+            profileRepository.save(profile);
+        } else {
+            if ((profile.getNickname() == null || profile.getNickname().isBlank())
+                && nickname != null) {
+                profile.updateNickname(nickname);
+            }
+            if ((profile.getProfileImageUrl() == null || profile.getProfileImageUrl().isBlank())
+                && profileImageUrl != null) {
+                profile.updateProfileImageUrl(profileImageUrl);
+            }
+        }
+        return user;
+    }
+
+    @Transactional
+    public User createSocialUserAndProfile(Provider provider, String providerUserId, String email,
+        String nickname, String profileImageUrl) {
+        User newUser = User.builder()
+            .socialAccount(SocialAccount.builder()
+                .provider(provider)
+                .providerUserId(providerUserId)
+                .build())
+            .email(email)
+            .password("")
+            .role(Role.USER)
+            .locked(false)
+            .build();
+        newUser = userRepository.save(newUser);
+
+        Profile profile = Profile.builder()
+            .user(newUser)
+            .nickname(nickname)
+            .profileImageUrl(profileImageUrl)
+            .build();
+        profileRepository.save(profile);
+        return newUser;
     }
 }

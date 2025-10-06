@@ -1,5 +1,7 @@
 package com.onepiece.otboo.domain.user.controller;
 
+import static com.onepiece.otboo.global.enums.SortBy.EMAIL;
+import static com.onepiece.otboo.global.enums.SortDirection.ASCENDING;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -25,7 +27,6 @@ import com.onepiece.otboo.domain.user.dto.request.UserGetRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserLockUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.fixture.UserDtoFixture;
@@ -91,7 +92,7 @@ class UserControllerTest {
             .email("test@test.com")
             .name("test")
             .role(Role.USER)
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(false)
             .build();
 
@@ -180,7 +181,7 @@ class UserControllerTest {
 
         // given
         CursorPageResponseDto<UserDto> page = new CursorPageResponseDto<>(dummyUsers, null,
-            null, false, 5L, "email", "ASCENDING");
+            null, false, 5L, EMAIL, ASCENDING);
 
         given(userService.getUsers(any(UserGetRequest.class))).willReturn(page);
 
@@ -197,15 +198,15 @@ class UserControllerTest {
             .andExpect(jsonPath("$.data.length()").value(5))
             .andExpect(jsonPath("$.data[0].email").value("han@test.com"))
             .andExpect(jsonPath("$.hasNext").value(false))
-            .andExpect(jsonPath("$.sortBy").value("email"))
+            .andExpect(jsonPath("$.sortBy").value("EMAIL"))
             .andExpect(jsonPath("$.sortDirection").value("ASCENDING"));
         // DTO 바인딩 값 검증
         ArgumentCaptor<UserGetRequest> captor = ArgumentCaptor.forClass(UserGetRequest.class);
         verify(userService).getUsers(captor.capture());
         UserGetRequest request = captor.getValue();
         assertEquals(10, request.limit());
-        assertEquals("email", request.sortBy());
-        assertEquals("ASCENDING", request.sortDirection());
+        assertEquals(EMAIL, request.sortBy());
+        assertEquals(ASCENDING, request.sortDirection());
     }
 
     @Test
@@ -217,7 +218,7 @@ class UserControllerTest {
         // when
         ResultActions result = mockMvc.perform(get("/api/users")
             .param("limit", "10")
-            .param("sortBy", invalidSortBy)
+            .param("sortBy", "INVALID")
             .param("sortDirection", "ASCENDING")
             .accept(MediaType.APPLICATION_JSON));
 
@@ -307,7 +308,7 @@ class UserControllerTest {
             .email(user.getEmail())
             .name("test")
             .role(user.getRole())
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(true)
             .build();
         given(userService.lockUser(any(UUID.class))).willReturn(lockedDto);
@@ -332,7 +333,7 @@ class UserControllerTest {
             .email(user.getEmail())
             .name("test")
             .role(user.getRole())
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(false)
             .build();
         given(userService.unlockUser(any(UUID.class))).willReturn(unlockedDto);

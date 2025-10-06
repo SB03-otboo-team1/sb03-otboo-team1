@@ -1,11 +1,13 @@
 package com.onepiece.otboo.domain.profile.mapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.BDDMockito.mock;
+import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.verify;
 
 import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.location.fixture.LocationFixture;
@@ -21,7 +23,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -39,11 +40,12 @@ class ProfileMapperTest {
         ReflectionTestUtils.setField(user, "id", userId);
 
         Profile profile = ProfileFixture.createProfile(user);
+        profile.updateProfileImageUrl("profile/image.png"); // S3 key로 세팅
         Location location = LocationFixture.createLocation();
         profile.updateLocation(location);
 
         S3Storage s3 = mock(S3Storage.class);
-        given(s3.generatePresignedUrl("https://example.com/image.png"))
+        given(s3.generatePresignedUrl("profile/image.png"))
             .willReturn("https://cdn.example.com/profile/image.jpg?sig=xxx");
 
         // when
@@ -56,7 +58,7 @@ class ProfileMapperTest {
         assertNotNull(result.location());
         assertEquals(5, result.temperatureSensitivity());
         assertEquals("https://cdn.example.com/profile/image.jpg?sig=xxx", result.profileImageUrl());
-        verify(s3).generatePresignedUrl("https://example.com/image.png");
+        verify(s3).generatePresignedUrl("profile/image.png");
     }
 
     @Test

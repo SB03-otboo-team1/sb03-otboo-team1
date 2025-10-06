@@ -8,6 +8,7 @@ import com.onepiece.otboo.domain.follow.entity.QFollow;
 import com.onepiece.otboo.domain.profile.entity.QProfile;
 import com.onepiece.otboo.domain.user.entity.QUser;
 import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -29,7 +30,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
+        SortBy sortBy,
         SortDirection sortDirection
     ) {
         QFollow follow = QFollow.follow;
@@ -88,7 +89,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
+        SortBy sortBy,
         SortDirection sortDirection
     ) {
         QFollow follow = QFollow.follow;
