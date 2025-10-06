@@ -6,6 +6,8 @@ import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
@@ -34,8 +36,8 @@ public interface FollowApi {
         @RequestParam(required = false) UUID idAfter,
         @RequestParam(defaultValue = "10") int limit,
         @RequestParam(required = false) String nameLike,
-        @RequestParam(defaultValue = "createdAt") String sortBy,
-        @RequestParam(defaultValue = "ASC") String sortDirection
+        @RequestParam(defaultValue = "CREATED_AT") SortBy sortBy,
+        @RequestParam(defaultValue = "ASCENDING") SortDirection sortDirection
     );
 
     @Operation(summary = "팔로잉 목록 조회", description = "특정 사용자가 팔로우하는 사용자 목록을 조회합니다.")
@@ -46,8 +48,8 @@ public interface FollowApi {
         @RequestParam(required = false) UUID idAfter,
         @RequestParam(defaultValue = "10") int limit,
         @RequestParam(required = false) String nameLike,
-        @RequestParam(defaultValue = "createdAt") String sortBy,
-        @RequestParam(defaultValue = "ASC") String sortDirection
+        @RequestParam(defaultValue = "CREATED_AT") SortBy sortBy,
+        @RequestParam(defaultValue = "ASCENDING") SortDirection sortDirection
     );
 
     @Operation(summary = "언팔로우", description = "사용자가 특정 사용자를 언팔로우합니다.")

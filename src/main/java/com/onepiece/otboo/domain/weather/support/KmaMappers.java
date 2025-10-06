@@ -64,7 +64,7 @@ public class KmaMappers {
         }
         try {
             int code = Integer.parseInt(it.fcstValue());
-            // 0 없음, 1 비, 2 비/눈, 3 눈, 4 소나기, (5~7: 빗방울/눈날림 등은 필요시 확장)
+            // 0 없음, 1 비, 2 비/눈, 3 눈, 4 소나기
             return switch (code) {
                 case 0 -> PrecipitationType.NONE;
                 case 1 -> PrecipitationType.RAIN;

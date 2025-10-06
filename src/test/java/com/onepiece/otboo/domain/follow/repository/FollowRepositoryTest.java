@@ -7,12 +7,13 @@ import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.config.TestJpaConfig;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +37,7 @@ class FollowRepositoryTest {
 
     private User createUser(String email) {
         return User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email(email)
             .password("password123")
             .locked(false)
@@ -165,7 +165,8 @@ class FollowRepositoryTest {
             .build());
 
         List<FollowingResponse> responses = followRepository
-            .findFollowingsWithProfileCursor(follower, null, null, 10, null, "createdAt", "ASC");
+            .findFollowingsWithProfileCursor(follower, null, null, 10, null, SortBy.CREATED_AT,
+                SortDirection.ASCENDING);
 
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getNickname()).isEqualTo("팔로잉닉네임");
@@ -184,7 +185,8 @@ class FollowRepositoryTest {
             .build());
 
         List<FollowerResponse> responses = followRepository
-            .findFollowersWithProfileCursor(following, null, null, 10, null, "createdAt", "ASC");
+            .findFollowersWithProfileCursor(following, null, null, 10, null, SortBy.CREATED_AT,
+                SortDirection.ASCENDING);
 
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getNickname()).isEqualTo("팔로워닉네임");

@@ -16,11 +16,13 @@ import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
+import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.storage.FileStorage;
 import java.time.Instant;
@@ -61,8 +63,7 @@ class FollowServiceImplTest {
         MockitoAnnotations.openMocks(this);
 
         follower = User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email("follower@test.com")
             .password("pwd123")
             .locked(false)
@@ -70,8 +71,7 @@ class FollowServiceImplTest {
             .build();
 
         following = User.builder()
-            .provider(Provider.LOCAL)
-            .providerUserId(UUID.randomUUID().toString())
+            .socialAccount(SocialAccount.builder().build())
             .email("following@test.com")
             .password("pwd123")
             .locked(false)
@@ -157,7 +157,8 @@ class FollowServiceImplTest {
             any(User.class), any(), any(), anyInt(), any(), any(), any()
         )).willReturn(List.of(followerResponse));
 
-        var response = followService.getFollowers(userId, null, null, 10, null, "createdAt", "ASC");
+        var response = followService.getFollowers(userId, null, null, 10, null, SortBy.CREATED_AT,
+            SortDirection.ASCENDING);
 
         assertThat(response.data()).hasSize(1);
         assertThat(response.data().get(0).getNickname()).isEqualTo("팔로워닉네임");
@@ -182,8 +183,8 @@ class FollowServiceImplTest {
             any(User.class), any(), any(), anyInt(), any(), any(), any()
         )).willReturn(List.of(followingResponse));
 
-        var response = followService.getFollowings(userId, null, null, 10, null, "createdAt",
-            "ASC");
+        var response = followService.getFollowings(userId, null, null, 10, null, SortBy.CREATED_AT,
+            SortDirection.ASCENDING);
 
         assertThat(response.data()).hasSize(1);
         assertThat(response.data().get(0).getNickname()).isEqualTo("팔로잉닉네임");
@@ -195,7 +196,8 @@ class FollowServiceImplTest {
         FollowRequest request = new FollowRequest(follower.getId(), following.getId());
         given(userRepository.findById(request.followerId())).willReturn(Optional.of(follower));
         given(userRepository.findById(request.followeeId())).willReturn(Optional.of(following));
-        given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(true); // ✅ 추가
+        given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(
+            true); // ✅ 추가
 
         followService.deleteFollow(request);
 
