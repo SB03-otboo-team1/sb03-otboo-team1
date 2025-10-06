@@ -22,22 +22,23 @@ public class KmaLookup {
             return index.get(exact);
         }
 
-        // 2. ±1, ±2 시간까지 탐색
         int hh = Integer.parseInt(timeKey.substring(0, 2));
         int mm = Integer.parseInt(timeKey.substring(2, 4));
 
-        int[] offsets = {-1, 1, -2, 2};
+        int[] offsets = {-3, 3, -6, 6, -9, 9, -12, 12};
         for (int off : offsets) {
-            int nh = hh + off;
-            if (nh < 0 || nh > 23) continue; // 시간 범위 넘어가면 skip
+            int nh = (hh + off) % 24;
+            if (nh < 0) {
+                nh += 24;
+            }
 
             String neighborTime = String.format("%02d%02d", nh, mm);
             ForecastKey neighborKey = new ForecastKey(
                 prevDate.format(DATE), neighborTime
             );
-
-            if (index.containsKey(neighborKey)) {
-                return index.get(neighborKey);
+            Double v = index.get(neighborKey);
+            if (v != null) {
+                return v;
             }
         }
 

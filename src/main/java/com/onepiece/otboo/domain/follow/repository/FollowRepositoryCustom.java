@@ -3,7 +3,7 @@ package com.onepiece.otboo.domain.follow.repository;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.user.entity.User;
-
+import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +16,7 @@ public interface FollowRepositoryCustom {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
+        SortBy sortBy,
         SortDirection sortDirection
     );
 
@@ -26,7 +26,7 @@ public interface FollowRepositoryCustom {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
+        SortBy sortBy,
         SortDirection sortDirection
     );
 }
