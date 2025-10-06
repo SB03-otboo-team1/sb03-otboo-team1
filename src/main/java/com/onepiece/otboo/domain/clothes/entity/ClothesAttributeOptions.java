@@ -28,7 +28,7 @@ public class ClothesAttributeOptions {
     @JoinColumn(name = "definition_id", columnDefinition = "uuid", nullable = false)
     private ClothesAttributeDefs definition;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "option_value", nullable = false, length = 50)
     public String optionValue;
 
 }
