@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.clothes.service;
 
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDefDto;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
@@ -29,15 +30,24 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
     ) {
         log.info("의상 속성 조회 시작: sortBy: {}, sortDirection: {}, keywordLike: {}", sortBy, sortDirection, keywordLike);
 
-        List<ClothesAttributeDefDto> defs =
+        List<ClothesAttributeDefs> defs =
             clothesAttributeDefRepository.getClothesAttributeDefs(
                 sortBy, sortDirection, keywordLike
             );
+
+        List<ClothesAttributeDefDto> result =
+            defs.stream().map(
+                def ->
+                    clothesAttributeMapper.toAttributeDefDto(
+                        def,
+                        clothesAttributeOptionsRepository.findByDefinitionId(def.getId())
+                    )
+            ).toList();
 
         Long totalCount = clothesAttributeDefRepository.countClothesAttributeDefs(keywordLike);
 
         log.info("의상 속성 목록 조회 완료 - sortBy: {}, sortDirection: {}, keywordLike: {}, 전체 데이터 개수: {}", sortBy, sortDirection, keywordLike, totalCount);
 
-        return defs;
+        return result;
     }
 }

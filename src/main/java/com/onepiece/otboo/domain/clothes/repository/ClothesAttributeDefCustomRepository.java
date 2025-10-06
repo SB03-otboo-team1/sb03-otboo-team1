@@ -1,6 +1,6 @@
 package com.onepiece.otboo.domain.clothes.repository;
 
-import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDefDto;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
@@ -18,7 +18,7 @@ public interface ClothesAttributeDefCustomRepository {
      * @param keywordLike 검색 키워드
      * @return 커서 페이징된 의상 목록
      */
-    List<ClothesAttributeDefDto> getClothesAttributeDefs(
+    List<ClothesAttributeDefs> getClothesAttributeDefs(
         SortBy sortBy, SortDirection sortDirection, String keywordLike);
 
     Long countClothesAttributeDefs(String keywordLike);

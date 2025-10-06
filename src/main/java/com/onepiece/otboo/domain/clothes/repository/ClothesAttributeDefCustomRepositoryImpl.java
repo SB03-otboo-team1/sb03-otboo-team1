@@ -1,11 +1,8 @@
 package com.onepiece.otboo.domain.clothes.repository;
 
-import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDefDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
-import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
 import com.onepiece.otboo.domain.clothes.entity.QClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.QClothesAttributeOptions;
-import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.querydsl.core.BooleanBuilder;
@@ -14,18 +11,15 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Repository;
 
 @Slf4j
-@Repository
 @RequiredArgsConstructor
 public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttributeDefCustomRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
-    private final ClothesAttributeMapper clothesAttributeMapper;
 
     @Override
-    public List<ClothesAttributeDefDto> getClothesAttributeDefs(
+    public List<ClothesAttributeDefs> getClothesAttributeDefs(
         SortBy sortBy, SortDirection sortDirection, String keywordLike
     ) {
 
@@ -60,15 +54,7 @@ public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttribute
             .orderBy(primary, tieBreaker)
             .fetch();
 
-        List<ClothesAttributeOptions> optList = jpaQueryFactory
-            .select(opt)
-            .from(opt)
-            .where(opt.definition.id.in(defList.stream().map(ClothesAttributeDefs::getId).toList()))
-            .fetch();
-
-        return defList.stream()
-            .map(d -> clothesAttributeMapper.toAttributeDefDto(d, optList))
-            .toList();
+        return defList;
     }
 
     @Override
