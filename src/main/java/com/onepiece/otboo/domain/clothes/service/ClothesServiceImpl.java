@@ -203,7 +203,10 @@ public class ClothesServiceImpl implements ClothesService {
 
       String newName = request.name();
       ClothesType newType = request.type();
-      String newImageUrl = fileStorage.uploadFile(CLOTHES_PREFIX, imageFile);
+      String newImageUrl = null;
+      if (imageFile != null) {
+          newImageUrl = fileStorage.uploadFile(CLOTHES_PREFIX, imageFile);
+      }
 
       clothes.update(newName, newType, newImageUrl);
 
