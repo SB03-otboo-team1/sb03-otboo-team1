@@ -143,6 +143,7 @@ public class ClothesController implements ClothesApi {
         ClothesDto clothes = clothesService.getClothes(clothesId);
         UUID ownerId = clothes.ownerId();
 
+        // request의 ownerId와 인증된 사용자 ID 비교
         if (!ownerId.equals(authenticatedUserId)) {
             log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", ownerId, authenticatedUserId);
             throw new GlobalException(ErrorCode.FORBIDDEN);
