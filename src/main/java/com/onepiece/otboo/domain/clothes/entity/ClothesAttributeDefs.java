@@ -20,4 +20,10 @@ public class ClothesAttributeDefs extends BaseUpdatableEntity {
 
     @Column(nullable = false, length = 100, unique = true)
     private String name;
+
+    public void update(String newName) {
+        if (newName != null && !newName.equals(this.name)) {
+            this.name = newName;
+        }
+    }
 }
