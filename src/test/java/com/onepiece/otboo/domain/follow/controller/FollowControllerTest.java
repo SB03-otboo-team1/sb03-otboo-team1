@@ -21,6 +21,8 @@ import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import java.time.Instant;
 import java.util.List;
@@ -93,8 +95,8 @@ class FollowControllerTest {
                 UUID.randomUUID(),
                 false,
                 1L,
-                "createdAt",
-                "ASC"
+                SortBy.CREATED_AT,
+                SortDirection.ASCENDING
             );
 
         given(followService.getFollowers(eq(userId), any(), any(), anyInt(), any(), any(), any()))
@@ -121,7 +123,7 @@ class FollowControllerTest {
 
         CursorPageResponseDto<FollowingResponse> mockResponse =
             new CursorPageResponseDto<>(List.of(followingResponse), "cursor456", UUID.randomUUID(),
-                false, 1L, "createdAt", "ASC");
+                false, 1L, SortBy.CREATED_AT, SortDirection.ASCENDING);
 
         given(followService.getFollowings(eq(userId), any(), any(), anyInt(), any(), any(), any()))
             .willReturn(mockResponse);

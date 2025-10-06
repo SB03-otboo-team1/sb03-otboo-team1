@@ -5,17 +5,22 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
+import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.fixture.UserFixture;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.config.TestJpaConfig;
 import com.onepiece.otboo.global.config.TestJpaConfig.MutableDateTimeProvider;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
@@ -27,36 +32,46 @@ class ClothesRepositoryTest {
     private ClothesRepository clothesRepository;
 
     @Autowired
+    private ClothesAttributeRepository attributeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private MutableDateTimeProvider time;
 
     private UUID ownerId;
 
     @BeforeEach
     void 데이터_준비() {
-        ownerId = UUID.randomUUID();
+        User owner = UserFixture.createUser("test@test.com");
+
+        userRepository.save(owner);
+        ownerId = owner.getId();
 
         time.setNow(Instant.parse("2025-09-29T13:00:00Z"));
         Clothes shirt = Clothes.builder()
-            .ownerId(ownerId)
+            .owner(owner)
             .name("셔츠")
             .type(ClothesType.TOP)
             .build();
 
+        clothesRepository.save(shirt);
+
         time.setNow(Instant.parse("2025-09-29T13:30:00Z"));
         Clothes pants = Clothes.builder()
-                .ownerId(ownerId)
-                .name("바지")
-                .type(ClothesType.BOTTOM)
-                .build();
+            .owner(owner)
+            .name("바지")
+            .type(ClothesType.BOTTOM)
+            .build();
 
-        clothesRepository.save(shirt);
         clothesRepository.save(pants);
     }
 
     @Test
     void 옷_목록_커서기반_조회_성공() {
         List<Clothes> result = clothesRepository.getClothesWithCursor(
-            ownerId, null, null, 10, "createdAt", "desc", null);
+            ownerId, null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING, null);
 
         assertThat(result).hasSize(2);
     }
@@ -76,7 +91,7 @@ class ClothesRepositoryTest {
     @Test
     void 데이터_없을_때_옷_목록_조회결과_빈리스트() {
         List<Clothes> result = clothesRepository.getClothesWithCursor(
-            UUID.randomUUID(), null, null, 10, "createdAt", "asc", null);
+            UUID.randomUUID(), null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING, null);
 
         assertThat(result).isEmpty();
     }
@@ -89,10 +104,16 @@ class ClothesRepositoryTest {
 
     @Test
     void 잘못된_정렬_기준으로_옷_목록_조회_실패() {
-        assertThrows(InvalidDataAccessApiUsageException.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             clothesRepository.getClothesWithCursor(
-                ownerId, null, null, 10, "invalidField", "asc", null
+                ownerId, null, null, 10, null, SortDirection.ASCENDING, null
             );
         });
+    }
+
+    @AfterEach
+    void tearDown() {
+        clothesRepository.deleteAll();
+        userRepository.deleteAll();
     }
 }
