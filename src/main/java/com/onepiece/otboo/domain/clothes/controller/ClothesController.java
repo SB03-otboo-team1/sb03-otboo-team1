@@ -120,7 +120,7 @@ public class ClothesController implements ClothesApi {
       UUID ownerId = oldClothes.ownerId();
 
         // request의 ownerId와 인증된 사용자 ID 비교
-        if (ownerId.equals(authenticatedUserId)) {
+        if (!ownerId.equals(authenticatedUserId)) {
             log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", ownerId, authenticatedUserId);
             throw new GlobalException(ErrorCode.FORBIDDEN);
         }
