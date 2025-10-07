@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -87,7 +88,7 @@ public class ClothesController implements ClothesApi {
 
       ClothesDto clothes = clothesService.createClothes(request, imageFile);
 
-      return ResponseEntity.ok(clothes);
+      return ResponseEntity.status(HttpStatus.CREATED).body(clothes);
     }
 
     private UUID resolveRequesterId(Authentication auth) {
@@ -130,7 +131,7 @@ public class ClothesController implements ClothesApi {
     }
 
     @DeleteMapping(path = "/{clothesId}")
-    public ResponseEntity<String> deleteClothes(
+    public ResponseEntity<Void> deleteClothes(
         @PathVariable UUID clothesId
     ) {
         // 인증된 사용자 ID 가져오기
@@ -152,6 +153,6 @@ public class ClothesController implements ClothesApi {
 
         log.info("의상 삭제 작업 완료 - clothesId: {}", clothesId);
 
-        return ResponseEntity.ok("의상 삭제 완료");
+        return ResponseEntity.noContent().build();
     }
 }

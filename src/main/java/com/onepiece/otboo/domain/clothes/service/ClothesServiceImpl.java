@@ -25,7 +25,6 @@ import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.storage.FileStorage;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -58,6 +58,7 @@ public class ClothesServiceImpl implements ClothesService {
     private String CLOTHES_PREFIX;
 
   @Override
+  @Transactional(readOnly = true)
   public CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
 
     List<Clothes> clothes =
@@ -134,6 +135,7 @@ public class ClothesServiceImpl implements ClothesService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public ClothesDto getClothes(UUID clothesId) {
       Clothes clothes = clothesRepository.findById(clothesId)
           .orElseThrow(() -> new ClothesNotFoundException("해당 옷 정보를 찾을 수 없습니다."));
@@ -212,9 +214,9 @@ public class ClothesServiceImpl implements ClothesService {
 
       clothes.update(newName, newType, newImageUrl);
 
-      clothesRepository.save(clothes);
+      Clothes updatedClothes = clothesRepository.save(clothes);
 
-      return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
+      return clothesMapper.toDto(updatedClothes, Collections.emptyList(), fileStorage);
   }
 
     @Override
