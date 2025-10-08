@@ -60,6 +60,7 @@ public class Weather5DayProcessor implements ItemProcessor<Location, List<Weathe
             .flatMap(Optional::stream)
             .toList();
 
+        // 생성된 날씨 데이터에 대해 알림 생성 여부 판단
         List<WeatherAlertOutbox> alerts = ruleEngine.evaluate(location, result);
 
         if (!alerts.isEmpty()) {
