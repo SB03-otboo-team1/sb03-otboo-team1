@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS clothes_attributes
     id            uuid PRIMARY KEY,
     clothes_id    uuid                     NOT NULL,
     definition_id uuid                     NOT NULL,
-    option_value     varchar(50)                     NOT NULL,
+    option_value  varchar(50)              NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at    TIMESTAMP WITH TIME ZONE,
     FOREIGN KEY (clothes_id) REFERENCES clothes (id) ON DELETE CASCADE,
@@ -274,6 +274,17 @@ CREATE TABLE IF NOT EXISTS notifications
     CHECK (level IN ('INFO', 'WARNING', 'ERROR'))
 );
 
+CREATE TABLE weather_alert_outboxes
+(
+    id          uuid PRIMARY KEY,
+    location_id UUID                     NOT NULL,
+    title       VARCHAR(255)             NOT NULL,
+    message     TEXT                     NOT NULL,
+    status      VARCHAR(20)              NOT NULL DEFAULT 'PENDING',
+    created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    CHECK (status IN ('PENDING', 'SEND', 'FAILED'))
+);
+
 /*
 ============= INDEX (조회 성능 최적화용) =============
  */
@@ -283,3 +294,5 @@ CREATE INDEX IF NOT EXISTS idx_feed_comments_feed_created_at ON feed_comments (f
 CREATE INDEX IF NOT EXISTS idx_feed_likes_feed ON feed_likes (feed_id);
 CREATE INDEX IF NOT EXISTS idx_feed_author_created_at ON feeds (author_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_weather_location_time ON weather_data (location_id, forecast_at);
+CREATE INDEX idx_weather_alert_outboxes_location_id ON weather_alert_outboxes (location_id);
+CREATE INDEX idx_weather_alert_outboxes_status ON weather_alert_outboxes (status);
