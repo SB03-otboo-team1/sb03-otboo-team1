@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class WeatherAlertRuleEngine {
 
-    private static final double TEMP_CRITICAL = 1.0;
+    private static final double TEMP_CRITICAL = 5.0;
     private static final double RAIN_CRITICAL = 5.0;
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
