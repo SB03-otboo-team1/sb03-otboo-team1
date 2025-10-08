@@ -274,7 +274,7 @@ CREATE TABLE IF NOT EXISTS notifications
     CHECK (level IN ('INFO', 'WARNING', 'ERROR'))
 );
 
-CREATE TABLE weather_alert_outboxes
+CREATE TABLE IF NOT EXISTS weather_alert_outboxes
 (
     id          uuid PRIMARY KEY,
     location_id UUID                     NOT NULL,
@@ -294,5 +294,5 @@ CREATE INDEX IF NOT EXISTS idx_feed_comments_feed_created_at ON feed_comments (f
 CREATE INDEX IF NOT EXISTS idx_feed_likes_feed ON feed_likes (feed_id);
 CREATE INDEX IF NOT EXISTS idx_feed_author_created_at ON feeds (author_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_weather_location_time ON weather_data (location_id, forecast_at);
-CREATE INDEX idx_weather_alert_outboxes_location_id ON weather_alert_outboxes (location_id);
-CREATE INDEX idx_weather_alert_outboxes_status ON weather_alert_outboxes (status);
+CREATE INDEX IF NOT EXISTS idx_weather_alert_outboxes_location_id ON weather_alert_outboxes (location_id);
+CREATE INDEX IF NOT EXISTS idx_weather_alert_outboxes_status ON weather_alert_outboxes (status);
