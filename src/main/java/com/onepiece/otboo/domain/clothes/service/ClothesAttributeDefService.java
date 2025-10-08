@@ -5,7 +5,6 @@ import com.onepiece.otboo.domain.clothes.dto.request.ClothesAttributeDefCreateRe
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesAttributeDefUpdateRequest;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
-import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,9 +14,9 @@ public interface ClothesAttributeDefService {
         SortBy sortBy, SortDirection sortDirection, String keywordLike
     );
 
-    ClothesAttributeDefDto createClothesAttributeDef(@Valid ClothesAttributeDefCreateRequest request);
+    ClothesAttributeDefDto createClothesAttributeDef(ClothesAttributeDefCreateRequest request);
 
-    ClothesAttributeDefDto updateClothesAttributeDef(UUID definitionId, @Valid ClothesAttributeDefUpdateRequest request);
+    ClothesAttributeDefDto updateClothesAttributeDef(UUID definitionId, ClothesAttributeDefUpdateRequest request);
 
     void deleteClothesAttributeDef(UUID definitionId);
 }

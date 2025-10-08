@@ -81,13 +81,13 @@ public class ClothesAttributeDefController implements ClothesAttributeDefApi {
 
     @DeleteMapping(path = "/{definitionId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteClothesAttributeDef(
+    public ResponseEntity<Void> deleteClothesAttributeDef(
         @PathVariable UUID definitionId
     ) {
         log.info("의상 속성 정의 삭제 API 실행 - definitionId: {}", definitionId);
 
         clothesAttributeDefService.deleteClothesAttributeDef(definitionId);
 
-        return ResponseEntity.ok("의상 속성 정의 삭제 완료");
+        return ResponseEntity.noContent().build();
     }
 }
