@@ -2,14 +2,14 @@ package com.onepiece.otboo.domain.weather.batch.tasklet;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.onepiece.otboo.domain.notification.enums.AlertStatus;
-import com.onepiece.otboo.domain.notification.enums.Level;
-import com.onepiece.otboo.domain.notification.service.NotificationService;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.fixture.ProfileFixture;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
@@ -17,8 +17,8 @@ import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.weather.entity.WeatherAlertOutbox;
 import com.onepiece.otboo.domain.weather.repository.WeatherAlertOutboxRepository;
+import com.onepiece.otboo.global.event.event.WeatherChangeEvent;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,7 +42,7 @@ class WeatherAlertSendTaskletTest {
     private ProfileRepository profileRepository;
 
     @Mock
-    private NotificationService notificationService;
+    private ApplicationEventPublisher publisher;
 
     @InjectMocks
     private WeatherAlertSendTasklet tasklet;
@@ -59,7 +60,7 @@ class WeatherAlertSendTaskletTest {
         // then
         assertEquals(RepeatStatus.FINISHED, status);
         verify(outboxRepository).findTop100ByStatus(AlertStatus.PENDING);
-        verifyNoMoreInteractions(outboxRepository, profileRepository, notificationService);
+        verifyNoMoreInteractions(outboxRepository, profileRepository, publisher);
     }
 
     @Test
@@ -110,9 +111,6 @@ class WeatherAlertSendTaskletTest {
 
         // then
         assertEquals(RepeatStatus.CONTINUABLE, status);
-        verify(notificationService).create(Set.of(id1), "강풍 주의", "강풍이 예보되어 있습니다.", Level.INFO);
-        verify(notificationService).create(Set.of(id2), "강풍 주의", "강풍이 예보되어 있습니다.", Level.INFO);
-        verify(notificationService).create(Set.of(id3), "폭우 주의", "폭우가 예보되어 있습니다.", Level.INFO);
         ArgumentCaptor<List<WeatherAlertOutbox>> captor = ArgumentCaptor.forClass(List.class);
         verify(outboxRepository).saveAll(captor.capture());
         List<WeatherAlertOutbox> saved = captor.getValue();
@@ -121,6 +119,8 @@ class WeatherAlertSendTaskletTest {
         verify(outboxRepository).findTop100ByStatus(AlertStatus.PENDING);
         verify(profileRepository).findAllByLocationId(locationId1);
         verify(profileRepository).findAllByLocationId(locationId2);
-        verifyNoMoreInteractions(outboxRepository, profileRepository, notificationService);
+        ArgumentCaptor<WeatherChangeEvent> evtCap = ArgumentCaptor.forClass(
+            WeatherChangeEvent.class);
+        verify(publisher, times(3)).publishEvent(any(WeatherChangeEvent.class));
     }
 }
