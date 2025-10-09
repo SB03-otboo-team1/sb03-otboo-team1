@@ -282,6 +282,7 @@ CREATE TABLE IF NOT EXISTS weather_alert_outboxes
     message     TEXT                     NOT NULL,
     status      VARCHAR(20)              NOT NULL DEFAULT 'PENDING',
     created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    FOREIGN KEY (location_id) REFERENCES locations (id) ON DELETE CASCADE,
     CHECK (status IN ('PENDING', 'SEND', 'FAILED'))
 );
 
