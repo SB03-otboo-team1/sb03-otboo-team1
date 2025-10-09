@@ -1,14 +1,12 @@
 package com.onepiece.otboo.domain.weather.batch.tasklet;
 
 import com.onepiece.otboo.domain.notification.enums.AlertStatus;
-import com.onepiece.otboo.domain.notification.enums.Level;
-import com.onepiece.otboo.domain.notification.service.NotificationService;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.weather.entity.WeatherAlertOutbox;
 import com.onepiece.otboo.domain.weather.repository.WeatherAlertOutboxRepository;
+import com.onepiece.otboo.global.event.event.WeatherChangeEvent;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +14,7 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -25,7 +24,7 @@ public class WeatherAlertSendTasklet implements Tasklet {
 
     private final WeatherAlertOutboxRepository outboxRepository;
     private final ProfileRepository profileRepository;
-    private final NotificationService notificationService;
+    private final ApplicationEventPublisher publisher;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
@@ -42,8 +41,8 @@ public class WeatherAlertSendTasklet implements Tasklet {
             List<Profile> profiles = profileRepository.findAllByLocationId(alert.getLocationId());
             for (Profile p : profiles) {
                 UUID userId = p.getUser().getId();
-                notificationService.create(Set.of(userId), alert.getTitle(), alert.getMessage(),
-                    Level.INFO);
+                publisher.publishEvent(new WeatherChangeEvent(userId, alert.getTitle(),
+                    alert.getMessage()));
             }
             alert.markSent();
         }
