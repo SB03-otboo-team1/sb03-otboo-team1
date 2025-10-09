@@ -43,7 +43,7 @@ public class WeatherAlertOutbox extends BaseEntity {
             .build();
     }
 
-    public void markSent() {
-        this.status = AlertStatus.SEND;
+    public void updateStatus(AlertStatus status) {
+        this.status = status;
     }
 }

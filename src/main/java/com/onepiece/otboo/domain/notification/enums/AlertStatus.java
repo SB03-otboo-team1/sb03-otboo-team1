@@ -8,6 +8,7 @@ package com.onepiece.otboo.domain.notification.enums;
  *
  * <ul>
  *   <li>{@link #PENDING} - 알림이 생성되었지만 아직 발송되지 않은 상태</li>
+ *   <li>{@link #SENDING} - 알림이 사용자에게 발송 중인 상태</li>
  *   <li>{@link #SEND} - 알림이 정상적으로 사용자에게 발송된 상태</li>
  *   <li>{@link #FAILED} - 알림 발송 중 오류가 발생한 상태</li>
  * </ul>
@@ -17,6 +18,7 @@ package com.onepiece.otboo.domain.notification.enums;
  */
 public enum AlertStatus {
     PENDING,
+    SENDING,
     SEND,
     FAILED
 }

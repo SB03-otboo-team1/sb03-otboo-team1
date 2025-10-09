@@ -36,7 +36,13 @@ public class NotificationRequiredTopicListener {
             log.debug("[NotificationRequiredTopicListener] 날씨 변화 알림 생성 완료 - userId: {}",
                 userId);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            log.error("[NotificationRequiredTopicListener] JSON 파싱 실패 - kafkaEvent: {}",
+                kafkaEvent, e);
+            throw new RuntimeException("Failed to parse WeatherChangeEvent from Kafka message", e);
+        } catch (Exception e) {
+            log.error("[NotificationRequiredTopicListener] 알림 생성 중 오류 발생 - kafkaEvent: {}",
+                kafkaEvent, e);
+            throw e;
         }
     }
 }

@@ -30,24 +30,26 @@ public class WeatherAlertSendTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
         throws Exception {
 
-        List<WeatherAlertOutbox> alerts = outboxRepository.findTop100ByStatus(AlertStatus.PENDING);
+        List<WeatherAlertOutbox> outboxes = outboxRepository.findTop100ByStatus(
+            AlertStatus.PENDING);
 
-        if (alerts.isEmpty()) {
+        if (outboxes.isEmpty()) {
             log.info("[WeatherAlertSendTasklet] 보낼 알림 없음!!");
             return RepeatStatus.FINISHED;
         }
 
-        for (WeatherAlertOutbox alert : alerts) {
-            List<Profile> profiles = profileRepository.findAllByLocationId(alert.getLocationId());
+        for (WeatherAlertOutbox outbox : outboxes) {
+            outbox.updateStatus(AlertStatus.SENDING);
+            List<Profile> profiles = profileRepository.findAllByLocationId(outbox.getLocationId());
+            UUID outboxId = outbox.getId();
             for (Profile p : profiles) {
                 UUID userId = p.getUser().getId();
-                publisher.publishEvent(new WeatherChangeEvent(userId, alert.getTitle(),
-                    alert.getMessage()));
+                publisher.publishEvent(new WeatherChangeEvent(outboxId, userId, outbox.getTitle(),
+                    outbox.getMessage()));
             }
-            alert.markSent();
         }
 
-        outboxRepository.saveAll(alerts);
+        outboxRepository.saveAll(outboxes);
         return RepeatStatus.CONTINUABLE;
     }
 }
