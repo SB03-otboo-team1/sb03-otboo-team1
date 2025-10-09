@@ -64,7 +64,7 @@ class WeatherAlertSendTaskletTest {
     }
 
     @Test
-    void 사용자에게_보낼_알림_전송_후_SEND_상태로_변경() throws Exception {
+    void 사용자에게_보낼_알림_생성_후_SENDING_상태로_변경() throws Exception {
 
         // given
         UUID locationId1 = UUID.randomUUID();
@@ -115,7 +115,7 @@ class WeatherAlertSendTaskletTest {
         verify(outboxRepository).saveAll(captor.capture());
         List<WeatherAlertOutbox> saved = captor.getValue();
         assertThat(saved).hasSize(2);
-        assertThat(saved).allMatch(x -> x.getStatus() == AlertStatus.SEND);
+        assertThat(saved).allMatch(x -> x.getStatus() == AlertStatus.SENDING);
         verify(outboxRepository).findTop100ByStatus(AlertStatus.PENDING);
         verify(profileRepository).findAllByLocationId(locationId1);
         verify(profileRepository).findAllByLocationId(locationId2);
