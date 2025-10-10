@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Comment API")
 @RestController
 @RequestMapping("/api/feeds")
 @RequiredArgsConstructor
@@ -41,7 +40,7 @@ public class CommentController implements CommentApi {
     @GetMapping("/{feedId}/comments")
     @Override
     public ResponseEntity<CursorPageResponseDto<CommentDto>> listComments(
-        @PathVariable UUID feedId,
+        @PathVariable("feedId") UUID feedId,
         @RequestParam(required = false) String cursor,
         @RequestParam(name = "idAfter", required = false) UUID idAfter,
         @RequestParam(name = "limit", defaultValue = "20") int limit
