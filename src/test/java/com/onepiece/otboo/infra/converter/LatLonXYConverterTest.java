@@ -1,10 +1,10 @@
 package com.onepiece.otboo.infra.converter;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-class LatLonToXYConverterTest {
+class LatLonXYConverterTest {
 
     @Test
     void 위도_경도_데이터_격자_좌표로_변환_테스트() {
@@ -15,10 +15,10 @@ class LatLonToXYConverterTest {
         double longitude = 126.800077777777;
 
         // when
-        LatLonToXYConverter.Point point = LatLonToXYConverter.latLonToXY(latitude, longitude);
+        LatLonXYConverter.Point point = LatLonXYConverter.latLonToXY(latitude, longitude);
 
         // then
-        assertEquals(57, point.x);
-        assertEquals(124, point.y);
+        assertEquals(57, point.x());
+        assertEquals(124, point.y());
     }
 }

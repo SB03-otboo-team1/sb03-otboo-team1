@@ -14,6 +14,8 @@ import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
 import java.util.List;
@@ -71,8 +73,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public CursorPageResponseDto<UserDto> getUsers(UserGetRequest userGetRequest) {
-        String sortBy = userGetRequest.sortBy();
-        String sortDirection = userGetRequest.sortDirection();
+        SortBy sortBy = userGetRequest.sortBy();
+        SortDirection sortDirection = userGetRequest.sortDirection();
         String emailLike = userGetRequest.emailLike();
         Role roleEqual = userGetRequest.roleEqual();
         Boolean locked = userGetRequest.locked();
