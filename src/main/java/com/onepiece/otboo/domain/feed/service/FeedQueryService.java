@@ -133,8 +133,8 @@ public class FeedQueryService {
                     : String.valueOf(last.getLikeCount());
             nextIdAfter = last.getId();
 
-        }    long totalCount = countAllWithoutCursor(keywordLike, skyStatusEqual, precipitationTypeEqual, authorIdEqual, joinWeather);
-
+        }
+        long totalCount = countAllWithoutCursor(keywordLike, skyStatusEqual, precipitationTypeEqual, authorIdEqual, joinWeather);
         return new CursorPageResponseDto<>(data, nextCursor, nextIdAfter, hasNext, totalCount, sb.name(), sd.name());
     }
 
