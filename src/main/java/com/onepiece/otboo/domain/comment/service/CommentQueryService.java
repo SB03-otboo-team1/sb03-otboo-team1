@@ -5,8 +5,8 @@ import com.onepiece.otboo.domain.comment.entity.Comment;
 import com.onepiece.otboo.domain.comment.mapper.CommentMapper;
 import com.onepiece.otboo.domain.comment.repository.CommentRepository;
 import com.onepiece.otboo.domain.feed.entity.Feed;
-import com.onepiece.otboo.domain.feed.enums.FeedSortBy;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -90,9 +90,8 @@ public class CommentQueryService {
 
         long totalCount = commentRepository.countByFeed_Id(feedId);
 
-        // 메타 값 표준화: sortBy="createdAt", sortDirection="DESCENDING"
-        String sortBy = FeedSortBy.createdAt.name();
-        String sortDirection = SortDirection.DESCENDING.name();
+        SortBy sortBy = SortBy.CREATED_AT;
+        SortDirection sortDirection = SortDirection.DESCENDING;
 
         return new CursorPageResponseDto<>(
             data,

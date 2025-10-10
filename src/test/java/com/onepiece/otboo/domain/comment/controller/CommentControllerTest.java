@@ -1,19 +1,19 @@
 package com.onepiece.otboo.domain.comment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.onepiece.otboo.domain.comment.controller.api.CommentApi;
 import com.onepiece.otboo.domain.comment.dto.request.CommentCreateRequest;
 import com.onepiece.otboo.domain.comment.dto.response.CommentDto;
 import com.onepiece.otboo.domain.comment.service.CommentService;
+import com.onepiece.otboo.domain.comment.service.CommentQueryService;
 import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -26,13 +26,18 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CommentController.class)
+@WebMvcTest(controllers = CommentController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CommentControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
 
-    @MockitoBean CommentService commentService;
+    @MockitoBean
+    private CommentService commentService;
+
+    @MockitoBean
+    private CommentQueryService commentQueryService;
 
     @Test
     @WithMockUser
