@@ -10,6 +10,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -24,7 +25,7 @@ public class NotificationRequiredTopicListener {
         topics = "otboo.WeatherChangeEvent",
         containerFactory = "processingKafkaListenerContainerFactory"
     )
-    public void onWeatherChanged(String kafkaEvent) {
+    public void onWeatherChanged(String kafkaEvent, Acknowledgment ack) {
         try {
             WeatherChangeEvent event = objectMapper.readValue(kafkaEvent, WeatherChangeEvent.class);
             UUID userId = event.userId();
@@ -35,6 +36,8 @@ public class NotificationRequiredTopicListener {
 
             log.debug("[NotificationRequiredTopicListener] 날씨 변화 알림 생성 완료 - userId: {}",
                 userId);
+
+            ack.acknowledge();
         } catch (JsonProcessingException e) {
             log.error("[NotificationRequiredTopicListener] JSON 파싱 실패 - kafkaEvent: {}",
                 kafkaEvent, e);
