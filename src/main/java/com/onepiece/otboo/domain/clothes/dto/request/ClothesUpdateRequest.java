@@ -1,10 +1,9 @@
 package com.onepiece.otboo.domain.clothes.dto.request;
 
+import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.*;
+import java.util.List;
+import lombok.Builder;
 
 /**
  * 의상 수정 요청 DTO
@@ -13,8 +12,8 @@ import lombok.*;
 @Builder
 public record ClothesUpdateRequest(
     String name,
-    ClothesType type
-    // TODO : 의상 속성 추가해야 함
+    ClothesType type,
+    List<ClothesAttributeDto> attributes
 ) {
 
 }

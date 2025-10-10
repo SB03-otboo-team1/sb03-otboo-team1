@@ -5,6 +5,8 @@ import com.onepiece.otboo.domain.feed.dto.request.FeedUpdateRequest;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.dto.response.ErrorResponse;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -17,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,8 +28,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.UUID;
 
 @Tag(name = "피드 관리", description = "피드 관련 API")
 public interface FeedApi {
@@ -56,14 +57,14 @@ public interface FeedApi {
             content = @Content(
                 mediaType = "application/json",
                 schema = @Schema(implementation = ErrorResponse.class
-            ))
+                ))
         ),
         @ApiResponse(
             responseCode = "401",
             description = "인증 실패(미인증/만료/무효 토큰)",
             content = @Content(
-            schema = @Schema(implementation = ErrorResponse.class
-            ))
+                schema = @Schema(implementation = ErrorResponse.class
+                ))
         ),
         @ApiResponse(
             responseCode = "403",
@@ -71,7 +72,7 @@ public interface FeedApi {
             content = @Content(
                 mediaType = "application/json",
                 schema = @Schema(implementation = ErrorResponse.class
-            ))
+                ))
         ),
         @ApiResponse(
             responseCode = "404",
@@ -79,11 +80,12 @@ public interface FeedApi {
             content = @Content(
                 mediaType = "application/json",
                 schema = @Schema(implementation = ErrorResponse.class
-            ))
+                ))
         )
     })
     @PostMapping(consumes = "application/json", produces = "application/json")
-    ResponseEntity<FeedResponse> createFeed(@Valid @RequestBody FeedCreateRequest feedCreateRequest);
+    ResponseEntity<FeedResponse> createFeed(
+        @Valid @RequestBody FeedCreateRequest feedCreateRequest);
 
     @Operation(
         summary = "피드 삭제",
@@ -124,7 +126,8 @@ public interface FeedApi {
         description = "작성자 본인이 피드 내용을 수정합니다."
     )
     @PatchMapping(value = "/{feedId}", consumes = "application/json", produces = "application/json")
-    ResponseEntity<FeedResponse> updateFeed(@PathVariable UUID feedId, @Valid @RequestBody FeedUpdateRequest req);
+    ResponseEntity<FeedResponse> updateFeed(@PathVariable UUID feedId,
+        @Valid @RequestBody FeedUpdateRequest req);
 
     @Operation(
         summary = "피드 목록 조회",
@@ -166,14 +169,14 @@ public interface FeedApi {
             schema = @Schema(allowableValues = {"createdAt", "likeCount"}),
             example = "createdAt"
         )
-        @RequestParam String sortBy,
+        @RequestParam SortBy sortBy,
 
         @Parameter(
             description = "정렬 방향",
             schema = @Schema(allowableValues = {"ASCENDING", "DESCENDING"}),
             example = "DESCENDING"
         )
-        @RequestParam String sortDirection,
+        @RequestParam SortDirection sortDirection,
 
         @Parameter(
             description = "내용 키워드 (부분 일치)",

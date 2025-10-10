@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface WeatherProvider {
 
-    List<KmaItem> fetchLatestItems(int x, int y);
+    List<KmaItem> fetchLatestItems(double latitude, double longitude);
 }

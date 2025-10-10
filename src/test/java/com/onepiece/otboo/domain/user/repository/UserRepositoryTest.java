@@ -14,6 +14,8 @@ import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.global.config.TestJpaConfig;
 import com.onepiece.otboo.global.config.TestJpaConfig.MutableDateTimeProvider;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -98,8 +100,8 @@ class UserRepositoryTest {
         // given
         UserGetRequest request = UserGetRequest.builder()
             .limit(2)
-            .sortBy("createdAt")
-            .sortDirection("ASCENDING")
+            .sortBy(SortBy.CREATED_AT)
+            .sortDirection(SortDirection.ASCENDING)
             .emailLike("test.com")
             .build();
 
@@ -115,12 +117,12 @@ class UserRepositoryTest {
 
     @ParameterizedTest(name = "sortBy = {0}, sortDirection = {1}")
     @CsvSource({
-        "email,ASCENDING",
-        "email,DESCENDING",
-        "createdAt,ASCENDING",
-        "createdAt,DESCENDING"
+        "EMAIL,ASCENDING",
+        "EMAIL,DESCENDING",
+        "CREATED_AT,ASCENDING",
+        "CREATED_AT,DESCENDING"
     })
-    void 두번째_페이지_커서_조회_테스트(String sortBy, String sortDirection) {
+    void 두번째_페이지_커서_조회_테스트(SortBy sortBy, SortDirection sortDirection) {
 
         // given
         UserGetRequest first = UserGetRequest.builder()
@@ -131,7 +133,7 @@ class UserRepositoryTest {
         List<UserDto> firstRows = userRepository.findUsers(first);
         UserDto lastOfPage1 = firstRows.get(1);
 
-        String cursor = "email".equals(sortBy)
+        String cursor = SortBy.EMAIL.equals(sortBy)
             ? lastOfPage1.email()
             : lastOfPage1.createdAt().toString();
 
@@ -151,14 +153,15 @@ class UserRepositoryTest {
         String expectedEmail;
         UUID expectedId;
 
-        if ("email".equals(sortBy) && "ASCENDING".equals(sortDirection)) {
+        if (SortBy.EMAIL.equals(sortBy) && SortDirection.ASCENDING.equals(sortDirection)) {
             // 1페이지: han, kim → 2페이지: shin
             expectedEmail = "shin@test.com";
             expectedId = id2;
-        } else if ("email".equals(sortBy) && "DESCENDING".equals(sortDirection)) {
+        } else if (SortBy.EMAIL.equals(sortBy) && SortDirection.DESCENDING.equals(sortDirection)) {
             expectedEmail = "han@test.com";
             expectedId = id1;
-        } else if ("createdAt".equals(sortBy) && "ASCENDING".equals(sortDirection)) {
+        } else if (SortBy.CREATED_AT.equals(sortBy) && SortDirection.ASCENDING.equals(
+            sortDirection)) {
             expectedEmail = "kim@test.com";
             expectedId = id3;
         } else {
@@ -171,15 +174,15 @@ class UserRepositoryTest {
         assertEquals(expectedId, only.id());
 
         // 정렬/커서 일관성 확인
-        if ("email".equals(sortBy)) {
-            if ("ASCENDING".equals(sortDirection)) {
+        if (SortBy.EMAIL.equals(sortBy)) {
+            if (SortDirection.ASCENDING.equals(sortDirection)) {
                 // 다음 페이지 값이 이전 마지막보다 커야 함
                 assertTrue(only.email().compareTo(lastOfPage1.email()) > 0);
             } else {
                 assertTrue(only.email().compareTo(lastOfPage1.email()) < 0);
             }
         } else { // createdAt
-            if ("ASCENDING".equals(sortDirection)) {
+            if (SortDirection.ASCENDING.equals(sortDirection)) {
                 assertFalse(only.createdAt().isBefore(lastOfPage1.createdAt()));
             } else {
                 assertFalse(only.createdAt().isAfter(lastOfPage1.createdAt()));

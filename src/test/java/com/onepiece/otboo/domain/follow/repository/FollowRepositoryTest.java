@@ -11,6 +11,8 @@ import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.config.TestJpaConfig;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -163,7 +165,8 @@ class FollowRepositoryTest {
             .build());
 
         List<FollowingResponse> responses = followRepository
-            .findFollowingsWithProfileCursor(follower, null, null, 10, null, "createdAt", "ASC");
+            .findFollowingsWithProfileCursor(follower, null, null, 10, null, SortBy.CREATED_AT,
+                SortDirection.ASCENDING);
 
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getNickname()).isEqualTo("팔로잉닉네임");
@@ -182,7 +185,8 @@ class FollowRepositoryTest {
             .build());
 
         List<FollowerResponse> responses = followRepository
-            .findFollowersWithProfileCursor(following, null, null, 10, null, "createdAt", "ASC");
+            .findFollowersWithProfileCursor(following, null, null, 10, null, SortBy.CREATED_AT,
+                SortDirection.ASCENDING);
 
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getNickname()).isEqualTo("팔로워닉네임");

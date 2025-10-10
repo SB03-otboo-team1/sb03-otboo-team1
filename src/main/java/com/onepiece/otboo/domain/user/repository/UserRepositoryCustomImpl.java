@@ -59,10 +59,12 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
             }
         }
 
-        OrderSpecifier<?> primary = switch (userGetRequest.sortByEnum()) {
+        OrderSpecifier<?> primary = switch (userGetRequest.sortBy()) {
             case CREATED_AT ->
                 (userGetRequest.isAscending() ? user.createdAt.asc() : user.createdAt.desc());
+            case NAME -> null;
             case EMAIL -> (userGetRequest.isAscending() ? user.email.asc() : user.email.desc());
+            case LIKE_COUNT -> null;
         };
         OrderSpecifier<?> tieBreaker = (userGetRequest.isAscending() ? user.id.asc()
             : user.id.desc());
