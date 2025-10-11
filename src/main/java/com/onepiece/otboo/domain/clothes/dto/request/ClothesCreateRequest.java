@@ -11,8 +11,7 @@ import java.util.UUID;
 import lombok.Builder;
 
 /**
- * 의상 등록 요청 DTO
- * 사용자가 의상을 등록할 때 사용되는 요청 데이터입니다.
+ * 의상 등록 요청 DTO. 사용자가 의상을 등록할 때 사용되는 요청 데이터입니다.
  */
 @Builder
 public record ClothesCreateRequest(
@@ -29,4 +28,5 @@ public record ClothesCreateRequest(
     @Size(max = 50, message = "속성은 최대 50개까지 등록 가능합니다")
     List<ClothesAttributeDto> attributes
 ) {
+
 }

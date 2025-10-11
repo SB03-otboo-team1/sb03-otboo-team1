@@ -17,8 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 의상 엔티티 클래스
- * 사용자가 등록한 의상 정보를 저장합니다.
+ * 의상 엔티티 클래스 사용자가 등록한 의상 정보를 저장합니다.
  */
 @Entity
 @Table(name = "clothes")

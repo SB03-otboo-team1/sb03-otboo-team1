@@ -7,8 +7,8 @@ import com.onepiece.otboo.domain.clothes.dto.request.ClothesUpdateRequest;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.service.ClothesService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
-import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
@@ -36,8 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * 의상 관리 컨트롤러
- * 사용자의 의상 등록, 조회, 수정, 삭제 기능을 제공합니다.
+ * 의상 관리 컨트롤러. 사용자의 의상 등록, 조회, 수정, 삭제 기능을 제공합니다.
  */
 @Slf4j
 @RestController
@@ -46,52 +45,55 @@ import org.springframework.web.multipart.MultipartFile;
 @Validated
 public class ClothesController implements ClothesApi {
 
-  private final ClothesService clothesService;
+    private final ClothesService clothesService;
 
-  @GetMapping
-  @PreAuthorize("#ownerId == principal.userId")
-  public ResponseEntity<CursorPageResponseDto<ClothesDto>> getClothes(
-      @RequestParam(required = false) String cursor,
-      @RequestParam(required = false) UUID idAfter,
-      @RequestParam(defaultValue = "15") @Positive @Min(1) int limit,
-      @RequestParam(required = false) ClothesType typeEqual,
-      @RequestParam UUID ownerId
-  ) {
-    log.info("의상 목록 조회 API 호출 - 소유자: {}, limit: {}", ownerId, limit);
+    @GetMapping
+    @PreAuthorize("#ownerId == principal.userId")
+    public ResponseEntity<CursorPageResponseDto<ClothesDto>> getClothes(
+        @RequestParam(required = false) String cursor,
+        @RequestParam(required = false) UUID idAfter,
+        @RequestParam(defaultValue = "15") @Positive @Min(1) int limit,
+        @RequestParam(required = false) ClothesType typeEqual,
+        @RequestParam UUID ownerId
+    ) {
+        log.info("의상 목록 조회 API 호출 - 소유자: {}, limit: {}", ownerId, limit);
 
-    SortBy sortBy = SortBy.CREATED_AT;
-    SortDirection sortDirection = SortDirection.DESCENDING;
+        SortBy sortBy = SortBy.CREATED_AT;
+        SortDirection sortDirection = SortDirection.DESCENDING;
 
-    CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
-        ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
+        CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
+            ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
 
-    return ResponseEntity.ok(response);
-  }
+        return ResponseEntity.ok(response);
+    }
 
-  @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ClothesDto> createClothes(
         @Valid @RequestPart ClothesCreateRequest request,
-        @RequestPart(value= "image", required = false) MultipartFile imageFile
+        @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) throws IOException {
-      // 인증된 사용자 ID 가져오기
-      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-      UUID authenticatedUserId = resolveRequesterId(auth);
+        // 인증된 사용자 ID 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID authenticatedUserId = resolveRequesterId(auth);
 
-      log.info("의상 등록 API 호출 - request: {}", request);
+        log.info("의상 등록 API 호출 - request: {}", request);
 
-      // request의 ownerId와 인증된 사용자 ID 비교
-      if (!request.ownerId().equals(authenticatedUserId)) {
-          log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", request.ownerId(), authenticatedUserId);
-          throw new GlobalException(ErrorCode.FORBIDDEN);
-      }
+        // request의 ownerId와 인증된 사용자 ID 비교
+        if (!request.ownerId().equals(authenticatedUserId)) {
+            log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", request.ownerId(),
+                authenticatedUserId);
+            throw new GlobalException(ErrorCode.FORBIDDEN);
+        }
 
-      ClothesDto clothes = clothesService.createClothes(request, imageFile);
+        ClothesDto clothes = clothesService.createClothes(request, imageFile);
 
-      return ResponseEntity.ok(clothes);
+        return ResponseEntity.ok(clothes);
     }
 
     private UUID resolveRequesterId(Authentication auth) {
-        if (auth == null) throw new GlobalException(ErrorCode.UNAUTHORIZED);
+        if (auth == null) {
+            throw new GlobalException(ErrorCode.UNAUTHORIZED);
+        }
         Object principal = auth.getPrincipal();
         if (principal instanceof CustomUserDetails cud) {
             return cud.getUserId();
@@ -113,10 +115,10 @@ public class ClothesController implements ClothesApi {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UUID authenticatedUserId = resolveRequesterId(auth);
 
-      log.info("의상 수정 API 호출 - request: {}", request);
+        log.info("의상 수정 API 호출 - request: {}", request);
 
-      ClothesDto oldClothes = clothesService.getClothes(clothesId);
-      UUID ownerId = oldClothes.ownerId();
+        ClothesDto oldClothes = clothesService.getClothes(clothesId);
+        UUID ownerId = oldClothes.ownerId();
 
         // request의 ownerId와 인증된 사용자 ID 비교
         if (!ownerId.equals(authenticatedUserId)) {
@@ -126,7 +128,8 @@ public class ClothesController implements ClothesApi {
 
         ClothesDto clothes = clothesService.updateClothes(clothesId, request, imageFile);
 
-      return ResponseEntity.ok(clothes);
+        return ResponseEntity.ok(clothes);
     }
+
 
 }

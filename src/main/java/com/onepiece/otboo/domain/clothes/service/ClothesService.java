@@ -14,13 +14,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ClothesService {
 
-    CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual);
+    CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor,
+        UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual);
 
     ClothesDto getClothes(UUID clothesId);
 
     ClothesDto createClothes(@Valid ClothesCreateRequest request, MultipartFile imageFile)
         throws IOException;
 
-    ClothesDto updateClothes(UUID clothesId, @Valid ClothesUpdateRequest request, MultipartFile imageFile)
+    ClothesDto updateClothes(UUID clothesId, @Valid ClothesUpdateRequest request,
+        MultipartFile imageFile)
         throws IOException;
 }
