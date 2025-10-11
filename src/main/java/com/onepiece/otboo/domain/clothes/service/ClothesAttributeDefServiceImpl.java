@@ -64,15 +64,15 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
                 .build();
 
         log.debug("의상 속성 정의 저장");
-        clothesAttributeDefRepository.save(def);
+        ClothesAttributeDefs savedDef = clothesAttributeDefRepository.save(def);
 
-        log.debug("의상 속성 정의 저장 완료 - definitionId: {}", def.getId());
+        log.debug("의상 속성 정의 저장 완료 - definitionId: {}", savedDef.getId());
 
         log.debug("의상 속성값 생성");
         List<ClothesAttributeOptions> options =
             selectableValues.stream().map(
                 val -> ClothesAttributeOptions.builder()
-                    .definition(def)
+                    .definition(savedDef)
                     .optionValue(val)
                     .build()
             ).toList();
@@ -80,9 +80,9 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
         log.debug("의상 속성값 저장");
         clothesAttributeOptionsRepository.saveAll(options);
 
-        log.info("[의상 속성 정의] 등록 작업 완료 - definitionId: {}, countOptions: {}", def.getId(), options.size());
+        log.info("[의상 속성 정의] 등록 작업 완료 - definitionId: {}, countOptions: {}", savedDef.getId(), options.size());
 
-        return clothesAttributeMapper.toAttributeDefDto(def, options);
+        return clothesAttributeMapper.toAttributeDefDto(savedDef);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
         log.info("[의상 속성 정의] 수정 작업 완료 - definitionId: {}, countOptions: {}", newDef.getId(),
             newOptions.size());
 
-        return clothesAttributeMapper.toAttributeDefDto(newDef, newOptions);
+        return clothesAttributeMapper.toAttributeDefDto(newDef);
     }
 
     @Override

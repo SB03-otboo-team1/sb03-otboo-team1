@@ -18,7 +18,6 @@ public interface ClothesAttributeMapper {
     @Mapping(target = "value", source = "value")
     ClothesAttributeWithDefDto toAttributeWithDefDto(
         ClothesAttributeDefs def,
-        List<ClothesAttributeOptions> options,
         String value
     );
 

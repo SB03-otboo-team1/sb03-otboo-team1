@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public interface ClothesAttributeDefApi {
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     ResponseEntity<ClothesAttributeDefDto> createClothesAttributeDef(
-        @RequestBody ClothesAttributeDefCreateRequest request
+        @Valid @RequestBody ClothesAttributeDefCreateRequest request
     );
 
     @Operation(summary = "의상 속성 정의 수정", description = "의상 속성 정의 수정 API")
@@ -54,7 +55,7 @@ public interface ClothesAttributeDefApi {
     })
     ResponseEntity<ClothesAttributeDefDto> updateClothesAttributeDef(
         @PathVariable(name = "definitionId") UUID definitionId,
-        @RequestBody ClothesAttributeDefUpdateRequest request
+        @Valid @RequestBody ClothesAttributeDefUpdateRequest request
     );
 
     @Operation(summary = "의상 속성 정의 삭제", description = "의상 속성 정의 삭제 API")

@@ -28,10 +28,10 @@ public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttribute
 
         BooleanBuilder where = new BooleanBuilder();
 
-        if (keywordLike != null) {
-            where.and(
-                def.name.containsIgnoreCase(keywordLike)
-                .or(opt.optionValue.containsIgnoreCase(keywordLike))
+        if (keywordLike != null && !keywordLike.isBlank()) {
+            where.andAnyOf(
+                def.name.containsIgnoreCase(keywordLike),
+                opt.optionValue.containsIgnoreCase(keywordLike)
             );
         }
 
@@ -74,7 +74,7 @@ public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttribute
         Long counts = jpaQueryFactory
             .select(def.countDistinct())
             .from(def)
-            .leftJoin(opt).on(opt.definition.eq(def))
+            .leftJoin(def.options, opt)
             .where(where)
             .fetchOne();
 
