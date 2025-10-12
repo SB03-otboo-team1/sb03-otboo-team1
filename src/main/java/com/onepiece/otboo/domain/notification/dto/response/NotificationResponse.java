@@ -1,6 +1,5 @@
 package com.onepiece.otboo.domain.notification.dto.response;
 
-import com.onepiece.otboo.domain.notification.enums.Level;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
@@ -31,5 +30,11 @@ public class NotificationResponse {
     private String content;
 
     @Schema(description = "알림 레벨", example = "INFO")
-    private Level level;
+    private String level;
+
+    @Schema(description = "읽음 여부", example = "false")
+    private boolean isRead;
+
+    @Schema(description = "읽은 시각 (읽지 않은 경우 null)", example = "2025-10-13T03:15:27.123Z")
+    private Instant readAt;
 }
