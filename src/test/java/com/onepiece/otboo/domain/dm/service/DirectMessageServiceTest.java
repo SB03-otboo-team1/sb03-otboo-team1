@@ -13,7 +13,6 @@ import com.onepiece.otboo.domain.dm.exception.CannotSendMessageToSelfException;
 import com.onepiece.otboo.domain.dm.exception.DirectMessageNotFoundException;
 import com.onepiece.otboo.domain.dm.repository.DirectMessageRepository;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import java.util.List;
@@ -51,7 +50,6 @@ class DirectMessageServiceTest {
 
         sender = User.builder()
             .email("sender@test.com")
-            .provider(Provider.LOCAL)
             .role(Role.USER)
             .password("password")
             .locked(false)
@@ -59,7 +57,6 @@ class DirectMessageServiceTest {
 
         receiver = User.builder()
             .email("receiver@test.com")
-            .provider(Provider.LOCAL)
             .role(Role.USER)
             .password("password")
             .locked(false)
@@ -133,8 +130,8 @@ class DirectMessageServiceTest {
     void getDirectMessages_success() {
         DirectMessageDto mockResponse = DirectMessageDto.builder()
             .id(UUID.randomUUID())
-            .sender(new DirectMessageDto.UserInfo(senderId, "sender@test.com"))
-            .receiver(new DirectMessageDto.UserInfo(receiverId, "receiver@test.com"))
+            .sender(new DirectMessageDto.UserDto(senderId, "sender@test.com"))
+            .receiver(new DirectMessageDto.UserDto(receiverId, "receiver@test.com"))
             .content("목록 조회 메시지")
             .build();
 

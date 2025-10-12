@@ -49,8 +49,8 @@ public class DirectMessageServiceImpl implements DirectMessageService {
         return DirectMessageDto.builder()
             .id(saved.getId())
             .createdAt(saved.getCreatedAt())
-            .sender(new DirectMessageDto.UserInfo(sender.getId(), sender.getEmail()))
-            .receiver(new DirectMessageDto.UserInfo(receiver.getId(), receiver.getEmail()))
+            .sender(new DirectMessageDto.UserDto(sender.getId(), sender.getEmail()))
+            .receiver(new DirectMessageDto.UserDto(receiver.getId(), receiver.getEmail()))
             .content(saved.getContent())
             .build();
     }
@@ -82,9 +82,9 @@ public class DirectMessageServiceImpl implements DirectMessageService {
         return DirectMessageDto.builder()
             .id(dm.getId())
             .createdAt(dm.getCreatedAt())
-            .sender(new DirectMessageDto.UserInfo(
+            .sender(new DirectMessageDto.UserDto(
                 dm.getSender().getId(), dm.getSender().getEmail()))
-            .receiver(new DirectMessageDto.UserInfo(
+            .receiver(new DirectMessageDto.UserDto(
                 dm.getReceiver().getId(), dm.getReceiver().getEmail()))
             .content(dm.getContent())
             .build();

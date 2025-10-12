@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.dm.repository;
 
 import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto.UserInfo;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto.UserDto;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.dm.entity.QDirectMessage;
 import com.querydsl.core.BooleanBuilder;
@@ -34,20 +34,22 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
         BooleanBuilder whereBuilder = new BooleanBuilder();
         whereBuilder.and(dm.sender.id.eq(userId).or(dm.receiver.id.eq(userId)));
 
+        boolean isAscending = false;
+
         if (cursor != null && !cursor.isEmpty()) {
             try {
                 Instant cursorTime = Instant.parse(cursor);
                 BooleanBuilder cursorCondition = new BooleanBuilder();
-                cursorCondition.and(dm.createdAt.lt(cursorTime));
 
+                cursorCondition.and(dm.createdAt.lt(cursorTime));
                 if (idAfter != null) {
                     cursorCondition.or(dm.createdAt.eq(cursorTime).and(dm.id.lt(idAfter)));
                 }
+
                 whereBuilder.and(cursorCondition);
             } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException(
-                    "Invalid cursor format. Must be ISO-8601 datetime."
-                );
+                    "Invalid cursor format. Must be ISO-8601 datetime.");
             }
         } else if (idAfter != null) {
             DirectMessage pivot = queryFactory.selectFrom(dm)
@@ -58,46 +60,24 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
                 BooleanBuilder afterCondition = new BooleanBuilder();
                 afterCondition.or(dm.createdAt.lt(pivot.getCreatedAt()));
                 afterCondition.or(
-                    dm.createdAt.eq(pivot.getCreatedAt())
-                        .and(dm.id.lt(pivot.getId()))
-                );
+                    dm.createdAt.eq(pivot.getCreatedAt()).and(dm.id.lt(pivot.getId())));
                 whereBuilder.and(afterCondition);
             }
         }
 
-        OrderSpecifier<?> primaryOrder = dm.createdAt.desc();
-        OrderSpecifier<?> secondaryOrder = dm.id.desc();
-
-        if (sort != null && !sort.isEmpty()) {
-            String[] parts = sort.split(",");
-            String sortBy = parts[0];
-            String direction = parts.length > 1 ? parts[1].toUpperCase() : "DESC";
-
-            if ("createdAt".equals(sortBy)) {
-                primaryOrder = direction.equals("ASC")
-                    ? new OrderSpecifier<>(Order.ASC, dm.createdAt)
-                    : new OrderSpecifier<>(Order.DESC, dm.createdAt);
-                secondaryOrder = direction.equals("ASC")
-                    ? new OrderSpecifier<>(Order.ASC, dm.id)
-                    : new OrderSpecifier<>(Order.DESC, dm.id);
-            } else if ("id".equals(sortBy)) {
-                primaryOrder = direction.equals("ASC")
-                    ? new OrderSpecifier<>(Order.ASC, dm.id)
-                    : new OrderSpecifier<>(Order.DESC, dm.id);
-                secondaryOrder = null;
-            }
-        }
+        OrderSpecifier<?> primaryOrder = new OrderSpecifier<>(Order.DESC, dm.createdAt);
+        OrderSpecifier<?> secondaryOrder = new OrderSpecifier<>(Order.DESC, dm.id);
 
         return queryFactory
             .select(Projections.constructor(
                 DirectMessageDto.class,
                 dm.id,
                 dm.createdAt,
-                Projections.constructor(UserInfo.class,
+                Projections.constructor(UserDto.class,
                     dm.sender.id,
                     dm.sender.email
                 ),
-                Projections.constructor(UserInfo.class,
+                Projections.constructor(UserDto.class,
                     dm.receiver.id,
                     dm.receiver.email
                 ),
@@ -105,11 +85,7 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
             ))
             .from(dm)
             .where(whereBuilder)
-            .orderBy(
-                secondaryOrder != null
-                    ? new OrderSpecifier[]{primaryOrder, secondaryOrder}
-                    : new OrderSpecifier[]{primaryOrder}
-            )
+            .orderBy(primaryOrder, secondaryOrder)
             .limit(limit)
             .fetch();
     }

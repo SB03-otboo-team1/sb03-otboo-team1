@@ -6,7 +6,6 @@ import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
 import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import java.time.Instant;
 import java.util.UUID;
@@ -20,7 +19,6 @@ class DirectMessageMapperTest {
     @DisplayName("Request → Entity 매핑 성공")
     void toEntity_success() {
         User sender = User.builder()
-            .provider(Provider.LOCAL)
             .email("sender@test.com")
             .password("pw")
             .role(Role.USER)
@@ -29,7 +27,6 @@ class DirectMessageMapperTest {
         ReflectionTestUtils.setField(sender, "id", UUID.randomUUID());
 
         User receiver = User.builder()
-            .provider(Provider.LOCAL)
             .email("receiver@test.com")
             .password("pw")
             .role(Role.USER)
@@ -51,7 +48,6 @@ class DirectMessageMapperTest {
     @DisplayName("Entity → Response 매핑 성공")
     void toResponse_success() {
         User sender = User.builder()
-            .provider(Provider.LOCAL)
             .email("sender@test.com")
             .password("pw")
             .role(Role.USER)
@@ -60,7 +56,6 @@ class DirectMessageMapperTest {
         ReflectionTestUtils.setField(sender, "id", UUID.randomUUID());
 
         User receiver = User.builder()
-            .provider(Provider.LOCAL)
             .email("receiver@test.com")
             .password("pw")
             .role(Role.USER)
@@ -83,8 +78,8 @@ class DirectMessageMapperTest {
 
         assertThat(response.getId()).isEqualTo(dmId);
         assertThat(response.getCreatedAt()).isEqualTo(now);
-        assertThat(response.getSender().getUserId()).isEqualTo(sender.getId());
-        assertThat(response.getReceiver().getUserId()).isEqualTo(receiver.getId());
+        assertThat(response.getSender().getId()).isEqualTo(sender.getId());
+        assertThat(response.getReceiver().getId()).isEqualTo(receiver.getId());
         assertThat(response.getContent()).isEqualTo("엔티티 → 응답 매핑");
     }
 }

@@ -19,9 +19,9 @@ public class DirectMessageMapper {
         return DirectMessageDto.builder()
             .id(dm.getId())
             .createdAt(dm.getCreatedAt())
-            .sender(new DirectMessageDto.UserInfo(dm.getSender().getId(),
+            .sender(new DirectMessageDto.UserDto(dm.getSender().getId(),
                 dm.getSender().getEmail()))
-            .receiver(new DirectMessageDto.UserInfo(dm.getReceiver().getId(),
+            .receiver(new DirectMessageDto.UserDto(dm.getReceiver().getId(),
                 dm.getReceiver().getEmail()))
             .content(dm.getContent())
             .build();

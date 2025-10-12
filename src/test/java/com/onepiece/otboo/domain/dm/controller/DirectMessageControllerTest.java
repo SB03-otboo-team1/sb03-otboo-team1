@@ -49,8 +49,8 @@ class DirectMessageControllerTest {
         DirectMessageDto mockResponse = DirectMessageDto.builder()
             .id(UUID.randomUUID())
             .createdAt(Instant.now())
-            .sender(new DirectMessageDto.UserInfo(senderId, "sender@test.com"))
-            .receiver(new DirectMessageDto.UserInfo(receiverId, "receiver@test.com"))
+            .sender(new DirectMessageDto.UserDto(senderId, "sender@test.com"))
+            .receiver(new DirectMessageDto.UserDto(receiverId, "receiver@test.com"))
             .content("테스트 메시지")
             .build();
 
@@ -72,8 +72,8 @@ class DirectMessageControllerTest {
         DirectMessageDto mockResponse = DirectMessageDto.builder()
             .id(UUID.randomUUID())
             .createdAt(Instant.now())
-            .sender(new DirectMessageDto.UserInfo(UUID.randomUUID(), "sender@test.com"))
-            .receiver(new DirectMessageDto.UserInfo(userId, "receiver@test.com"))
+            .sender(new DirectMessageDto.UserDto(UUID.randomUUID(), "sender@test.com"))
+            .receiver(new DirectMessageDto.UserDto(userId, "receiver@test.com"))
             .content("조회 테스트")
             .build();
 
