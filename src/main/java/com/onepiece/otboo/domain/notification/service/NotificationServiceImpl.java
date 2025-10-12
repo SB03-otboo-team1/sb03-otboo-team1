@@ -4,9 +4,13 @@ import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
 import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -22,7 +26,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final ApplicationEventPublisher publisher;
 
     /**
-     * 알림 생성
+     * 🔹 알림 생성
      */
     @Override
     @Transactional
@@ -32,6 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
             log.warn("[NotificationService] 알림 수신자가 없음");
             return;
         }
+
         log.info("[NotificationService] 알림 생성 시작 - receiverIds: {}", receiverIds);
 
         List<Notification> notifications = receiverIds.stream()
@@ -48,17 +53,32 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     /**
-     * 알림 목록 조회
+     * 🔹 알림 목록 조회 (커서 기반)
      */
     @Override
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getNotifications(UUID receiverId) {
+    public CursorPageResponseDto<NotificationResponse> getNotifications(
+        UUID receiverId,
+        UUID idAfter,
+        int limit
+    ) {
         log.info("[NotificationService] 알림 목록 조회 시작 - receiverId: {}", receiverId);
 
         List<Notification> notifications =
-            notificationRepository.findAllByReceiverIdOrderByCreatedAtDesc(receiverId);
+            notificationRepository.findNotifications(receiverId, idAfter, limit + 1);
 
-        List<NotificationResponse> responses = notifications.stream()
+        boolean hasNext = notifications.size() > limit;
+        if (hasNext) {
+            notifications = notifications.subList(0, limit);
+        }
+
+        UUID nextCursor = hasNext
+            ? notifications.get(notifications.size() - 1).getId()
+            : null;
+
+        long totalCount = notificationRepository.countByReceiverId(receiverId);
+
+        List<NotificationResponse> data = notifications.stream()
             .map(n -> NotificationResponse.builder()
                 .id(n.getId())
                 .receiverId(n.getReceiverId())
@@ -67,9 +87,29 @@ public class NotificationServiceImpl implements NotificationService {
                 .level(n.getLevel())
                 .createdAt(n.getCreatedAt())
                 .build())
-            .toList();
+            .collect(Collectors.toList());
 
-        log.info("[NotificationService] 알림 {}개 조회 완료", responses.size());
-        return responses;
+        return new CursorPageResponseDto<>(
+            data,
+            nextCursor != null ? nextCursor.toString() : null,
+            null,
+            hasNext,
+            totalCount,
+            SortBy.CREATED_AT,
+            SortDirection.DESCENDING
+        );
+    }
+
+    /**
+     * 🔹 알림 읽음 처리 (Soft Delete)
+     */
+    @Override
+    @Transactional
+    public void deleteNotification(UUID id) {
+        Notification notification = notificationRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다: " + id));
+
+        notification.delete();
+        log.info("[NotificationService] 알림 읽음 처리 완료 - id: {}", id);
     }
 }

@@ -7,7 +7,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
 import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
@@ -31,7 +30,7 @@ class NotificationServiceTest {
     private NotificationServiceImpl notificationService;
 
     @Test
-    @DisplayName("알림 목록 조회 성공")
+    @DisplayName("알림 목록 조회 성공 (커서 기반)")
     void getNotifications_Success() {
         UUID receiverId = UUID.randomUUID();
 
@@ -42,17 +41,17 @@ class NotificationServiceTest {
             .level(Level.INFO)
             .build();
 
-        when(notificationRepository.findAllByReceiverIdOrderByCreatedAtDesc(receiverId))
+        when(notificationRepository.findNotifications(receiverId, null, 11))
             .thenReturn(List.of(notification));
 
-        List<NotificationResponse> result = notificationService.getNotifications(receiverId);
+        when(notificationRepository.countByReceiverId(receiverId))
+            .thenReturn(1L);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getTitle()).isEqualTo("새 메시지가 도착했습니다");
-        assertThat(result.get(0).getLevel()).isEqualTo(Level.INFO);
+        var result = notificationService.getNotifications(receiverId, null, 10);
 
-        verify(notificationRepository, times(1))
-            .findAllByReceiverIdOrderByCreatedAtDesc(receiverId);
+        assertThat(result.data()).hasSize(1);
+        assertThat(result.data().get(0).getTitle()).isEqualTo("새 메시지가 도착했습니다");
+        assertThat(result.hasNext()).isFalse();
     }
 
     @Test
