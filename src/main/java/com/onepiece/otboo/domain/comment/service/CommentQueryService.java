@@ -58,6 +58,9 @@ public class CommentQueryService {
         if ((decoded.createdAtLt == null || decoded.idLt == null) && idAfter != null) {
             Comment pivot = commentRepository.findById(idAfter)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found: " + idAfter));
+            if (!Objects.equals(pivot.getFeed().getId(), feedId)) {
+                throw new IllegalArgumentException("idAfter does not belong to the feed: " + feedId);
+            }
             Instant pivotCreatedAt = Objects.requireNonNullElse(pivot.getCreatedAt(), Instant.EPOCH);
             decoded = new Cursor(pivotCreatedAt, pivot.getId());
         }
