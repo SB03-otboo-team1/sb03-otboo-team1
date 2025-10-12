@@ -14,7 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttributeDefCustomRepository {
+public class ClothesAttributeDefCustomRepositoryImpl implements
+    ClothesAttributeDefCustomRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -28,28 +29,29 @@ public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttribute
 
         BooleanBuilder where = new BooleanBuilder();
 
-        if (keywordLike != null) {
-            where.and(
-                def.name.containsIgnoreCase(keywordLike)
-                .or(opt.optionValue.containsIgnoreCase(keywordLike))
+        if (keywordLike != null && !keywordLike.isBlank()) {
+            where.andAnyOf(
+                def.name.containsIgnoreCase(keywordLike),
+                opt.optionValue.containsIgnoreCase(keywordLike)
             );
         }
 
         OrderSpecifier<?> primary = switch (sortBy) {
             case CREATED_AT ->
-                (sortDirection != null && sortDirection.equals(SortDirection.DESCENDING)
-                    ? def.createdAt.desc() : def.createdAt.asc());
-            case NAME -> (sortDirection != null && sortDirection.equals(SortDirection.DESCENDING)
-                ? def.name.desc() : def.name.asc());
+                (sortDirection != null && sortDirection.equals(SortDirection.ASCENDING)
+                    ? def.createdAt.asc() : def.createdAt.desc());
+            case NAME -> (sortDirection != null && sortDirection.equals(SortDirection.ASCENDING)
+                ? def.name.asc() : def.name.desc());
             default -> throw new IllegalStateException("Unexpected value: " + sortBy);
         };
-        OrderSpecifier<?> tieBreaker = (sortDirection.equals(SortDirection.DESCENDING)
-            ? def.id.desc() : def.id.asc());
+        OrderSpecifier<?> tieBreaker = (
+            sortDirection != null && sortDirection.equals(SortDirection.ASCENDING)
+                ? def.id.asc() : def.id.desc());
 
         List<ClothesAttributeDefs> defList = jpaQueryFactory
             .selectDistinct(def)
             .from(def)
-            .leftJoin(opt).on(opt.definition.eq(def))
+            .leftJoin(def.options, opt).fetchJoin()
             .where(where)
             .orderBy(primary, tieBreaker)
             .fetch();
@@ -74,7 +76,7 @@ public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttribute
         Long counts = jpaQueryFactory
             .select(def.countDistinct())
             .from(def)
-            .leftJoin(opt).on(opt.definition.eq(def))
+            .leftJoin(def.options, opt)
             .where(where)
             .fetchOne();
 

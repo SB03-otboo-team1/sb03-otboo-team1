@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.clothes.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -27,12 +28,10 @@ public class ClothesAttributeOptions {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     public UUID id;
-
-    @ManyToOne
-    @JoinColumn(name = "definition_id", columnDefinition = "uuid", nullable = false)
-    private ClothesAttributeDefs definition;
-
     @Column(name = "option_value", nullable = false, length = 50)
     public String optionValue;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "definition_id", columnDefinition = "uuid", nullable = false)
+    private ClothesAttributeDefs definition;
 
 }

@@ -14,20 +14,19 @@ public interface ClothesAttributeMapper {
 
     @Mapping(target = "definitionId", source = "def.id")
     @Mapping(target = "definitionName", source = "def.name")
-    @Mapping(target = "selectableValues", source = "options", qualifiedByName = "optionsToValues")
+    @Mapping(target = "selectableValues", source = "def.options", qualifiedByName = "optionsToValues")
     @Mapping(target = "value", source = "value")
     ClothesAttributeWithDefDto toAttributeWithDefDto(
         ClothesAttributeDefs def,
-        List<ClothesAttributeOptions> options,
         String value
     );
 
+    @Mapping(target = "id", source = "def.id")
     @Mapping(target = "name", source = "def.name")
-    @Mapping(target = "selectableValues", source = "options", qualifiedByName = "optionsToValues")
-    ClothesAttributeDefDto toAttributeDefDto(
-        ClothesAttributeDefs def,
-        List<ClothesAttributeOptions> options
-    );
+    @Mapping(target = "selectableValues", source = "def.options", qualifiedByName = "optionsToValues")
+    ClothesAttributeDefDto toAttributeDefDto(ClothesAttributeDefs def);
+
+    List<ClothesAttributeDefDto> toAttributeDefDto(List<ClothesAttributeDefs> defs);
 
     @Named("optionsToValues")
     default List<String> optionsToValues(List<ClothesAttributeOptions> options) {
