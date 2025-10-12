@@ -124,7 +124,6 @@ class QuerydslPagingItemReaderTest {
             new QuerydslPagingItemReader<>(emf, 5, qf -> q1);
 
         reader.afterPropertiesSet();
-        ;
         reader.open(new ExecutionContext());
 
         // when

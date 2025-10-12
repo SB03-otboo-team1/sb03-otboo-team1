@@ -48,8 +48,9 @@ public class WeatherAlertSendTasklet implements Tasklet {
                 continue;
             }
 
+            outbox.updateStatus(AlertStatus.SENDING);
+            
             for (Profile p : profiles) {
-                outbox.updateStatus(AlertStatus.SENDING);
                 UUID userId = p.getUser().getId();
                 publisher.publishEvent(new WeatherChangeEvent(outboxId, userId, outbox.getTitle(),
                     outbox.getMessage()));

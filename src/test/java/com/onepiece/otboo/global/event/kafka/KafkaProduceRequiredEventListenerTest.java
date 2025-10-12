@@ -1,5 +1,6 @@
 package com.onepiece.otboo.global.event.kafka;
 
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.notification.enums.AlertStatus;
 import com.onepiece.otboo.domain.weather.service.WeatherAlertOutboxService;
 import com.onepiece.otboo.global.event.event.WeatherChangeEvent;
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -63,9 +65,12 @@ class KafkaProduceRequiredEventListenerTest {
         given(sendResult.getRecordMetadata()).willReturn(recordMetadata);
         given(recordMetadata.offset()).willReturn(42L);
         future.complete(sendResult);
-        verify(kafkaTemplate, times(1)).send(TOPIC, payload);
-        verify(outboxService, times(1)).updateStatus(outboxId, AlertStatus.SEND);
-        verify(outboxService, never()).updateStatus(outboxId, AlertStatus.FAILED);
+        await().atMost(Duration.ofSeconds(2))
+            .untilAsserted(() -> {
+                verify(kafkaTemplate, times(1)).send(TOPIC, payload);
+                verify(outboxService, times(1)).updateStatus(outboxId, AlertStatus.SEND);
+                verify(outboxService, never()).updateStatus(outboxId, AlertStatus.FAILED);
+            });
     }
 
     @Test
@@ -107,8 +112,11 @@ class KafkaProduceRequiredEventListenerTest {
 
         // then
         future.completeExceptionally(new RuntimeException("send failed"));
-        verify(kafkaTemplate, times(1)).send(TOPIC, payload);
-        verify(outboxService, times(1)).updateStatus(outboxId, AlertStatus.FAILED);
-        verify(outboxService, never()).updateStatus(outboxId, AlertStatus.SEND);
+        await().atMost(Duration.ofSeconds(2))
+            .untilAsserted(() -> {
+                verify(kafkaTemplate, times(1)).send(TOPIC, payload);
+                verify(outboxService, times(1)).updateStatus(outboxId, AlertStatus.FAILED);
+                verify(outboxService, never()).updateStatus(outboxId, AlertStatus.SEND);
+            });
     }
 }
