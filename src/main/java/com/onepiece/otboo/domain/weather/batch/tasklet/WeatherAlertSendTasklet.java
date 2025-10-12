@@ -41,6 +41,13 @@ public class WeatherAlertSendTasklet implements Tasklet {
         for (WeatherAlertOutbox outbox : outboxes) {
             List<Profile> profiles = profileRepository.findAllByLocationId(outbox.getLocationId());
             UUID outboxId = outbox.getId();
+
+            if (profiles.isEmpty()) {
+                log.warn("[WeatherAlertSendTasklet] 알림 대상 프로필 없음 - outboxId: {}", outboxId);
+                outbox.updateStatus(AlertStatus.FAILED);
+                continue;
+            }
+
             for (Profile p : profiles) {
                 outbox.updateStatus(AlertStatus.SENDING);
                 UUID userId = p.getUser().getId();
