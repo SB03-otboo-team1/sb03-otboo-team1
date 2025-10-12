@@ -41,6 +41,7 @@ public interface CommentApi {
         @Valid @RequestBody CommentCreateRequest request
     );
 
+    @GetMapping
     @Operation(
         summary = "피드별 댓글 목록 조회 (커서 페이징)",
         description = "특정 피드의 댓글을 최신순으로 조회합니다.",
@@ -53,9 +54,13 @@ public interface CommentApi {
         }
     )
     ResponseEntity<CursorPageResponseDto<CommentDto>> listComments(
-        @Parameter(description = "조회 대상 피드 ID", required = true) UUID feedId,
-        @Parameter(description = "다음 페이지 커서(이전 응답의 nextCursor)") String cursor,
-        @Parameter(description = "이후 항목 경계 ID") UUID idAfter,
-        @Parameter(description = "페이지 크기(1~100)") int limit
+        @Parameter(description = "조회 대상 피드 ID", required = true)
+        @PathVariable("feedId") UUID feedId,
+        @Parameter(description = "다음 페이지 커서(이전 응답의 nextCursor)")
+        @RequestParam(required = false) String cursor,
+        @Parameter(description = "이후 항목 경계 ID")
+        @RequestParam(required = false) UUID idAfter,
+        @Parameter(description = "페이지 크기(1~100)")
+        @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit
     );
 }
