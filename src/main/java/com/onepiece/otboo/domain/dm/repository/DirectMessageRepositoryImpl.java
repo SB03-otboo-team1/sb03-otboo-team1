@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.dm.repository;
 
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse.UserInfo;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto.UserInfo;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.dm.entity.QDirectMessage;
 import com.querydsl.core.BooleanBuilder;
@@ -24,7 +24,7 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
     private final QDirectMessage dm = QDirectMessage.directMessage;
 
     @Override
-    public List<DirectMessageResponse> findDirectMessages(
+    public List<DirectMessageDto> findDirectMessages(
         UUID userId,
         String cursor,
         UUID idAfter,
@@ -46,7 +46,8 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
                 whereBuilder.and(cursorCondition);
             } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException(
-                    "Invalid cursor format. Must be ISO-8601 datetime.");
+                    "Invalid cursor format. Must be ISO-8601 datetime."
+                );
             }
         } else if (idAfter != null) {
             DirectMessage pivot = queryFactory.selectFrom(dm)
@@ -55,10 +56,10 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
 
             if (pivot != null) {
                 BooleanBuilder afterCondition = new BooleanBuilder();
-                afterCondition.or(dm.createdAt.gt(pivot.getCreatedAt()));
+                afterCondition.or(dm.createdAt.lt(pivot.getCreatedAt()));
                 afterCondition.or(
                     dm.createdAt.eq(pivot.getCreatedAt())
-                        .and(dm.id.gt(pivot.getId()))
+                        .and(dm.id.lt(pivot.getId()))
                 );
                 whereBuilder.and(afterCondition);
             }
@@ -89,7 +90,7 @@ public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCusto
 
         return queryFactory
             .select(Projections.constructor(
-                DirectMessageResponse.class,
+                DirectMessageDto.class,
                 dm.id,
                 dm.createdAt,
                 Projections.constructor(UserInfo.class,

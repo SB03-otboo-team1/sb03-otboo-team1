@@ -3,7 +3,7 @@ package com.onepiece.otboo.domain.dm.mapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
@@ -79,7 +79,7 @@ class DirectMessageMapperTest {
         ReflectionTestUtils.setField(dm, "id", dmId);
         ReflectionTestUtils.setField(dm, "createdAt", now);
 
-        DirectMessageResponse response = DirectMessageMapper.toResponse(dm);
+        DirectMessageDto response = DirectMessageMapper.toResponse(dm);
 
         assertThat(response.getId()).isEqualTo(dmId);
         assertThat(response.getCreatedAt()).isEqualTo(now);

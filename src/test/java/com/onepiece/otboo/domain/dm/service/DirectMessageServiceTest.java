@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.dm.exception.CannotSendMessageToSelfException;
 import com.onepiece.otboo.domain.dm.exception.DirectMessageNotFoundException;
@@ -79,7 +79,7 @@ class DirectMessageServiceTest {
         when(directMessageRepository.save(any(DirectMessage.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
 
-        DirectMessageResponse response = directMessageService.createDirectMessage(request);
+        DirectMessageDto response = directMessageService.createDirectMessage(request);
 
         assertThat(response.getContent()).isEqualTo("테스트 메시지");
         assertThat(response.getSender().getEmail()).isEqualTo("sender@test.com");
@@ -122,7 +122,7 @@ class DirectMessageServiceTest {
         when(directMessageRepository.findById(dm.getId()))
             .thenReturn(Optional.of(dm));
 
-        DirectMessageResponse response = directMessageService.getDirectMessageById(dm.getId());
+        DirectMessageDto response = directMessageService.getDirectMessageById(dm.getId());
 
         assertThat(response.getContent()).isEqualTo("조회 성공 메시지");
         assertThat(response.getSender().getEmail()).isEqualTo("sender@test.com");
@@ -131,10 +131,10 @@ class DirectMessageServiceTest {
     @Test
     @DisplayName("DM 목록 조회 성공")
     void getDirectMessages_success() {
-        DirectMessageResponse mockResponse = DirectMessageResponse.builder()
+        DirectMessageDto mockResponse = DirectMessageDto.builder()
             .id(UUID.randomUUID())
-            .sender(new DirectMessageResponse.UserInfo(senderId, "sender@test.com"))
-            .receiver(new DirectMessageResponse.UserInfo(receiverId, "receiver@test.com"))
+            .sender(new DirectMessageDto.UserInfo(senderId, "sender@test.com"))
+            .receiver(new DirectMessageDto.UserInfo(receiverId, "receiver@test.com"))
             .content("목록 조회 메시지")
             .build();
 

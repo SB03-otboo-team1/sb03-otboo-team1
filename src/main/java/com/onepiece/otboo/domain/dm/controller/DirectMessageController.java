@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.dm.controller;
 
 import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.service.DirectMessageService;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +25,7 @@ public class DirectMessageController {
      * DM 생성
      */
     @PostMapping
-    public ResponseEntity<DirectMessageResponse> createDirectMessage(
+    public ResponseEntity<DirectMessageDto> createDirectMessage(
         @RequestBody DirectMessageRequest request
     ) {
         return ResponseEntity.ok(directMessageService.createDirectMessage(request));
@@ -35,7 +35,7 @@ public class DirectMessageController {
      * DM 목록 조회 (커서 기반 페이징)
      */
     @GetMapping
-    public ResponseEntity<List<DirectMessageResponse>> getDirectMessages(
+    public ResponseEntity<List<DirectMessageDto>> getDirectMessages(
         @RequestParam UUID userId,
         @RequestParam(required = false) String cursor,
         @RequestParam(required = false) UUID idAfter,

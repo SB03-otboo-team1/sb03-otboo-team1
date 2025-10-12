@@ -2,7 +2,7 @@ package com.onepiece.otboo.domain.dm.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Provider;
@@ -54,7 +54,7 @@ class DirectMessageRepositoryTest {
         ReflectionTestUtils.setField(dm, "createdAt", Instant.now());
         directMessageRepository.save(dm);
 
-        List<DirectMessageResponse> result =
+        List<DirectMessageDto> result =
             directMessageRepository.findDirectMessages(sender.getId(), null, null, 10, null);
 
         assertThat(result).hasSize(1);
@@ -77,27 +77,27 @@ class DirectMessageRepositoryTest {
             directMessageRepository.save(dm);
         }
 
-        List<DirectMessageResponse> result =
+        List<DirectMessageDto> result =
             directMessageRepository.findDirectMessages(sender.getId(), null, null, 3, null);
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getContent()).isEqualTo("메시지 5");
+        assertThat(result.get(1).getContent()).isEqualTo("메시지 4");
+        assertThat(result.get(2).getContent()).isEqualTo("메시지 3");
     }
 
     @Test
-    @DisplayName("DM 목록 조회 - idAfter 기반 커서 페이징 성공")
+    @DisplayName("DM 목록 조회 - idAfter 기반 커서 페이징 (pivot 이전 데이터)")
     void findDirectMessages_withIdAfter_success() {
         User sender = createUser("sender@test.com");
         User receiver = createUser("receiver@test.com");
-
-        Instant baseTime = Instant.now();
 
         DirectMessage dm1 = DirectMessage.builder()
             .sender(sender)
             .receiver(receiver)
             .content("메시지 1")
             .build();
-        ReflectionTestUtils.setField(dm1, "createdAt", baseTime);
+        ReflectionTestUtils.setField(dm1, "createdAt", Instant.now());
         directMessageRepository.save(dm1);
 
         DirectMessage dm2 = DirectMessage.builder()
@@ -105,7 +105,7 @@ class DirectMessageRepositoryTest {
             .receiver(receiver)
             .content("메시지 2")
             .build();
-        ReflectionTestUtils.setField(dm2, "createdAt", baseTime.plusSeconds(1));
+        ReflectionTestUtils.setField(dm2, "createdAt", Instant.now().plusSeconds(1));
         directMessageRepository.save(dm2);
 
         DirectMessage dm3 = DirectMessage.builder()
@@ -113,15 +113,15 @@ class DirectMessageRepositoryTest {
             .receiver(receiver)
             .content("메시지 3")
             .build();
-        ReflectionTestUtils.setField(dm3, "createdAt", baseTime.plusSeconds(2));
+        ReflectionTestUtils.setField(dm3, "createdAt", Instant.now().plusSeconds(2));
         directMessageRepository.save(dm3);
 
-        List<DirectMessageResponse> result =
-            directMessageRepository.findDirectMessages(sender.getId(), null, dm1.getId(), 10, null);
+        List<DirectMessageDto> result =
+            directMessageRepository.findDirectMessages(sender.getId(), null, dm3.getId(), 10, null);
 
         assertThat(result).hasSize(2);
-        assertThat(result).extracting(DirectMessageResponse::getContent)
-            .containsExactly("메시지 3", "메시지 2");
+        assertThat(result.get(0).getContent()).isEqualTo("메시지 2");
+        assertThat(result.get(1).getContent()).isEqualTo("메시지 1");
     }
 
     @Test
@@ -140,12 +140,13 @@ class DirectMessageRepositoryTest {
             directMessageRepository.save(dm);
         }
 
-        List<DirectMessageResponse> result =
+        List<DirectMessageDto> result =
             directMessageRepository.findDirectMessages(sender.getId(), null, null, 10,
                 "createdAt,DESC");
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getContent()).isEqualTo("메시지 3");
+        assertThat(result.get(1).getContent()).isEqualTo("메시지 2");
         assertThat(result.get(2).getContent()).isEqualTo("메시지 1");
     }
 
@@ -165,12 +166,13 @@ class DirectMessageRepositoryTest {
             directMessageRepository.save(dm);
         }
 
-        List<DirectMessageResponse> result =
+        List<DirectMessageDto> result =
             directMessageRepository.findDirectMessages(sender.getId(), null, null, 10,
                 "createdAt,ASC");
 
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getContent()).isEqualTo("메시지 1");
+        assertThat(result.get(1).getContent()).isEqualTo("메시지 2");
         assertThat(result.get(2).getContent()).isEqualTo("메시지 3");
     }
 }

@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.service.DirectMessageService;
 import java.time.Instant;
 import java.util.List;
@@ -46,11 +46,11 @@ class DirectMessageControllerTest {
 
         DirectMessageRequest request = new DirectMessageRequest(senderId, receiverId, "테스트 메시지");
 
-        DirectMessageResponse mockResponse = DirectMessageResponse.builder()
+        DirectMessageDto mockResponse = DirectMessageDto.builder()
             .id(UUID.randomUUID())
             .createdAt(Instant.now())
-            .sender(new DirectMessageResponse.UserInfo(senderId, "sender@test.com"))
-            .receiver(new DirectMessageResponse.UserInfo(receiverId, "receiver@test.com"))
+            .sender(new DirectMessageDto.UserInfo(senderId, "sender@test.com"))
+            .receiver(new DirectMessageDto.UserInfo(receiverId, "receiver@test.com"))
             .content("테스트 메시지")
             .build();
 
@@ -69,11 +69,11 @@ class DirectMessageControllerTest {
     void getDirectMessages_success() throws Exception {
         UUID userId = UUID.randomUUID();
 
-        DirectMessageResponse mockResponse = DirectMessageResponse.builder()
+        DirectMessageDto mockResponse = DirectMessageDto.builder()
             .id(UUID.randomUUID())
             .createdAt(Instant.now())
-            .sender(new DirectMessageResponse.UserInfo(UUID.randomUUID(), "sender@test.com"))
-            .receiver(new DirectMessageResponse.UserInfo(userId, "receiver@test.com"))
+            .sender(new DirectMessageDto.UserInfo(UUID.randomUUID(), "sender@test.com"))
+            .receiver(new DirectMessageDto.UserInfo(userId, "receiver@test.com"))
             .content("조회 테스트")
             .build();
 

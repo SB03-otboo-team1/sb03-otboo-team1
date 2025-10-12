@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.dm.mapper;
 
 import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.user.entity.User;
 
@@ -15,13 +15,13 @@ public class DirectMessageMapper {
             .build();
     }
 
-    public static DirectMessageResponse toResponse(DirectMessage dm) {
-        return DirectMessageResponse.builder()
+    public static DirectMessageDto toResponse(DirectMessage dm) {
+        return DirectMessageDto.builder()
             .id(dm.getId())
             .createdAt(dm.getCreatedAt())
-            .sender(new DirectMessageResponse.UserInfo(dm.getSender().getId(),
+            .sender(new DirectMessageDto.UserInfo(dm.getSender().getId(),
                 dm.getSender().getEmail()))
-            .receiver(new DirectMessageResponse.UserInfo(dm.getReceiver().getId(),
+            .receiver(new DirectMessageDto.UserInfo(dm.getReceiver().getId(),
                 dm.getReceiver().getEmail()))
             .content(dm.getContent())
             .build();

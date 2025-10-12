@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.dm.service;
 
 import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageResponse;
+import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
 import com.onepiece.otboo.domain.dm.exception.CannotSendMessageToSelfException;
 import com.onepiece.otboo.domain.dm.exception.DirectMessageNotFoundException;
@@ -27,7 +27,7 @@ public class DirectMessageServiceImpl implements DirectMessageService {
      * DM 생성
      */
     @Override
-    public DirectMessageResponse createDirectMessage(DirectMessageRequest request) {
+    public DirectMessageDto createDirectMessage(DirectMessageRequest request) {
         if (request.getSenderId().equals(request.getReceiverId())) {
             throw new CannotSendMessageToSelfException();
         }
@@ -46,11 +46,11 @@ public class DirectMessageServiceImpl implements DirectMessageService {
 
         DirectMessage saved = directMessageRepository.save(dm);
 
-        return DirectMessageResponse.builder()
+        return DirectMessageDto.builder()
             .id(saved.getId())
             .createdAt(saved.getCreatedAt())
-            .sender(new DirectMessageResponse.UserInfo(sender.getId(), sender.getEmail()))
-            .receiver(new DirectMessageResponse.UserInfo(receiver.getId(), receiver.getEmail()))
+            .sender(new DirectMessageDto.UserInfo(sender.getId(), sender.getEmail()))
+            .receiver(new DirectMessageDto.UserInfo(receiver.getId(), receiver.getEmail()))
             .content(saved.getContent())
             .build();
     }
@@ -60,7 +60,7 @@ public class DirectMessageServiceImpl implements DirectMessageService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<DirectMessageResponse> getDirectMessages(
+    public List<DirectMessageDto> getDirectMessages(
         UUID userId,
         String cursor,
         UUID idAfter,
@@ -75,16 +75,16 @@ public class DirectMessageServiceImpl implements DirectMessageService {
      */
     @Override
     @Transactional(readOnly = true)
-    public DirectMessageResponse getDirectMessageById(UUID id) {
+    public DirectMessageDto getDirectMessageById(UUID id) {
         DirectMessage dm = directMessageRepository.findById(id)
             .orElseThrow(DirectMessageNotFoundException::new);
 
-        return DirectMessageResponse.builder()
+        return DirectMessageDto.builder()
             .id(dm.getId())
             .createdAt(dm.getCreatedAt())
-            .sender(new DirectMessageResponse.UserInfo(
+            .sender(new DirectMessageDto.UserInfo(
                 dm.getSender().getId(), dm.getSender().getEmail()))
-            .receiver(new DirectMessageResponse.UserInfo(
+            .receiver(new DirectMessageDto.UserInfo(
                 dm.getReceiver().getId(), dm.getReceiver().getEmail()))
             .content(dm.getContent())
             .build();
