@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
+
     @Mapping(target = "feedId", expression = "java(comment.getFeed().getId())")
     @Mapping(target = "author", expression =
         "java(new AuthorDto(comment.getAuthor().getId(), comment.getAuthor().getNickname(), comment.getAuthor().getProfileImage()))")

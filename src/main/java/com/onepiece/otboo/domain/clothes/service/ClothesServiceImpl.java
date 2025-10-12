@@ -4,12 +4,14 @@ import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
+import com.onepiece.otboo.domain.clothes.dto.request.ClothesUpdateRequest;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.exception.ClothesAttributeDefNotFoundException;
+import com.onepiece.otboo.domain.clothes.exception.ClothesNotFoundException;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
@@ -34,10 +36,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ClothesServiceImpl implements ClothesService {
 
@@ -54,7 +58,8 @@ public class ClothesServiceImpl implements ClothesService {
     private String CLOTHES_PREFIX;
 
   @Override
-  public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
+  @Transactional(readOnly = true)
+  public CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
 
     List<Clothes> clothes =
         clothesRepository.getClothesWithCursor(ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
@@ -107,9 +112,8 @@ public class ClothesServiceImpl implements ClothesService {
         List<ClothesAttributeWithDefDto> attributeWithDefDtos =
             attr.stream().map(a -> {
                 ClothesAttributeDefs def = a.getDefinition();
-                List<ClothesAttributeOptions> options = optionsByDefId.getOrDefault(def.getId(), List.of());
                 String value = a.getOptionValue();
-                return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
+                return clothesAttributeMapper.toAttributeWithDefDto(def, value);
             }).toList();
 
         // ClothesDto 생성
@@ -127,6 +131,14 @@ public class ClothesServiceImpl implements ClothesService {
         sortBy,
         sortDirection
     );
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public ClothesDto getClothes(UUID clothesId) {
+      Clothes clothes = clothesRepository.findById(clothesId)
+          .orElseThrow(() -> new ClothesNotFoundException("해당 옷 정보를 찾을 수 없습니다."));
+      return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
   }
 
   @Override
@@ -176,12 +188,44 @@ public class ClothesServiceImpl implements ClothesService {
       List<ClothesAttributeWithDefDto> clothesAttributeWithDefDto =
           attributes.stream().map(a -> {
               ClothesAttributeDefs def = a.getDefinition();
-              List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(def.getId());
               String value = a.getOptionValue();
-              return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
+              return clothesAttributeMapper.toAttributeWithDefDto(def, value);
           }).toList();
 
       // ClothesDto 반환
       return clothesMapper.toDto(clothes, clothesAttributeWithDefDto, fileStorage);
   }
+
+  @Override
+  public ClothesDto updateClothes(UUID clothesId, ClothesUpdateRequest request, MultipartFile imageFile)
+      throws IOException {
+
+      Clothes clothes = clothesRepository.findById(clothesId)
+          .orElseThrow(() -> new ClothesNotFoundException("의상 정보를 찾을 수 없습니다. id: " + clothesId));
+
+      String newName = request.name();
+      ClothesType newType = request.type();
+      String newImageUrl = null;
+      if (imageFile != null) {
+          newImageUrl = fileStorage.uploadFile(CLOTHES_PREFIX, imageFile);
+      }
+
+      clothes.update(newName, newType, newImageUrl);
+
+      Clothes updatedClothes = clothesRepository.save(clothes);
+
+      return clothesMapper.toDto(updatedClothes, Collections.emptyList(), fileStorage);
+  }
+
+    @Override
+    public void deleteClothes(UUID clothesId) {
+
+        Clothes clothes = clothesRepository.findById(clothesId)
+          .orElseThrow(() -> new ClothesNotFoundException("의상 정보를 찾을 수 없습니다. id: " + clothesId));
+
+        fileStorage.deleteFile(clothes.getImageUrl());
+        attributeRepository.deleteByClothesId(clothesId);
+        clothesRepository.deleteById(clothesId);
+    }
+
 }

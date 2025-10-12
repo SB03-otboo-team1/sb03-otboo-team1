@@ -42,4 +42,15 @@ public class Clothes extends BaseUpdatableEntity {
     @Column(name = "image_url", nullable = true)
     private String imageUrl;
 
+    public void update(String newName, ClothesType newType, String newImageUrl) {
+        if (newName != null && !newName.equals(this.name)) {
+            this.name = newName;
+        }
+        if (newType != null && !newType.equals(this.type)) {
+            this.type = newType;
+        }
+        if (newImageUrl != null && !newImageUrl.equals(this.imageUrl)) {
+            this.imageUrl = newImageUrl;
+        }
+    }
 }

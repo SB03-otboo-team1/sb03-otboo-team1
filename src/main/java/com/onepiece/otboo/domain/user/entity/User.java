@@ -49,6 +49,8 @@ public class User extends BaseUpdatableEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Profile profile;
 
     public void updatePassword(String password) {
         this.password = password;
@@ -106,11 +108,10 @@ public class User extends BaseUpdatableEntity {
         }
     }
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-    private Profile profile;
     public String getNickname() {
         return (profile != null) ? profile.getNickname() : null;
     }
+
     public String getProfileImage() {
         return (profile != null) ? profile.getProfileImageUrl() : null;
     }

@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.clothes.api;
+package com.onepiece.otboo.domain.clothes.controller.api;
 
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
@@ -31,10 +31,10 @@ public interface ClothesApi {
      * @param ownerId 소유자 ID
      * @return 의상 목록
      */
-    @Operation(summary = "의상 조회", description = "사용자의 의상을 조회합니다.")
+    @Operation(summary = "옷 목록 조회", description = "옷 목록 조회 API")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "의상 조회 성공"),
-      @ApiResponse(responseCode = "404", description = "의상을 찾을 수 없음"),
+      @ApiResponse(responseCode = "200", description = "옷 목록 조회 성공"),
+      @ApiResponse(responseCode = "400", description = "옷 목록 조회 실패"),
       @ApiResponse(responseCode = "500", description = "서버 오류")
   })
   ResponseEntity<CursorPageResponseDto<ClothesDto>> getClothes(

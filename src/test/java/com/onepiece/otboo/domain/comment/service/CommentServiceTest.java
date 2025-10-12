@@ -1,5 +1,14 @@
 package com.onepiece.otboo.domain.comment.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.onepiece.otboo.domain.comment.dto.request.CommentCreateRequest;
 import com.onepiece.otboo.domain.comment.dto.response.CommentDto;
 import com.onepiece.otboo.domain.comment.entity.Comment;
@@ -9,28 +18,28 @@ import com.onepiece.otboo.domain.feed.entity.Feed;
 import com.onepiece.otboo.domain.user.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
 
-    @Mock CommentRepository repository;
-    @Mock CommentMapper mapper;
-    @Mock EntityManager em;
+    @Mock
+    CommentRepository repository;
+    @Mock
+    CommentMapper mapper;
+    @Mock
+    EntityManager em;
 
-    @InjectMocks CommentService service;
+    @InjectMocks
+    CommentService service;
 
     UUID feedId;
     UUID authorId;
