@@ -24,10 +24,14 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
         where.and(c.feed.id.eq(feedId));
 
         if (createdAtLt != null) {
-            where.and(
-                c.createdAt.lt(createdAtLt)
-                    .or(c.createdAt.eq(createdAtLt).and(c.id.lt(idLt)))
-            );
+            if (idLt != null) {
+                where.and(
+                    c.createdAt.lt(createdAtLt)
+                        .or(c.createdAt.eq(createdAtLt).and(c.id.lt(idLt)))
+                );
+            } else {
+                where.and(c.createdAt.lt(createdAtLt));
+            }
         }
 
         return queryFactory.selectFrom(c)
