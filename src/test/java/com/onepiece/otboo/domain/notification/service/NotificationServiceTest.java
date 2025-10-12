@@ -2,15 +2,20 @@ package com.onepiece.otboo.domain.notification.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
 import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
+import com.onepiece.otboo.domain.notification.exception.NotificationNotFoundException;
 import com.onepiece.otboo.domain.notification.mapper.NotificationMapper;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,5 +75,65 @@ class NotificationServiceTest {
 
         verify(notificationRepository).findNotifications(receiverId, idAfter, limit);
         verify(notificationRepository).countByReceiverId(receiverId);
+    }
+
+    @Test
+    @DisplayName("알림 읽음 처리 성공 - isRead=true, readAt 설정 후 저장 호출")
+    void markAsRead_Success() {
+        UUID id = UUID.randomUUID();
+        Notification notification = Notification.builder()
+            .receiverId(UUID.randomUUID())
+            .title("읽음 테스트 알림")
+            .content("내용")
+            .level(NotificationLevel.INFO)
+            .build();
+
+        given(notificationRepository.findById(id)).willReturn(Optional.of(notification));
+
+        notificationService.markAsRead(id);
+
+        assertThat(notification.isRead()).isTrue();
+        assertThat(notification.getReadAt()).isNotNull();
+        verify(notificationRepository).findById(id);
+        verify(notificationRepository).save(notification);
+    }
+
+    @Test
+    @DisplayName("알림 읽음 처리 실패 - 존재하지 않는 ID")
+    void markAsRead_Fail_NotFound() {
+        UUID invalidId = UUID.randomUUID();
+        given(notificationRepository.findById(invalidId)).willReturn(Optional.empty());
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+            NotificationNotFoundException.class,
+            () -> notificationService.markAsRead(invalidId)
+        );
+
+        verify(notificationRepository).findById(invalidId);
+        verify(notificationRepository, never()).save(any(Notification.class));
+    }
+
+    @Test
+    @DisplayName("이미 읽은 알림에 markAsRead 호출 시 save 재호출되지 않음")
+    void markAsRead_AlreadyRead_NoSave() {
+        UUID id = UUID.randomUUID();
+        Notification notification = Notification.builder()
+            .receiverId(UUID.randomUUID())
+            .title("이미 읽은 알림")
+            .content("내용")
+            .level(NotificationLevel.INFO)
+            .build();
+
+        notification.markAsRead();
+        Instant readAtBefore = notification.getReadAt();
+
+        given(notificationRepository.findById(id)).willReturn(Optional.of(notification));
+
+        notificationService.markAsRead(id);
+
+        assertThat(notification.isRead()).isTrue();
+        assertThat(notification.getReadAt()).isEqualTo(readAtBefore);
+        verify(notificationRepository).findById(id);
+        verify(notificationRepository, never()).save(notification);
     }
 }

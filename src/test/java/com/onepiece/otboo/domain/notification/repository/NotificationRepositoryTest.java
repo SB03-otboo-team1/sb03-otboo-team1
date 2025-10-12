@@ -8,6 +8,7 @@ import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
 import com.onepiece.otboo.global.config.TestJpaConfig;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -111,5 +112,35 @@ class NotificationRepositoryTest {
         long count = notificationRepository.countByReceiverId(receiverId);
 
         assertThat(count).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("알림 읽음 처리 후 isRead=true, readAt이 설정된다")
+    void markAsRead_Persistence_Success() {
+        UUID receiverId = UUID.randomUUID();
+
+        Notification notification = Notification.builder()
+            .receiverId(receiverId)
+            .title("읽음 테스트 알림")
+            .content("읽음 처리 전 상태입니다.")
+            .level(NotificationLevel.INFO)
+            .build();
+
+        notificationRepository.save(notification);
+        em.flush();
+        em.clear();
+
+        Notification saved = notificationRepository.findById(notification.getId()).orElseThrow();
+        assertThat(saved.isRead()).isFalse();
+
+        saved.markAsRead();
+        notificationRepository.save(saved);
+        em.flush();
+        em.clear();
+
+        Notification updated = notificationRepository.findById(notification.getId()).orElseThrow();
+        assertThat(updated.isRead()).isTrue();
+        assertThat(updated.getReadAt()).isNotNull();
+        assertThat(updated.getReadAt()).isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
     }
 }
