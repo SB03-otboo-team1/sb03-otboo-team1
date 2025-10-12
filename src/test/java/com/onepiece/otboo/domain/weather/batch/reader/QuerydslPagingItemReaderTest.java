@@ -30,21 +30,22 @@ import org.springframework.batch.item.ExecutionContext;
 class QuerydslPagingItemReaderTest {
 
     @Mock
-    EntityManagerFactory emf;
-    @Mock
-    EntityManager em;
+    private EntityManagerFactory emf;
 
     @Mock
-    JPAQuery<Location> q1;
+    private EntityManager em;
 
     @Mock
-    JPAQuery<Location> q2;
+    private JPAQuery<Location> q1;
 
     @Mock
-    JPAQuery<Location> q3;
+    private JPAQuery<Location> q2;
 
     @Mock
-    JPAQuery<Location> q4; // empty
+    private JPAQuery<Location> q3;
+
+    @Mock
+    private JPAQuery<Location> q4; // empty
 
     private final AtomicInteger callSeq = new AtomicInteger(0);
 
@@ -122,7 +123,8 @@ class QuerydslPagingItemReaderTest {
         QuerydslPagingItemReader<Location> reader =
             new QuerydslPagingItemReader<>(emf, 5, qf -> q1);
 
-        reader.afterPropertiesSet();;
+        reader.afterPropertiesSet();
+        ;
         reader.open(new ExecutionContext());
 
         // when
