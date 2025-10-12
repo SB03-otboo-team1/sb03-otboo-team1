@@ -4,12 +4,14 @@ import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
+import com.onepiece.otboo.domain.clothes.dto.request.ClothesUpdateRequest;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.exception.ClothesAttributeDefNotFoundException;
+import com.onepiece.otboo.domain.clothes.exception.ClothesNotFoundException;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
@@ -54,7 +56,7 @@ public class ClothesServiceImpl implements ClothesService {
     private String CLOTHES_PREFIX;
 
   @Override
-  public CursorPageResponseDto<ClothesDto> getClothes(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
+  public CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
 
     List<Clothes> clothes =
         clothesRepository.getClothesWithCursor(ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
@@ -130,6 +132,13 @@ public class ClothesServiceImpl implements ClothesService {
   }
 
   @Override
+  public ClothesDto getClothes(UUID clothesId) {
+      Clothes clothes = clothesRepository.findById(clothesId)
+          .orElseThrow(() -> new ClothesNotFoundException("해당 옷 정보를 찾을 수 없습니다."));
+      return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
+  }
+
+  @Override
     public ClothesDto createClothes(ClothesCreateRequest request, MultipartFile imageFile)
       throws IOException {
 
@@ -184,4 +193,26 @@ public class ClothesServiceImpl implements ClothesService {
       // ClothesDto 반환
       return clothesMapper.toDto(clothes, clothesAttributeWithDefDto, fileStorage);
   }
+
+  @Override
+  public ClothesDto updateClothes(UUID clothesId, ClothesUpdateRequest request, MultipartFile imageFile)
+      throws IOException {
+
+      Clothes clothes = clothesRepository.findById(clothesId)
+          .orElseThrow(() -> new ClothesNotFoundException("의상 정보를 찾을 수 없습니다. id: " + clothesId));
+
+      String newName = request.name();
+      ClothesType newType = request.type();
+      String newImageUrl = null;
+      if (imageFile != null) {
+          newImageUrl = fileStorage.uploadFile(CLOTHES_PREFIX, imageFile);
+      }
+
+      clothes.update(newName, newType, newImageUrl);
+
+      clothesRepository.save(clothes);
+
+      return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
+  }
+
 }

@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.clothes.controller;
 import com.onepiece.otboo.domain.clothes.api.ClothesApi;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
+import com.onepiece.otboo.domain.clothes.dto.request.ClothesUpdateRequest;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.service.ClothesService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -25,6 +26,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -59,7 +62,7 @@ public class ClothesController implements ClothesApi {
     SortBy sortBy = SortBy.CREATED_AT;
     SortDirection sortDirection = SortDirection.DESCENDING;
 
-    CursorPageResponseDto<ClothesDto> response = clothesService.getClothes(
+    CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
         ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
 
     return ResponseEntity.ok(response);
@@ -99,4 +102,31 @@ public class ClothesController implements ClothesApi {
             throw new GlobalException(ErrorCode.UNAUTHORIZED);
         }
     }
+
+    @PatchMapping(path = "/{clothesId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<ClothesDto> updateClothes(
+        @PathVariable UUID clothesId,
+        @Valid @RequestPart ClothesUpdateRequest request,
+        @RequestPart(value = "image", required = false) MultipartFile imageFile
+    ) throws IOException {
+        // 인증된 사용자 ID 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID authenticatedUserId = resolveRequesterId(auth);
+
+      log.info("의상 수정 API 호출 - request: {}", request);
+
+      ClothesDto oldClothes = clothesService.getClothes(clothesId);
+      UUID ownerId = oldClothes.ownerId();
+
+        // request의 ownerId와 인증된 사용자 ID 비교
+        if (!ownerId.equals(authenticatedUserId)) {
+            log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", ownerId, authenticatedUserId);
+            throw new GlobalException(ErrorCode.FORBIDDEN);
+        }
+
+        ClothesDto clothes = clothesService.updateClothes(clothesId, request, imageFile);
+
+      return ResponseEntity.ok(clothes);
+    }
+
 }
