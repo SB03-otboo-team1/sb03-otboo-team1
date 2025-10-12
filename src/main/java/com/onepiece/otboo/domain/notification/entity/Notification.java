@@ -44,6 +44,12 @@ public class Notification {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(nullable = false)
+    private boolean isRead = false;
+
+    @Column
+    private Instant readAt;
+
     @Builder
     public Notification(UUID receiverId, String title, String content,
         NotificationLevel level, Instant createdAt) {
@@ -52,6 +58,13 @@ public class Notification {
         this.content = content;
         this.level = level;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
+    }
+
+    public void markAsRead() {
+        if (!this.isRead) {
+            this.isRead = true;
+            this.readAt = Instant.now();
+        }
     }
 
     @Override
