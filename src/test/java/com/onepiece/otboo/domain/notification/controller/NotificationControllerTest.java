@@ -2,8 +2,10 @@ package com.onepiece.otboo.domain.notification.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.doNothing;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,6 +49,8 @@ class NotificationControllerTest {
             .content("민준님을 팔로우했습니다.")
             .level("INFO")
             .createdAt(Instant.now())
+            .isRead(false)
+            .readAt(null)
             .build();
 
         CursorPageResponseDto<NotificationResponse> mockResponse =
@@ -72,5 +76,16 @@ class NotificationControllerTest {
             .andExpect(jsonPath("$.data[0].content").value("민준님을 팔로우했습니다."))
             .andExpect(jsonPath("$.data[0].level").value("INFO"))
             .andExpect(jsonPath("$.hasNext").value(false));
+    }
+
+    @Test
+    @DisplayName("알림 읽음 처리 성공 (PATCH /api/notifications/{id}/read)")
+    void markAsRead_Success() throws Exception {
+        UUID notificationId = UUID.randomUUID();
+        doNothing().when(notificationService).markAsRead(notificationId);
+
+        mockMvc.perform(patch("/api/notifications/{id}/read", notificationId)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
     }
 }
