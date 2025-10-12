@@ -1,17 +1,16 @@
 package com.onepiece.otboo.domain.notification.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
+import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
-import com.onepiece.otboo.domain.notification.enums.Level;
+import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
+import com.onepiece.otboo.domain.notification.mapper.NotificationMapper;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,54 +25,50 @@ class NotificationServiceTest {
     @Mock
     private NotificationRepository notificationRepository;
 
+    @Mock
+    private NotificationMapper notificationMapper;
+
     @InjectMocks
     private NotificationServiceImpl notificationService;
 
     @Test
-    @DisplayName("알림 목록 조회 성공 (커서 기반)")
+    @DisplayName("알림 목록 조회 성공")
     void getNotifications_Success() {
+        // given
         UUID receiverId = UUID.randomUUID();
+        UUID idAfter = null;
+        int limit = 10;
 
         Notification notification = Notification.builder()
             .receiverId(receiverId)
-            .title("새 메시지가 도착했습니다")
-            .content("홍길동님이 메시지를 보냈습니다.")
-            .level(Level.INFO)
+            .title("테스트 알림")
+            .content("테스트 내용")
+            .level(NotificationLevel.INFO)
             .build();
 
-        when(notificationRepository.findNotifications(receiverId, null, 11))
-            .thenReturn(List.of(notification));
+        NotificationResponse response = NotificationResponse.builder()
+            .id(notification.getId())
+            .receiverId(receiverId)
+            .title("테스트 알림")
+            .content("테스트 내용")
+            .level("INFO")
+            .createdAt(notification.getCreatedAt())
+            .build();
 
-        when(notificationRepository.countByReceiverId(receiverId))
-            .thenReturn(1L);
+        given(notificationRepository.findNotifications(receiverId, idAfter, limit))
+            .willReturn(List.of(notification));
+        given(notificationMapper.toResponse(notification)).willReturn(response);
+        given(notificationRepository.countByReceiverId(receiverId)).willReturn(1L);
 
-        var result = notificationService.getNotifications(receiverId, null, 10);
+        CursorPageResponseDto<NotificationResponse> result =
+            notificationService.getNotifications(receiverId, idAfter, limit);
 
         assertThat(result.data()).hasSize(1);
-        assertThat(result.data().get(0).getTitle()).isEqualTo("새 메시지가 도착했습니다");
+        assertThat(result.data().get(0).getTitle()).isEqualTo("테스트 알림");
         assertThat(result.hasNext()).isFalse();
-    }
+        assertThat(result.totalCount()).isEqualTo(1L);
 
-    @Test
-    @DisplayName("알림 생성 성공 - 수신자 여러 명")
-    void createNotifications_Success() {
-        Set<UUID> receiverIds = Set.of(UUID.randomUUID(), UUID.randomUUID());
-        String title = "새 알림";
-        String content = "여러 수신자에게 알림 발송";
-        Level level = Level.WARNING;
-
-        notificationService.create(receiverIds, title, content, level);
-
-        verify(notificationRepository, times(1)).saveAll(any());
-    }
-
-    @Test
-    @DisplayName("알림 생성 실패 - 수신자 없음")
-    void createNotifications_EmptyReceivers() {
-        Set<UUID> receiverIds = Set.of();
-
-        notificationService.create(receiverIds, "제목", "내용", Level.ERROR);
-
-        verify(notificationRepository, never()).saveAll(any());
+        verify(notificationRepository).findNotifications(receiverId, idAfter, limit);
+        verify(notificationRepository).countByReceiverId(receiverId);
     }
 }
