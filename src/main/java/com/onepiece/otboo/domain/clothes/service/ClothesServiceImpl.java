@@ -112,9 +112,8 @@ public class ClothesServiceImpl implements ClothesService {
         List<ClothesAttributeWithDefDto> attributeWithDefDtos =
             attr.stream().map(a -> {
                 ClothesAttributeDefs def = a.getDefinition();
-                List<ClothesAttributeOptions> options = optionsByDefId.getOrDefault(def.getId(), List.of());
                 String value = a.getOptionValue();
-                return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
+                return clothesAttributeMapper.toAttributeWithDefDto(def, value);
             }).toList();
 
         // ClothesDto 생성
@@ -189,9 +188,8 @@ public class ClothesServiceImpl implements ClothesService {
       List<ClothesAttributeWithDefDto> clothesAttributeWithDefDto =
           attributes.stream().map(a -> {
               ClothesAttributeDefs def = a.getDefinition();
-              List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(def.getId());
               String value = a.getOptionValue();
-              return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
+              return clothesAttributeMapper.toAttributeWithDefDto(def, value);
           }).toList();
 
       // ClothesDto 반환

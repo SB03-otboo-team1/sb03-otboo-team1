@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.clothes.dto.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -11,6 +12,7 @@ import lombok.Builder;
  * 관리자가 의상 속성 정의를 수정할 때 사용되는 요청 데이터입니다.
  */
 @Builder
+@Valid
 public record ClothesAttributeDefUpdateRequest(
 
     @NotBlank(message = "속성 이름은 필수입니다")

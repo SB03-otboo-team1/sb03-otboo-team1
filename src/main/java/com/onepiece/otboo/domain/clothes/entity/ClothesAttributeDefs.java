@@ -28,4 +28,10 @@ public class ClothesAttributeDefs extends BaseUpdatableEntity {
     @OneToMany(mappedBy = "definition", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ClothesAttributeOptions> options = new ArrayList<>();
+
+    public void update(String newName) {
+        if (newName != null && !newName.equals(this.name)) {
+            this.name = newName;
+        }
+    }
 }
