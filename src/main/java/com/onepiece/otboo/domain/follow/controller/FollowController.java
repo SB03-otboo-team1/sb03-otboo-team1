@@ -2,18 +2,19 @@ package com.onepiece.otboo.domain.follow.controller;
 
 import com.onepiece.otboo.domain.follow.controller.api.FollowApi;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
-import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.domain.follow.service.FollowService;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,11 +35,12 @@ public class FollowController implements FollowApi {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
-        String sortDirection
+        SortBy sortBy,
+        SortDirection sortDirection
     ) {
         CursorPageResponseDto<FollowerResponse> responses =
-            followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike, sortBy, sortDirection);
+            followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike, sortBy,
+                sortDirection);
         return ResponseEntity.ok(responses);
     }
 
@@ -49,11 +51,12 @@ public class FollowController implements FollowApi {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
-        String sortDirection
+        SortBy sortBy,
+        SortDirection sortDirection
     ) {
         CursorPageResponseDto<FollowingResponse> responses =
-            followService.getFollowings(followerId, cursor, idAfter, limit, nameLike, sortBy, sortDirection);
+            followService.getFollowings(followerId, cursor, idAfter, limit, nameLike, sortBy,
+                sortDirection);
         return ResponseEntity.ok(responses);
     }
 

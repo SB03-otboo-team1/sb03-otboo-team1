@@ -2,11 +2,6 @@ package com.onepiece.otboo.domain.user.fixture;
 
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Role;
-
-import com.onepiece.otboo.domain.user.dto.response.UserDto;
-import com.onepiece.otboo.domain.user.enums.Provider;
-import com.onepiece.otboo.domain.user.enums.Role;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +20,7 @@ public class UserDtoFixture {
             .email(email)
             .name(name)
             .role(role)
-            .linkedOAuthProviders(List.of(Provider.LOCAL))
+            .linkedOAuthProviders(List.of())
             .locked(locked)
             .build();
     }

@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.clothes.dto.data;
 
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
-
+import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -16,8 +16,8 @@ public record ClothesDto (
     UUID ownerId,
     String name,
     String imageUrl,
-    ClothesType type
-    // TODO : 의상 속성 추가해야 함
+    ClothesType type,
+    List<ClothesAttributeWithDefDto> attributes
 ) {
 
 }

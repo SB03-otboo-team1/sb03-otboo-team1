@@ -1,7 +1,8 @@
 package com.onepiece.otboo.global.storage;
 
-import com.onepiece.otboo.domain.profile.exception.FileSizeExceededException;
-import com.onepiece.otboo.domain.profile.exception.InvalidFileTypeException;
+import com.onepiece.otboo.global.storage.exception.FileSizeExceededException;
+import com.onepiece.otboo.global.storage.exception.InvalidFileTypeException;
+import com.onepiece.otboo.global.storage.payload.UploadPayload;
 import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
@@ -11,13 +12,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
@@ -31,6 +33,8 @@ public class S3Storage implements FileStorage {
     private final S3Presigner s3Presigner;
 
     private final String bucket;
+
+    private final long MAX_SIZE = 5 * 1024 * 1024;
 
     @Value("${aws.storage.presigned-url-expiration}")
     private long presignedExpiration;
@@ -48,36 +52,23 @@ public class S3Storage implements FileStorage {
 
         // 파일 타입 검증
         String contentType = image.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new InvalidFileTypeException(contentType);
-        }
+        validateImage(contentType, image.getSize());
 
-        // 파일 크기 검증 (예: 5MB 제한)
-        // 5MB
-        long MAX_SIZE = 5 * 1024 * 1024;
-        if (image.getSize() > MAX_SIZE) {
-            throw new FileSizeExceededException(image.getSize(), MAX_SIZE);
-        }
+        String key = buildKey(prefix, image.getOriginalFilename());
 
-        String key = prefix + UUID.randomUUID() + "." + image.getOriginalFilename();
+        uploadInternal(key, image.getBytes());
 
-        // 메타 데이터 설정
-        PutObjectRequest putRequest = PutObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .build();
+        return key;
+    }
 
-        try {
-            s3Client.putObject(putRequest, RequestBody.fromBytes(image.getBytes()));
-        } catch (S3Exception e) {
-            log.error("S3 업로드 실패 - S3 서비스 오류 발생", e);
+    @Override
+    public String uploadBytes(String prefix, UploadPayload payload) throws IOException {
+        String contentType = payload.contentType();
+        validateImage(contentType, payload.size());
 
-            throw e;
-        } catch (IOException e) {
-            log.error("S3 업로드 실패 - 파일 업로드 오류 발생", e);
+        String key = buildKey(prefix, payload.originalFilename());
 
-            throw e;
-        }
+        uploadInternal(key, payload.bytes());
 
         return key;
     }
@@ -119,6 +110,42 @@ public class S3Storage implements FileStorage {
                 .key(key)
                 .build());
             return url.toString();
+        }
+    }
+
+    private void validateImage(String contentType, long size) {
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new InvalidFileTypeException(contentType);
+        }
+        if (size > MAX_SIZE) {
+            throw new FileSizeExceededException(size, MAX_SIZE);
+        }
+    }
+
+    private String buildKey(String prefix, String originalFilename) {
+        String original = (originalFilename != null && !originalFilename.isBlank())
+            ? originalFilename
+            : "image";
+        return prefix + UUID.randomUUID() + "." + original;
+    }
+
+    private PutObjectRequest buildPutRequest(String key) {
+        return PutObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .build();
+    }
+
+    private void uploadInternal(String key, byte[] bytes) {
+        PutObjectRequest putRequest = buildPutRequest(key);
+        try {
+            s3Client.putObject(putRequest, RequestBody.fromBytes(bytes));
+        } catch (AwsServiceException e) { // 서버측(Service) 예외
+            log.error("S3 업로드 실패 - S3 서비스 오류 발생 key: {}", key, e);
+            throw e;
+        } catch (SdkClientException e) {   // 클라이언트측(SDK) 예외
+            log.error("S3 업로드 실패 - SDK 클라이언트 오류 발생 key: {}", key, e);
+            throw e;
         }
     }
 }

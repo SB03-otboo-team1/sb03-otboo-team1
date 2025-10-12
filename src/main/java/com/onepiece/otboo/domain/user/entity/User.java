@@ -1,12 +1,16 @@
 package com.onepiece.otboo.domain.user.entity;
 
+import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import lombok.AccessLevel;
@@ -24,14 +28,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Table(name = "users")
 public class User extends BaseUpdatableEntity {
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Provider provider;
+    @Embedded
+    private SocialAccount socialAccount;
 
-    @Column(name = "provider_user_id")
-    private String providerUserId;
-
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -49,6 +49,8 @@ public class User extends BaseUpdatableEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Profile profile;
 
     public void updatePassword(String password) {
         this.password = password;
@@ -82,4 +84,36 @@ public class User extends BaseUpdatableEntity {
     public void updateRole(Role role) {
         this.role = role;
     }
+
+    /**
+     * 소셜 계정 연동
+     * <p>
+     * 현재 서비스의 구조는 소셜 로그인 또는 가입 시 고유한 이메일을 조회하여 신규 생성 또는 연동 업데이트 방식.
+     * <p>
+     * 하나의 계정에 여러 소셜 계정을 연결하는 것을 지원하지 않음.
+     */
+    public void linkSocialAccount(Provider provider, String providerUserId) {
+        if (this.socialAccount != null && this.socialAccount.isValid()) {
+            if (!this.socialAccount.isSameProviderAndId(provider, providerUserId)) {
+                throw new IllegalStateException("이미 다른 소셜 계정이 연동되어 있습니다.");
+            }
+            return;
+        }
+        this.socialAccount = SocialAccount.builder()
+            .provider(provider)
+            .providerUserId(providerUserId)
+            .build();
+        if (!this.socialAccount.isValid()) {
+            throw new IllegalArgumentException("유효하지 않은 소셜 계정 정보입니다.");
+        }
+    }
+
+    public String getNickname() {
+        return (profile != null) ? profile.getNickname() : null;
+    }
+
+    public String getProfileImage() {
+        return (profile != null) ? profile.getProfileImageUrl() : null;
+    }
+
 }
