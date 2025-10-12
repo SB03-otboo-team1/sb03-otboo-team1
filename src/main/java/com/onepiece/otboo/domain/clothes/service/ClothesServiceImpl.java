@@ -36,10 +36,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ClothesServiceImpl implements ClothesService {
 
@@ -56,6 +58,7 @@ public class ClothesServiceImpl implements ClothesService {
     private String CLOTHES_PREFIX;
 
   @Override
+  @Transactional(readOnly = true)
   public CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual) {
 
     List<Clothes> clothes =
@@ -132,6 +135,7 @@ public class ClothesServiceImpl implements ClothesService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public ClothesDto getClothes(UUID clothesId) {
       Clothes clothes = clothesRepository.findById(clothesId)
           .orElseThrow(() -> new ClothesNotFoundException("해당 옷 정보를 찾을 수 없습니다."));
@@ -210,9 +214,20 @@ public class ClothesServiceImpl implements ClothesService {
 
       clothes.update(newName, newType, newImageUrl);
 
-      clothesRepository.save(clothes);
+      Clothes updatedClothes = clothesRepository.save(clothes);
 
-      return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
+      return clothesMapper.toDto(updatedClothes, Collections.emptyList(), fileStorage);
   }
+
+    @Override
+    public void deleteClothes(UUID clothesId) {
+
+        Clothes clothes = clothesRepository.findById(clothesId)
+          .orElseThrow(() -> new ClothesNotFoundException("의상 정보를 찾을 수 없습니다. id: " + clothesId));
+
+        fileStorage.deleteFile(clothes.getImageUrl());
+        attributeRepository.deleteByClothesId(clothesId);
+        clothesRepository.deleteById(clothesId);
+    }
 
 }

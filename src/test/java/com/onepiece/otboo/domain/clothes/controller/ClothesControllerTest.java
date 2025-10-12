@@ -66,7 +66,7 @@ class ClothesControllerTest {
             SortDirection.DESCENDING
         );
 
-        given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq(SortBy.CREATED_AT),
+        given(clothesService.getClothesWithCursor(eq(ownerId), any(), any(), eq(15), eq(SortBy.CREATED_AT),
             eq(SortDirection.DESCENDING), any()))
             .willReturn(response);
 
@@ -111,7 +111,7 @@ class ClothesControllerTest {
             SortDirection.DESCENDING
         );
 
-        given(clothesService.getClothes(eq(ownerId), any(), any(), eq(10), eq(SortBy.CREATED_AT),
+        given(clothesService.getClothesWithCursor(eq(ownerId), any(), any(), eq(10), eq(SortBy.CREATED_AT),
             eq(SortDirection.DESCENDING), eq(ClothesType.BOTTOM)))
             .willReturn(response);
 
@@ -163,7 +163,7 @@ class ClothesControllerTest {
             SortDirection.DESCENDING
         );
 
-        given(clothesService.getClothes(eq(ownerId), eq("test-cursor"), eq(idAfter), eq(5),
+        given(clothesService.getClothesWithCursor(eq(ownerId), eq("test-cursor"), eq(idAfter), eq(5),
             eq(SortBy.CREATED_AT), eq(SortDirection.DESCENDING), any()))
             .willReturn(response);
 
@@ -200,7 +200,7 @@ class ClothesControllerTest {
             SortDirection.DESCENDING
         );
 
-        given(clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq(SortBy.CREATED_AT),
+        given(clothesService.getClothesWithCursor(eq(ownerId), any(), any(), eq(15), eq(SortBy.CREATED_AT),
             eq(SortDirection.DESCENDING), any()))
             .willReturn(response);
 
@@ -300,7 +300,7 @@ class ClothesControllerTest {
             );
 
             given(
-                clothesService.getClothes(eq(ownerId), any(), any(), eq(15), eq(SortBy.CREATED_AT),
+                clothesService.getClothesWithCursor(eq(ownerId), any(), any(), eq(15), eq(SortBy.CREATED_AT),
                     eq(SortDirection.DESCENDING), eq(type)))
                 .willReturn(response);
 

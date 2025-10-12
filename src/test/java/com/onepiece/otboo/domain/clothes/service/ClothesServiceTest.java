@@ -72,7 +72,7 @@ class ClothesServiceTest {
         given(clothesRepository.countClothes(ownerId, null)).willReturn(1L);
         given(clothesMapper.toDto(any(), any(), any())).willReturn(dto);
 
-        CursorPageResponseDto<ClothesDto> response = clothesService.getClothes(
+        CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
             ownerId, null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING, null);
 
         assertThat(response.data()).hasSize(1);
@@ -129,7 +129,7 @@ class ClothesServiceTest {
         given(clothesRepository.countClothes(ownerId, null)).willReturn(2L);
         given(clothesMapper.toDto(any(), any(), any())).willReturn(dto1);
 
-        CursorPageResponseDto<ClothesDto> response = clothesService.getClothes(
+        CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
             ownerId, null, null, 1, SortBy.CREATED_AT, SortDirection.DESCENDING, null);
 
         // when & then
@@ -149,7 +149,7 @@ class ClothesServiceTest {
             .willReturn(Collections.emptyList());
         given(clothesRepository.countClothes(ownerId, null)).willReturn(0L);
 
-        CursorPageResponseDto<ClothesDto> response = clothesService.getClothes(
+        CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
             ownerId, null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING, null);
 
         assertThat(response.data()).isEmpty();
@@ -168,7 +168,7 @@ class ClothesServiceTest {
             .willReturn(null); // 잘못된 상황 가정
         given(clothesRepository.countClothes(ownerId, null)).willReturn(0L);
 
-        CursorPageResponseDto<ClothesDto> response = clothesService.getClothes(
+        CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
             ownerId, null, null, 10, SortBy.CREATED_AT, SortDirection.DESCENDING, null);
 
         // null 결과가 들어와도 서비스는 방어적으로 빈 리스트처럼 취급해야 한다고 가정
