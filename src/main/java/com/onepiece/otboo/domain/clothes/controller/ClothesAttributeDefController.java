@@ -1,0 +1,45 @@
+package com.onepiece.otboo.domain.clothes.controller;
+
+import com.onepiece.otboo.domain.clothes.controller.api.ClothesAttributeDefApi;
+import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDefDto;
+import com.onepiece.otboo.domain.clothes.service.ClothesAttributeDefService;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/clothes/attribute-defs")
+@RequiredArgsConstructor
+@Validated
+public class ClothesAttributeDefController implements ClothesAttributeDefApi {
+
+    private final ClothesAttributeDefService clothesAttributeDefService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ClothesAttributeDefDto>> getClothesAttributeDefs(
+        @RequestParam(defaultValue = "createdAt") SortBy sortBy,
+        @RequestParam(defaultValue = "ASCENDING") SortDirection sortDirection,
+        @RequestParam(required = false) String keywordLike
+    ) {
+        log.info("의상 속성 조회 API 호출");
+
+        List<ClothesAttributeDefDto> response =
+            clothesAttributeDefService.getClothesAttributeDefs(
+            sortBy, sortDirection, keywordLike);
+
+        log.info("의상 속성 조회 작업 완료");
+
+        return ResponseEntity.ok(response);
+    }
+}

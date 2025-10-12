@@ -18,4 +18,6 @@ public record CommentCreateRequest(
     @Schema(description = "댓글 내용(최대 200자)", requiredMode = Schema.RequiredMode.REQUIRED, maxLength = 200)
     @NotBlank @Size(max = 200)
     String content
-) { }
+) {
+
+}

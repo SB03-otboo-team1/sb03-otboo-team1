@@ -12,4 +12,6 @@ public record CommentDto(
     UUID feedId,
     AuthorDto author,
     String content
-) { }
+) {
+
+}

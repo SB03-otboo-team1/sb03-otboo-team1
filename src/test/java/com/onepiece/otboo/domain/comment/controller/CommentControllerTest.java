@@ -1,12 +1,25 @@
 package com.onepiece.otboo.domain.comment.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.onepiece.otboo.domain.comment.controller.api.CommentApi;
 import com.onepiece.otboo.domain.comment.dto.request.CommentCreateRequest;
 import com.onepiece.otboo.domain.comment.dto.response.CommentDto;
 import com.onepiece.otboo.domain.comment.service.CommentService;
 import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
-import org.junit.jupiter.api.DisplayName;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,23 +29,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.Instant;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 @WebMvcTest(CommentController.class)
 class CommentControllerTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
+    @Autowired
+    MockMvc mockMvc;
+    @Autowired
+    ObjectMapper objectMapper;
 
-    @MockitoBean CommentService commentService;
+    @MockitoBean
+    CommentService commentService;
 
     @Test
     @WithMockUser
@@ -65,7 +71,8 @@ class CommentControllerTest {
             .andExpect(jsonPath("$.content").value("내용"));
 
         // 서비스 위임 파라미터 검증
-        ArgumentCaptor<CommentCreateRequest> captor = ArgumentCaptor.forClass(CommentCreateRequest.class);
+        ArgumentCaptor<CommentCreateRequest> captor = ArgumentCaptor.forClass(
+            CommentCreateRequest.class);
         verify(commentService, times(1)).create(eq(feedId), captor.capture());
         assertThat(captor.getValue().authorId()).isEqualTo(authorId);
         assertThat(captor.getValue().content()).isEqualTo("내용");

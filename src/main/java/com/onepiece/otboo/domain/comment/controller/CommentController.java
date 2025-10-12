@@ -1,9 +1,9 @@
 package com.onepiece.otboo.domain.comment.controller;
 
-import com.onepiece.otboo.domain.comment.service.CommentService;
 import com.onepiece.otboo.domain.comment.controller.api.CommentApi;
 import com.onepiece.otboo.domain.comment.dto.request.CommentCreateRequest;
 import com.onepiece.otboo.domain.comment.dto.response.CommentDto;
+import com.onepiece.otboo.domain.comment.service.CommentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;

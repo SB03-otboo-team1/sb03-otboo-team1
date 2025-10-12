@@ -11,7 +11,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-@Mapper(componentModel = "spring", uses = {ClothesAttributeMapper.class})
+@Mapper(componentModel = "spring")
 public interface ClothesMapper {
 
     @Mapping(target = "ownerId", source = "clothes.owner.id")
