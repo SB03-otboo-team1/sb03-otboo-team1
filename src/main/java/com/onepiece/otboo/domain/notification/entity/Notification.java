@@ -1,49 +1,72 @@
 package com.onepiece.otboo.domain.notification.entity;
 
-import com.onepiece.otboo.domain.notification.enums.Level;
-import com.onepiece.otboo.global.base.BaseEntity;
+import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.UuidGenerator;
 
-@Builder
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "notifications")
-public class Notification extends BaseEntity {
+public class Notification {
 
-    @Column(name = "receiver_id")
+    @Id
+    @GeneratedValue
+    @UuidGenerator
+    private UUID id;
+
+    @Column(nullable = false)
     private UUID receiverId;
 
-    @Column(name = "title")
+    @Column(nullable = false)
     private String title;
 
-    @Column(name = "content")
+    @Column(nullable = false)
     private String content;
 
-    @Column(name = "level")
     @Enumerated(EnumType.STRING)
-    private Level level;
+    @Column(nullable = false)
+    private NotificationLevel level;
 
-    @Column
-    private Instant deletedAt;
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
 
-    public void delete() {
-        this.deletedAt = Instant.now();
+    @Builder
+    public Notification(UUID receiverId, String title, String content,
+        NotificationLevel level, Instant createdAt) {
+        this.receiverId = receiverId;
+        this.title = title;
+        this.content = content;
+        this.level = level;
+        this.createdAt = createdAt != null ? createdAt : Instant.now();
     }
 
-    public boolean isDeleted() {
-        return deletedAt != null;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Notification that)) {
+            return false;
+        }
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }
