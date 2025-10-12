@@ -65,11 +65,9 @@ class NotificationRequiredTopicListenerTest {
         ArgumentCaptor<Set<UUID>> setCaptor = ArgumentCaptor.forClass(Set.class);
         verify(notificationService, times(1))
             .create(setCaptor.capture(), eq("비 예보"), eq("잠시 후 비가 옵니다."), eq(Level.INFO));
-
         Set<UUID> targetSet = setCaptor.getValue();
         // 대상 집합에 해당 userId 포함 확인
         assert targetSet.contains(userId);
-
         verify(ack, times(1)).acknowledge();
         verifyNoMoreInteractions(notificationService, ack);
     }
@@ -84,7 +82,6 @@ class NotificationRequiredTopicListenerTest {
 
         // when & then
         assertThrows(RuntimeException.class, () -> listener.onWeatherChanged(kafkaEvent, ack));
-
         verify(notificationService, never()).create(anySet(), anyString(), anyString(), any());
         verify(ack, never()).acknowledge();
     }
