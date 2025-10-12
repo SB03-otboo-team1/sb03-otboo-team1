@@ -14,7 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttributeDefCustomRepository {
+public class ClothesAttributeDefCustomRepositoryImpl implements
+    ClothesAttributeDefCustomRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -43,8 +44,9 @@ public class ClothesAttributeDefCustomRepositoryImpl implements ClothesAttribute
                 ? def.name.asc() : def.name.desc());
             default -> throw new IllegalStateException("Unexpected value: " + sortBy);
         };
-        OrderSpecifier<?> tieBreaker = (sortDirection != null && sortDirection.equals(SortDirection.ASCENDING)
-            ? def.id.asc() : def.id.desc());
+        OrderSpecifier<?> tieBreaker = (
+            sortDirection != null && sortDirection.equals(SortDirection.ASCENDING)
+                ? def.id.asc() : def.id.desc());
 
         List<ClothesAttributeDefs> defList = jpaQueryFactory
             .selectDistinct(def)

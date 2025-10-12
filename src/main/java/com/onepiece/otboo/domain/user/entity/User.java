@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.user.entity;
 
+import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.user.enums.Provider;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.base.BaseUpdatableEntity;
@@ -8,6 +9,8 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import lombok.AccessLevel;
@@ -46,6 +49,8 @@ public class User extends BaseUpdatableEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Profile profile;
 
     public void updatePassword(String password) {
         this.password = password;
@@ -102,4 +107,13 @@ public class User extends BaseUpdatableEntity {
             throw new IllegalArgumentException("유효하지 않은 소셜 계정 정보입니다.");
         }
     }
+
+    public String getNickname() {
+        return (profile != null) ? profile.getNickname() : null;
+    }
+
+    public String getProfileImage() {
+        return (profile != null) ? profile.getProfileImageUrl() : null;
+    }
+
 }
