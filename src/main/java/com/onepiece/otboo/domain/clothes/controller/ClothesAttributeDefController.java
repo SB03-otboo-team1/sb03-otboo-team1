@@ -2,9 +2,11 @@ package com.onepiece.otboo.domain.clothes.controller;
 
 import com.onepiece.otboo.domain.clothes.controller.api.ClothesAttributeDefApi;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDefDto;
+import com.onepiece.otboo.domain.clothes.dto.request.ClothesAttributeDefCreateRequest;
 import com.onepiece.otboo.domain.clothes.service.ClothesAttributeDefService;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,5 +45,18 @@ public class ClothesAttributeDefController implements ClothesAttributeDefApi {
         log.info("의상 속성 조회 작업 완료");
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClothesAttributeDefDto> createClothesAttributeDef(
+        @Valid @RequestBody ClothesAttributeDefCreateRequest request
+    ) {
+        log.info("의상 속성 정의 등록 API 실행 - request: {}", request);
+
+        ClothesAttributeDefDto result =
+            clothesAttributeDefService.createClothesAttributeDef(request);
+
+        return ResponseEntity.ok(result);
     }
 }

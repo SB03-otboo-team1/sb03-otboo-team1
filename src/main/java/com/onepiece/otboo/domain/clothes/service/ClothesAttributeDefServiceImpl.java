@@ -1,7 +1,9 @@
 package com.onepiece.otboo.domain.clothes.service;
 
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDefDto;
+import com.onepiece.otboo.domain.clothes.dto.request.ClothesAttributeDefCreateRequest;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
@@ -40,5 +42,41 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
         log.info("의상 속성 목록 조회 완료 - sortBy: {}, sortDirection: {}, keywordLike: {}, 전체 데이터 개수: {}", sortBy, sortDirection, keywordLike, totalCount);
 
         return clothesAttributeMapper.toAttributeDefDto(defs);
+    }
+
+    @Override
+    public ClothesAttributeDefDto createClothesAttributeDef(ClothesAttributeDefCreateRequest request) {
+
+        log.info("[의상 속성 정의] 등록 작업 시작");
+
+        String name = request.name();
+        List<String> selectableValues = request.selectableValues();
+
+        log.debug("[의상 속성 정의] 의상 속성 정의 생성");
+        ClothesAttributeDefs def =
+            ClothesAttributeDefs.builder()
+                .name(name)
+                .build();
+
+        log.debug("의상 속성 정의 저장");
+        clothesAttributeDefRepository.save(def);
+
+        log.debug("의상 속성 정의 저장 완료 - definitionId: {}", def.getId());
+
+        log.debug("의상 속성값 생성");
+        List<ClothesAttributeOptions> options =
+            selectableValues.stream().map(
+                val -> ClothesAttributeOptions.builder()
+                    .definition(def)
+                    .optionValue(val)
+                    .build()
+            ).toList();
+
+        log.debug("의상 속성값 저장");
+        clothesAttributeOptionsRepository.saveAll(options);
+
+        log.debug("의상 속성값 저장 완료 - definitionId: {}, countOptions: {}", def.getId(), options.size());
+
+        return clothesAttributeMapper.toAttributeDefDto(def, options);
     }
 }
