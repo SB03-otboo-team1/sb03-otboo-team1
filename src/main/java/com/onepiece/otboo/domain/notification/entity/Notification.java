@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -34,4 +35,15 @@ public class Notification extends BaseEntity {
     @Column(name = "level")
     @Enumerated(EnumType.STRING)
     private Level level;
+
+    @Column
+    private Instant deletedAt;
+
+    public void delete() {
+        this.deletedAt = Instant.now();
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
 }
