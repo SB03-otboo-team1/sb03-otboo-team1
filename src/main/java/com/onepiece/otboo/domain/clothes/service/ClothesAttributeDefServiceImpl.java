@@ -12,18 +12,18 @@ import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepos
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefService{
+public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefService {
 
     private final ClothesAttributeDefRepository clothesAttributeDefRepository;
     private final ClothesAttributeOptionsRepository clothesAttributeOptionsRepository;
@@ -32,10 +32,12 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
 
 
     @Override
+    @Transactional(readOnly = true)
     public List<ClothesAttributeDefDto> getClothesAttributeDefs(
         SortBy sortBy, SortDirection sortDirection, String keywordLike
     ) {
-        log.info("의상 속성 조회 시작: sortBy: {}, sortDirection: {}, keywordLike: {}", sortBy, sortDirection, keywordLike);
+        log.info("의상 속성 조회 시작: sortBy: {}, sortDirection: {}, keywordLike: {}", sortBy,
+            sortDirection, keywordLike);
 
         List<ClothesAttributeDefs> defs =
             clothesAttributeDefRepository.getClothesAttributeDefs(
@@ -44,13 +46,15 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
 
         Long totalCount = clothesAttributeDefRepository.countClothesAttributeDefs(keywordLike);
 
-        log.info("의상 속성 목록 조회 완료 - sortBy: {}, sortDirection: {}, keywordLike: {}, 전체 데이터 개수: {}", sortBy, sortDirection, keywordLike, totalCount);
+        log.info("의상 속성 목록 조회 완료 - sortBy: {}, sortDirection: {}, keywordLike: {}, 전체 데이터 개수: {}",
+            sortBy, sortDirection, keywordLike, totalCount);
 
         return clothesAttributeMapper.toAttributeDefDto(defs);
     }
 
     @Override
-    public ClothesAttributeDefDto createClothesAttributeDef(ClothesAttributeDefCreateRequest request) {
+    public ClothesAttributeDefDto createClothesAttributeDef(
+        ClothesAttributeDefCreateRequest request) {
 
         log.info("[의상 속성 정의] 등록 작업 시작");
 
@@ -80,7 +84,8 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
         log.debug("의상 속성값 저장");
         clothesAttributeOptionsRepository.saveAll(options);
 
-        log.info("[의상 속성 정의] 등록 작업 완료 - definitionId: {}, countOptions: {}", savedDef.getId(), options.size());
+        log.info("[의상 속성 정의] 등록 작업 완료 - definitionId: {}, countOptions: {}", savedDef.getId(),
+            options.size());
 
         return clothesAttributeMapper.toAttributeDefDto(savedDef);
     }
@@ -142,7 +147,7 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
         log.info("[의상 속성 정의] 삭제 작업 시작 - definitionId: {}", definitionId);
 
         clothesAttributeDefRepository.findById(definitionId)
-                .orElseThrow(() -> new ClothesAttributeDefNotFoundException("의상 속성을 찾을 수 없습니다"));
+            .orElseThrow(() -> new ClothesAttributeDefNotFoundException("의상 속성을 찾을 수 없습니다"));
 
         clothesAttributeRepository.deleteByDefinitionId(definitionId);
         log.debug("의상 속성 삭제 완료");

@@ -9,7 +9,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,6 +45,9 @@ public class Clothes extends BaseUpdatableEntity {
 
     @Column(name = "feed_count", nullable = false)
     private long feedCount;
+
+    @OneToMany(mappedBy = "clothes")
+    private List<ClothesAttributes> attributes;
 
     public void update(String newName, ClothesType newType, String newImageUrl) {
         if (newName != null && !newName.equals(this.name)) {
