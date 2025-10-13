@@ -45,7 +45,7 @@ class FeedQueryServiceListTest {
 
     JPAQueryFactory qf;
     FeedMapper feedMapper;
-    FeedLikeRepository feedLikeRepository;;
+    FeedLikeRepository feedLikeRepository;
     FeedQueryService sut;
 
     @BeforeEach
