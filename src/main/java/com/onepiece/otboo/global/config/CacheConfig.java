@@ -1,5 +1,6 @@
 package com.onepiece.otboo.global.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
@@ -28,7 +29,8 @@ public class CacheConfig {
             .build();
         redisObjectMapper.activateDefaultTyping(
             allowedTypes,
-            DefaultTyping.NON_FINAL
+            DefaultTyping.NON_FINAL,
+            As.PROPERTY
         );
 
         return RedisCacheConfiguration.defaultCacheConfig()
