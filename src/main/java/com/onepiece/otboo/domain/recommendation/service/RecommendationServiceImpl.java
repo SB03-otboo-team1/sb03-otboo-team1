@@ -16,6 +16,7 @@ import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
+import com.onepiece.otboo.global.storage.FileStorage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -46,6 +47,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 //    private final ClothesAttributeOptionsRepository optionRepository;
     private final RecommendationMapper recommendationMapper;
 
+    private final FileStorage fileStorage;
+
     @Override
     @Transactional(readOnly = true)
     public RecommendationDto getRecommendation(UUID weatherId) {
@@ -73,7 +76,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         List<RecommendationClothes> recommendationClothesList = getRecommendationClothes(
             recommendation);
 
-        return recommendationMapper.toDto(recommendation, recommendationClothesList);
+        return recommendationMapper.toDto(recommendation, recommendationClothesList, fileStorage);
     }
 
     public List<RecommendationClothes> getRecommendationClothes(Recommendation recommendation) {
@@ -145,7 +148,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         double feedDress = (double) dressFeedCount / (double) totalFeedCount;
 
-        boolean chooseDress = hasDress && random.nextDouble() < (feedDress * 2);
+        if (totalFeedCount == 0) {
+            feedDress = 0.0;
+        }
+
+        boolean chooseDress = hasDress && random.nextDouble() < (0.2 + feedDress * 2);
 
         if (chooseDress) {
             for (ClothesType type : ClothesType.values()) {
