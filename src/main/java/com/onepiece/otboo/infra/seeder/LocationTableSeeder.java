@@ -8,9 +8,10 @@ import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 @Slf4j
-//@Component
+@Component
 @Order(20)
 @RequiredArgsConstructor
 public class LocationTableSeeder implements DataSeeder {
