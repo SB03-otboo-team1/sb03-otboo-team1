@@ -1,4 +1,4 @@
-package com.onepiece.otboo.domain.recommendation.api;
+package com.onepiece.otboo.domain.recommendation.controller.api;
 
 import com.onepiece.otboo.domain.recommendation.dto.data.RecommendationDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,6 +28,6 @@ public interface RecommendationApi {
         @ApiResponse(responseCode = "400", description = "추천 조회 실패"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    ResponseEntity<List<RecommendationDto>> getRecommendations(
-        @Parameter(description = "날씨 ID") @RequestParam(required = true) UUID weatherId);
+    ResponseEntity<RecommendationDto> getRecommendation(
+        @Parameter(name = "weatherId", description = "날씨 ID") @RequestParam(required = true) UUID weatherId);
 }
