@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.recommendation.mapper;
 
+import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.feed.dto.response.OotdDto;
 import com.onepiece.otboo.domain.recommendation.dto.data.RecommendationDto;
 import com.onepiece.otboo.domain.recommendation.entity.Recommendation;
@@ -11,14 +12,19 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface RecommendationMapper {
 
-    @Mapping(target = "weatherId", source = "weather.id")
-    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "weatherId", source = "recommendation.weather.id")
+    @Mapping(target = "userId", source = "recommendation.profile.user.id")
     @Mapping(target = "clothes", source = "clothes")
     RecommendationDto toDto(Recommendation recommendation, List<RecommendationClothes> clothes);
 
-    @Mapping(target = "clothedId", source = "clothes.clothes.id")
+    @Mapping(target = "clothesId", source = "clothes.clothes.id")
     @Mapping(target = "type", source = "clothes.clothes.type")
     @Mapping(target = "name", source = "clothes.clothes.name")
     @Mapping(target = "imageUrl", source = "clothes.clothes.imageUrl")
     OotdDto clothesToOotdDto(RecommendationClothes clothes);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "recommendation", source = "recommendation")
+    @Mapping(target = "clothes", source = "clothes")
+    RecommendationClothes toRecommendationClothes(Recommendation recommendation, Clothes clothes);
 }

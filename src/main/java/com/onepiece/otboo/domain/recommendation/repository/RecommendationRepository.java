@@ -4,7 +4,7 @@ import com.onepiece.otboo.domain.recommendation.entity.Recommendation;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface RecommendationRepository extends JpaRepository<UUID, Recommendation>,
+public interface RecommendationRepository extends JpaRepository<Recommendation, UUID>,
     RecommendationCustomRepository {
 
 }
