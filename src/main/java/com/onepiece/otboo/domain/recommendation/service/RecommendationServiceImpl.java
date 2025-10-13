@@ -97,22 +97,8 @@ public class RecommendationServiceImpl implements RecommendationService {
         Profile profile = recommendation.getProfile();
         UUID userId = profile.getUser().getId();
 
-        log.debug("의상 추천 알고리즘 작업 시작");
-        List<Clothes> clothesList = new ArrayList<>();
-
-        // 기본 랜덤 추천
-        for (ClothesType type : ClothesType.values()) {
-            int size = clothesRepository.countClothesByOwnerIdAndType(userId, type);
-            if (size != 0) {
-                clothesList.add(
-                    clothesRepository.getClothesByOwnerIdAndType(userId, type)
-                        .get(random.nextInt(size))
-                );
-            }
-        }
-
-        // 상하의/원피스로 구분
-        clothesList = recommendClothes(recommendation);
+        // 추천 로직 실행
+        List<Clothes> clothesList = recommendClothes(recommendation);
 
         List<RecommendationClothes> recommendationClothesList = clothesList.stream().map(
             c -> {
@@ -127,6 +113,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     public List<Clothes> recommendClothes(Recommendation recommendation) {
 
+        log.info("의상 추천 로직 실행");
         List<Clothes> clothesList = new ArrayList<>();
 
         // 계절, 날씨, 사용자 데이터 활용하기
@@ -134,9 +121,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         double maxTemp = parameter.getMaxTemp();
         double curTemp = parameter.getCurTemp();
+        double feelHot = parameter.getFeelHot();
+        double feelCold = parameter.getFeelCold();
+
+        double feelTemp = curTemp + feelHot - feelCold;
 
         // 아우터 제외
-        boolean excludeOuter = maxTemp >= 30 || curTemp >= 27;
+        boolean excludeOuter = maxTemp >= 30 || feelTemp >= 30;
 
         // 상하의 / 원피스 케이스 나누기
         UUID userId = recommendation.getProfile().getUser().getId();
@@ -151,6 +142,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                 ClothesType.DRESS)
             .stream().map(c -> c.getFeedCount()).reduce(0L, Long::sum);
 
+        // 원피스 고르는 비율 조정
         double feedDress = (double) dressFeedCount / (double) totalFeedCount;
 
         if (totalFeedCount == 0) {
@@ -159,36 +151,73 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         boolean chooseDress = hasDress && random.nextDouble() < (0.2 + feedDress * 2);
 
-        if (chooseDress) {
-            for (ClothesType type : ClothesType.values()) {
-                if (type == ClothesType.TOP || type == ClothesType.BOTTOM) {
-                    continue;
+        // 속성이 하나라도 있는 경우 계절 반영하여 조회한 옷장에서 추천
+        List<Clothes> userClothesList = recommendationRepository.getClothesByOwnerIdAndAttributesAndParameters(
+            userId, parameter.getId());
+
+        if (userClothesList.size() != 0) {
+            if (chooseDress) {
+                for (ClothesType type : ClothesType.values()) {
+                    if (type == ClothesType.TOP || type == ClothesType.BOTTOM) {
+                        continue;
+                    }
+                    int size = (int) userClothesList.stream().filter(c -> c.getType().equals(type))
+                        .count();
+                    if (size != 0) {
+                        clothesList.add(
+                            userClothesList.stream().filter(c -> c.getType().equals(type)).toList()
+                                .get(random.nextInt(size))
+                        );
+                    }
                 }
-                if (excludeOuter && type == ClothesType.OUTER) {
-                    continue;
-                }
-                int size = clothesRepository.countClothesByOwnerIdAndType(userId, type);
-                if (size != 0) {
-                    clothesList.add(
-                        clothesRepository.getClothesByOwnerIdAndType(userId, type)
-                            .get(random.nextInt(size))
-                    );
+            } else {
+                for (ClothesType type : ClothesType.values()) {
+                    if (type == ClothesType.DRESS) {
+                        continue;
+                    }
+                    int size = (int) userClothesList.stream().filter(c -> c.getType().equals(type))
+                        .count();
+                    if (size != 0) {
+                        clothesList.add(
+                            userClothesList.stream().filter(c -> c.getType().equals(type)).toList()
+                                .get(random.nextInt(size))
+                        );
+                    }
                 }
             }
         } else {
-            for (ClothesType type : ClothesType.values()) {
-                if (type == ClothesType.DRESS) {
-                    continue;
+            // 속성이 하나도 없을 경우 전체 의상에서 추천
+            if (chooseDress) {
+                for (ClothesType type : ClothesType.values()) {
+                    if (type == ClothesType.TOP || type == ClothesType.BOTTOM) {
+                        continue;
+                    }
+                    if (excludeOuter && type == ClothesType.OUTER) {
+                        continue;
+                    }
+                    int size = clothesRepository.countClothesByOwnerIdAndType(userId, type);
+                    if (size != 0) {
+                        clothesList.add(
+                            clothesRepository.getClothesByOwnerIdAndType(userId, type)
+                                .get(random.nextInt(size))
+                        );
+                    }
                 }
-                if (excludeOuter && type == ClothesType.OUTER) {
-                    continue;
-                }
-                int size = clothesRepository.countClothesByOwnerIdAndType(userId, type);
-                if (size != 0) {
-                    clothesList.add(
-                        clothesRepository.getClothesByOwnerIdAndType(userId, type)
-                            .get(random.nextInt(size))
-                    );
+            } else {
+                for (ClothesType type : ClothesType.values()) {
+                    if (type == ClothesType.DRESS) {
+                        continue;
+                    }
+                    if (excludeOuter && type == ClothesType.OUTER) {
+                        continue;
+                    }
+                    int size = clothesRepository.countClothesByOwnerIdAndType(userId, type);
+                    if (size != 0) {
+                        clothesList.add(
+                            clothesRepository.getClothesByOwnerIdAndType(userId, type)
+                                .get(random.nextInt(size))
+                        );
+                    }
                 }
             }
         }
@@ -243,6 +272,8 @@ public class RecommendationServiceImpl implements RecommendationService {
         // 체감온도 가중치
         Double feelHot = 0.0;
         Double feelCold = 0.0;
+
+        // TODO: 체감온도 가중치 업데이트 코드 작성
 
         log.info("추천 관련 파라미터 객체 생성");
         RecommendationParameter parameter =
