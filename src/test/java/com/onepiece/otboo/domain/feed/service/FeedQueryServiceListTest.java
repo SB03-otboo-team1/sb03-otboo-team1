@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.domain.feed.mapper.FeedMapper;
+import com.onepiece.otboo.domain.feed.repository.FeedLikeRepository;
 import com.onepiece.otboo.domain.weather.dto.response.PrecipitationDto;
 import com.onepiece.otboo.domain.weather.dto.response.TemperatureDto;
 import com.onepiece.otboo.domain.weather.dto.response.WeatherSummaryDto;
@@ -44,13 +45,15 @@ class FeedQueryServiceListTest {
 
     JPAQueryFactory qf;
     FeedMapper feedMapper;
+    FeedLikeRepository feedLikeRepository;;
     FeedQueryService sut;
 
     @BeforeEach
     void setUp() {
         qf = mock(JPAQueryFactory.class);
         feedMapper = mock(FeedMapper.class);
-        sut = new FeedQueryService(qf, feedMapper);
+        feedLikeRepository = mock(FeedLikeRepository.class);
+        sut = new FeedQueryService(qf, feedMapper, feedLikeRepository);
     }
 
     // -------------------- 예외 케이스 --------------------
