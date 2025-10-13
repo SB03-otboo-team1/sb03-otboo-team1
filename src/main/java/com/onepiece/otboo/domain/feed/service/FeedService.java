@@ -13,13 +13,12 @@ import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +42,7 @@ public class FeedService {
         }
 
         List<UUID> clothes = r.clothesIds() == null ? List.of() : r.clothesIds();
+        // TODO(박진솔): feed create할 때 포함된 clothes는 count++할 예정입니당.. (어디에 넣을지 몰라서 일단 암데나 껴넣었슴돠)
         var dedup = new HashSet<>(r.clothesIds());
 
         // TODO: Clothes 모듈 연동 후 소유권 검증 로직 복구
@@ -87,7 +87,9 @@ public class FeedService {
     public FeedResponse update(UUID feedId, UUID requesterId, FeedUpdateRequest req) {
         Feed feed = feedRepository.findById(feedId)
             .orElseThrow(() -> new GlobalException(ErrorCode.FEED_NOT_FOUND));
-        if (!feed.getAuthorId().equals(requesterId)) throw new GlobalException(ErrorCode.FEED_FORBIDDEN);
+        if (!feed.getAuthorId().equals(requesterId)) {
+            throw new GlobalException(ErrorCode.FEED_FORBIDDEN);
+        }
 
         feed.updateContent(req.content());
         return feedMapper.toResponse(feed);
