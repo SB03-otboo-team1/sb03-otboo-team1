@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * 추천 알고리즘에 사용되는 변수 테이블.
@@ -23,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "recommendation_parameter")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
