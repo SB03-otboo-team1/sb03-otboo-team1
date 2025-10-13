@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.onepiece.otboo.domain.notification.Controller.NotificationController;
 import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.service.NotificationService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -23,10 +22,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(NotificationController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 class NotificationControllerTest {
 
     @Autowired
@@ -37,8 +37,9 @@ class NotificationControllerTest {
 
     @Test
     @DisplayName("알림 목록 조회 성공")
+    @WithMockUser(username = "b53f7b31-3cdf-4fb3-8e79-0183a964dea2")
     void getNotifications_Success() throws Exception {
-        UUID receiverId = UUID.randomUUID();
+        UUID receiverId = UUID.fromString("b53f7b31-3cdf-4fb3-8e79-0183a964dea2");
 
         NotificationResponse notificationResponse = NotificationResponse.builder()
             .id(UUID.randomUUID())
@@ -64,7 +65,6 @@ class NotificationControllerTest {
             .willReturn(mockResponse);
 
         mockMvc.perform(get("/api/notifications")
-                .param("receiverId", receiverId.toString())
                 .param("limit", "10")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())

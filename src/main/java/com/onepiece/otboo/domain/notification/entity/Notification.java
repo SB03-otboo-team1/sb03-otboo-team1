@@ -1,32 +1,24 @@
 package com.onepiece.otboo.domain.notification.entity;
 
 import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
+import com.onepiece.otboo.global.base.BaseEntity;
+import com.onepiece.otboo.global.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UuidGenerator;
 
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "notifications")
-public class Notification {
-
-    @Id
-    @GeneratedValue
-    @UuidGenerator
-    private UUID id;
+public class Notification extends BaseUpdatableEntity {
 
     @Column(nullable = false)
     private UUID receiverId;
@@ -41,17 +33,20 @@ public class Notification {
     @Column(nullable = false)
     private NotificationLevel level;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
-
     @Builder
-    public Notification(UUID receiverId, String title, String content,
-        NotificationLevel level, Instant createdAt) {
+    public Notification(UUID receiverId, String title, String content, NotificationLevel level) {
         this.receiverId = receiverId;
         this.title = title;
         this.content = content;
         this.level = level;
-        this.createdAt = createdAt != null ? createdAt : Instant.now();
+        if (getCreatedAt() == null) {
+            try {
+                var field = BaseEntity.class.getDeclaredField("createdAt");
+                field.setAccessible(true);
+                field.set(this, java.time.Instant.now());
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     @Override
@@ -62,11 +57,11 @@ public class Notification {
         if (!(o instanceof Notification that)) {
             return false;
         }
-        return id != null && id.equals(that.id);
+        return getId() != null && getId().equals(that.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return getId() != null ? getId().hashCode() : 0;
     }
 }

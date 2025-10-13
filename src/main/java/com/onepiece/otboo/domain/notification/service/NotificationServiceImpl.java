@@ -25,20 +25,28 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public CursorPageResponseDto<NotificationResponse> getNotifications(UUID receiverId,
         UUID idAfter, int limit) {
+
         List<Notification> notifications = notificationRepository.findNotifications(receiverId,
-            idAfter, limit);
+            idAfter, limit + 1);
+
+        boolean hasNext = notifications.size() > limit;
+        if (hasNext) {
+            notifications = notifications.subList(0, limit);
+        }
+
         List<NotificationResponse> data = notifications.stream()
-            .limit(limit)
             .map(notificationMapper::toResponse)
             .collect(Collectors.toList());
 
-        boolean hasNext = notifications.size() > limit;
-        UUID nextIdAfter = hasNext ? data.get(data.size() - 1).getId() : null;
+        UUID nextIdAfter = hasNext && !data.isEmpty()
+            ? data.get(data.size() - 1).getId()
+            : null;
+
         long totalCount = notificationRepository.countByReceiverId(receiverId);
 
         return new CursorPageResponseDto<>(
             data,
-            "cursor123",
+            null,
             nextIdAfter,
             hasNext,
             totalCount,

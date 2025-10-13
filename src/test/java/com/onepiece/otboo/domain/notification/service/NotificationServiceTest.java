@@ -1,6 +1,8 @@
 package com.onepiece.otboo.domain.notification.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -10,6 +12,8 @@ import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
 import com.onepiece.otboo.domain.notification.mapper.NotificationMapper;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +38,6 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 목록 조회 성공")
     void getNotifications_Success() {
-        // given
         UUID receiverId = UUID.randomUUID();
         UUID idAfter = null;
         int limit = 10;
@@ -55,8 +58,9 @@ class NotificationServiceTest {
             .createdAt(notification.getCreatedAt())
             .build();
 
-        given(notificationRepository.findNotifications(receiverId, idAfter, limit))
+        given(notificationRepository.findNotifications(eq(receiverId), eq(idAfter), anyInt()))
             .willReturn(List.of(notification));
+
         given(notificationMapper.toResponse(notification)).willReturn(response);
         given(notificationRepository.countByReceiverId(receiverId)).willReturn(1L);
 
@@ -67,8 +71,10 @@ class NotificationServiceTest {
         assertThat(result.data().get(0).getTitle()).isEqualTo("테스트 알림");
         assertThat(result.hasNext()).isFalse();
         assertThat(result.totalCount()).isEqualTo(1L);
+        assertThat(result.sortBy()).isEqualTo(SortBy.CREATED_AT);
+        assertThat(result.sortDirection()).isEqualTo(SortDirection.DESCENDING);
 
-        verify(notificationRepository).findNotifications(receiverId, idAfter, limit);
+        verify(notificationRepository).findNotifications(eq(receiverId), eq(idAfter), anyInt());
         verify(notificationRepository).countByReceiverId(receiverId);
     }
 }

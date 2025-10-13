@@ -23,7 +23,6 @@ class NotificationTest {
             .title("새 팔로워 알림")
             .content("민준님을 팔로우했습니다.")
             .level(NotificationLevel.INFO)
-            .createdAt(Instant.now())
             .build();
 
         assertThat(notification).isNotNull();
@@ -46,7 +45,6 @@ class NotificationTest {
             .title("테스트 알림 1")
             .content("내용 1")
             .level(NotificationLevel.INFO)
-            .createdAt(Instant.now())
             .build();
 
         Notification n2 = Notification.builder()
@@ -54,7 +52,6 @@ class NotificationTest {
             .title("테스트 알림 2")
             .content("내용 2")
             .level(NotificationLevel.INFO)
-            .createdAt(Instant.now())
             .build();
 
         ReflectionTestUtils.setField(n1, "id", id);
