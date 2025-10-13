@@ -33,10 +33,10 @@ public class CommentQueryService {
      * 피드별 댓글 목록 조회 (커서 페이징).
      *
      * 정렬: createdAt DESC, id DESC (tie-breaker)
-     * 커서 포맷: Base64(URL-safe) 로 인코딩된 "epochMilli:id"
-     *  - epochMilli: 마지막 행의 createdAt.toEpochMilli() (null이면 0)
+     * 커서 포맷: Base64(URL-safe) 로 인코딩된 "epochSecond:nano:id"
+     *  - epochSecond: 마지막 행의 createdAt.getEpochSecond()
+     *  - nano: 마지막 행의 createdAt.getNano()
      *  - id: 마지막 행의 UUID
-     *
      * @param feedId  대상 피드 ID
      * @param cursor  다음 페이지 커서 (직전 응답의 nextCursor)
      * @param idAfter 경계 ID (cursor가 없을 때 기준점으로 사용)
@@ -118,16 +118,12 @@ public class CommentQueryService {
         try {
             byte[] decoded = Base64.getUrlDecoder().decode(cursor);
             String token = new String(decoded, StandardCharsets.UTF_8);
-            int idx = token.indexOf(CURSOR_SEP);
-            if (idx <= 0 || idx >= token.length() - 1) {
-                return new Cursor(null, null);
-            }
-            String epochStr = token.substring(0, idx);
-            String idStr = token.substring(idx + 1);
-
-            long epochMilli = Long.parseLong(epochStr);
-            Instant createdAtLt = Instant.ofEpochMilli(epochMilli);
-            UUID idLt = UUID.fromString(idStr);
+            String[] parts = token.split(CURSOR_SEP, 3);
+            if (parts.length != 3) return new Cursor(null, null);
+            long epochSecond = Long.parseLong(parts[0]);
+            int nano = Integer.parseInt(parts[1]);
+            UUID idLt = UUID.fromString(parts[2]);
+            Instant createdAtLt = Instant.ofEpochSecond(epochSecond, nano);
             return new Cursor(createdAtLt, idLt);
         } catch (Exception e) {
             return new Cursor(null, null);
@@ -135,7 +131,7 @@ public class CommentQueryService {
     }
 
     private String encodeCursor(Instant createdAt, UUID id) {
-        String raw = createdAt.toEpochMilli() + CURSOR_SEP + id;
+        String raw = createdAt.getEpochSecond() + CURSOR_SEP + createdAt.getNano() + CURSOR_SEP + id;
         return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
 
