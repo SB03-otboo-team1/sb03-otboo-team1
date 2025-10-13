@@ -3,11 +3,13 @@ package com.onepiece.otboo.domain.feed.controller;
 import com.onepiece.otboo.domain.feed.controller.api.FeedLikeApi;
 import com.onepiece.otboo.domain.feed.service.FeedLikeService;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -36,13 +38,12 @@ public class FeedLikeController implements FeedLikeApi {
         if (auth == null || !auth.isAuthenticated()) {
             throw new AccessDeniedException("인증 정보가 없습니다.");
         }
-        String name = auth.getName(); // UUID 또는 email
-        try {
-            return UUID.fromString(name);
-        } catch (IllegalArgumentException ignore) {
-            return userRepository.findByEmail(name)
-                .map(u -> u.getId())
-                .orElseThrow(() -> new AccessDeniedException("인증 사용자 없음: " + name));
-        }
+        // Spring Security의 Principal에서 직접 사용자 정보 가져오기
+        Object principal = auth.getPrincipal();
+        if (principal instanceof UserDetails userDetails) {
+            // CustomUserDetails에 userId 필드가 있다고 가정
+            return ((CustomUserDetails) userDetails).getUserId();
+            }
+        throw new AccessDeniedException("올바르지 않은 인증 정보입니다.");
     }
 }
