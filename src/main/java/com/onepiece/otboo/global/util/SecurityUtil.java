@@ -1,5 +1,6 @@
 package com.onepiece.otboo.global.util;
 
+import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
@@ -14,7 +15,7 @@ public class SecurityUtil {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
-            throw new GlobalException(ErrorCode.UNAUTHORIZED);
+            throw new UnAuthorizedException();
         }
         Object principal = authentication.getPrincipal();
         if (principal instanceof CustomUserDetails cud) {
@@ -22,8 +23,8 @@ public class SecurityUtil {
         }
         try {
             return userId.equals(UUID.fromString(authentication.getName()));
-        } catch (IllegalArgumentException e) {
-            throw new GlobalException(ErrorCode.UNAUTHORIZED);
+        } catch (UnAuthorizedException e) {
+            throw new UnAuthorizedException();
         }
     }
 
