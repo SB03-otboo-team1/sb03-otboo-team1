@@ -17,8 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 의상 엔티티 클래스
- * 사용자가 등록한 의상 정보를 저장합니다.
+ * 의상 엔티티 클래스 사용자가 등록한 의상 정보를 저장합니다.
  */
 @Entity
 @Table(name = "clothes")
@@ -42,6 +41,9 @@ public class Clothes extends BaseUpdatableEntity {
     @Column(name = "image_url", nullable = true)
     private String imageUrl;
 
+    @Column(name = "feed_count", nullable = false)
+    private long feedCount;
+
     public void update(String newName, ClothesType newType, String newImageUrl) {
         if (newName != null && !newName.equals(this.name)) {
             this.name = newName;
@@ -52,5 +54,9 @@ public class Clothes extends BaseUpdatableEntity {
         if (newImageUrl != null && !newImageUrl.equals(this.imageUrl)) {
             this.imageUrl = newImageUrl;
         }
+    }
+
+    public void increaseFeedCount() {
+        this.feedCount++;
     }
 }
