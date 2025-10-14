@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
+@ActiveProfiles("test-integration")
 class AdminFeatureIntegrationTest {
 
     @Autowired
