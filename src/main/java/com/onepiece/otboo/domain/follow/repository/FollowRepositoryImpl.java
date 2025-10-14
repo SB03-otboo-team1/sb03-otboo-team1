@@ -8,6 +8,8 @@ import com.onepiece.otboo.domain.follow.entity.QFollow;
 import com.onepiece.otboo.domain.profile.entity.QProfile;
 import com.onepiece.otboo.domain.user.entity.QUser;
 import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -28,8 +30,8 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
-        String sortDirection
+        SortBy sortBy,
+        SortDirection sortDirection
     ) {
         QFollow follow = QFollow.follow;
         QUser user = QUser.user;
@@ -44,7 +46,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
 
         if (cursor != null && idAfter != null) {
             Instant cursorTime = Instant.parse(cursor);
-            if ("ASC".equalsIgnoreCase(sortDirection)) {
+            if (sortDirection.equals(SortDirection.ASCENDING)) {
                 builder.and(follow.createdAt.gt(cursorTime)
                     .or(follow.createdAt.eq(cursorTime).and(follow.id.gt(idAfter))));
             } else {
@@ -54,12 +56,12 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         }
 
         OrderSpecifier<?> orderByCreatedAt =
-            "ASC".equalsIgnoreCase(sortDirection)
+            sortDirection.equals(SortDirection.ASCENDING)
                 ? follow.createdAt.asc()
                 : follow.createdAt.desc();
 
         OrderSpecifier<?> orderById =
-            "ASC".equalsIgnoreCase(sortDirection)
+            sortDirection.equals(SortDirection.ASCENDING)
                 ? follow.id.asc()
                 : follow.id.desc();
 
@@ -87,8 +89,8 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         UUID idAfter,
         int limit,
         String nameLike,
-        String sortBy,
-        String sortDirection
+        SortBy sortBy,
+        SortDirection sortDirection
     ) {
         QFollow follow = QFollow.follow;
         QUser user = QUser.user;
@@ -103,7 +105,7 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
 
         if (cursor != null && idAfter != null) {
             Instant cursorTime = Instant.parse(cursor);
-            if ("ASC".equalsIgnoreCase(sortDirection)) {
+            if (sortDirection.equals(SortDirection.ASCENDING)) {
                 builder.and(follow.createdAt.gt(cursorTime)
                     .or(follow.createdAt.eq(cursorTime).and(follow.id.gt(idAfter))));
             } else {
@@ -113,12 +115,12 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         }
 
         OrderSpecifier<?> orderByCreatedAt =
-            "ASC".equalsIgnoreCase(sortDirection)
+            sortDirection.equals(SortDirection.ASCENDING)
                 ? follow.createdAt.asc()
                 : follow.createdAt.desc();
 
         OrderSpecifier<?> orderById =
-            "ASC".equalsIgnoreCase(sortDirection)
+            sortDirection.equals(SortDirection.ASCENDING)
                 ? follow.id.asc()
                 : follow.id.desc();
 

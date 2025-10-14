@@ -10,8 +10,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.onepiece.otboo.domain.profile.exception.FileSizeExceededException;
-import com.onepiece.otboo.domain.profile.exception.InvalidFileTypeException;
+import com.onepiece.otboo.global.storage.exception.FileSizeExceededException;
+import com.onepiece.otboo.global.storage.exception.InvalidFileTypeException;
 import com.onepiece.otboo.global.storage.payload.UploadPayload;
 import java.io.IOException;
 import java.net.URL;

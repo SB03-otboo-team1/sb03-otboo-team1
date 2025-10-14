@@ -29,6 +29,8 @@ import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
 import java.time.Instant;
 import java.util.List;
@@ -160,8 +162,8 @@ class UserServiceImplTest {
         // given
         UserGetRequest request = UserGetRequest.builder()
             .limit(10)
-            .sortBy("email")
-            .sortDirection("ASCENDING")
+            .sortBy(SortBy.EMAIL)
+            .sortDirection(SortDirection.ASCENDING)
             .build();
 
         given(userRepository.findUsers(request)).willReturn(dummyUsers);
@@ -177,8 +179,8 @@ class UserServiceImplTest {
         assertNull(result.nextCursor());
         assertNull(result.nextIdAfter());
         assertEquals(5, result.totalCount());
-        assertEquals("email", result.sortBy());
-        assertEquals("ASCENDING", result.sortDirection());
+        assertEquals(SortBy.EMAIL, result.sortBy());
+        assertEquals(SortDirection.ASCENDING, result.sortDirection());
         verify(userRepository).findUsers(request);
         verify(userRepository).countUsers(request.emailLike(), request.roleEqual(),
             request.locked());
@@ -186,10 +188,10 @@ class UserServiceImplTest {
 
     @ParameterizedTest(name = "sortBy = {0}, sortDirection = {1}")
     @CsvSource({
-        "email,ASCENDING",
-        "createdAt,DESCENDING"
+        "EMAIL,ASCENDING",
+        "CREATED_AT,DESCENDING"
     })
-    void 다음_페이지가_있는_계정_목록_조회_테스트(String sortBy, String sortDirection) {
+    void 다음_페이지가_있는_계정_목록_조회_테스트(SortBy sortBy, SortDirection sortDirection) {
 
         // given
         UserGetRequest request = UserGetRequest.builder()
@@ -213,7 +215,7 @@ class UserServiceImplTest {
         assertEquals(sortDirection, result.sortDirection());
         UserDto lastUser = result.data().get(1);
         assertEquals(lastUser.id(), result.nextIdAfter());
-        if ("email".equals(sortBy)) {
+        if (SortBy.EMAIL.equals(sortBy)) {
             assertEquals(lastUser.email(), result.nextCursor());
         } else {
             assertEquals(lastUser.createdAt().toString(), result.nextCursor());

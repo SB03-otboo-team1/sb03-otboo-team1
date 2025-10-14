@@ -129,12 +129,11 @@ CREATE TABLE IF NOT EXISTS clothes_attributes
     id            uuid PRIMARY KEY,
     clothes_id    uuid                     NOT NULL,
     definition_id uuid                     NOT NULL,
-    option_id     uuid                     NOT NULL,
+    option_value  varchar(50)              NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at    TIMESTAMP WITH TIME ZONE,
     FOREIGN KEY (clothes_id) REFERENCES clothes (id) ON DELETE CASCADE,
     FOREIGN KEY (definition_id) REFERENCES clothes_attribute_defs (id) ON DELETE CASCADE,
-    FOREIGN KEY (option_id) REFERENCES clothes_attribute_options (id) ON DELETE CASCADE,
     UNIQUE (clothes_id, definition_id)
 );
 
@@ -275,6 +274,18 @@ CREATE TABLE IF NOT EXISTS notifications
     CHECK (level IN ('INFO', 'WARNING', 'ERROR'))
 );
 
+CREATE TABLE IF NOT EXISTS weather_alert_outboxes
+(
+    id          uuid PRIMARY KEY,
+    location_id UUID                     NOT NULL,
+    title       VARCHAR(255)             NOT NULL,
+    message     TEXT                     NOT NULL,
+    status      VARCHAR(20)              NOT NULL DEFAULT 'PENDING',
+    created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    FOREIGN KEY (location_id) REFERENCES locations (id) ON DELETE CASCADE,
+    CHECK (status IN ('PENDING', 'SEND', 'FAILED'))
+);
+
 /*
 ============= INDEX (조회 성능 최적화용) =============
  */
@@ -373,3 +384,5 @@ CREATE TABLE IF NOT EXISTS BATCH_JOB_EXECUTION_CONTEXT
 CREATE SEQUENCE IF NOT EXISTS BATCH_STEP_EXECUTION_SEQ AS BIGINT MAXVALUE 9223372036854775807 NO CYCLE;
 CREATE SEQUENCE IF NOT EXISTS BATCH_JOB_EXECUTION_SEQ AS BIGINT MAXVALUE 9223372036854775807 NO CYCLE;
 CREATE SEQUENCE IF NOT EXISTS BATCH_JOB_SEQ AS BIGINT MAXVALUE 9223372036854775807 NO CYCLE;
+CREATE INDEX IF NOT EXISTS idx_weather_alert_outboxes_location_id ON weather_alert_outboxes (location_id);
+CREATE INDEX IF NOT EXISTS idx_weather_alert_outboxes_status ON weather_alert_outboxes (status);

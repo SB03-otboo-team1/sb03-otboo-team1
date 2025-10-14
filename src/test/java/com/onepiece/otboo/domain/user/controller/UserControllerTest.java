@@ -1,5 +1,7 @@
 package com.onepiece.otboo.domain.user.controller;
 
+import static com.onepiece.otboo.global.enums.SortBy.EMAIL;
+import static com.onepiece.otboo.global.enums.SortDirection.ASCENDING;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -179,7 +181,7 @@ class UserControllerTest {
 
         // given
         CursorPageResponseDto<UserDto> page = new CursorPageResponseDto<>(dummyUsers, null,
-            null, false, 5L, "email", "ASCENDING");
+            null, false, 5L, EMAIL, ASCENDING);
 
         given(userService.getUsers(any(UserGetRequest.class))).willReturn(page);
 
@@ -196,15 +198,15 @@ class UserControllerTest {
             .andExpect(jsonPath("$.data.length()").value(5))
             .andExpect(jsonPath("$.data[0].email").value("han@test.com"))
             .andExpect(jsonPath("$.hasNext").value(false))
-            .andExpect(jsonPath("$.sortBy").value("email"))
+            .andExpect(jsonPath("$.sortBy").value("EMAIL"))
             .andExpect(jsonPath("$.sortDirection").value("ASCENDING"));
         // DTO 바인딩 값 검증
         ArgumentCaptor<UserGetRequest> captor = ArgumentCaptor.forClass(UserGetRequest.class);
         verify(userService).getUsers(captor.capture());
         UserGetRequest request = captor.getValue();
         assertEquals(10, request.limit());
-        assertEquals("email", request.sortBy());
-        assertEquals("ASCENDING", request.sortDirection());
+        assertEquals(EMAIL, request.sortBy());
+        assertEquals(ASCENDING, request.sortDirection());
     }
 
     @Test
@@ -216,7 +218,7 @@ class UserControllerTest {
         // when
         ResultActions result = mockMvc.perform(get("/api/users")
             .param("limit", "10")
-            .param("sortBy", invalidSortBy)
+            .param("sortBy", "INVALID")
             .param("sortDirection", "ASCENDING")
             .accept(MediaType.APPLICATION_JSON));
 
