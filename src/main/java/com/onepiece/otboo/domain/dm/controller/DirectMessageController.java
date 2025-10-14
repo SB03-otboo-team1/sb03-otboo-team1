@@ -3,7 +3,7 @@ package com.onepiece.otboo.domain.dm.controller;
 import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
 import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.service.DirectMessageService;
-import java.util.List;
+import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -35,15 +35,14 @@ public class DirectMessageController {
      * DM 목록 조회 (커서 기반 페이징)
      */
     @GetMapping
-    public ResponseEntity<List<DirectMessageDto>> getDirectMessages(
+    public ResponseEntity<CursorPageResponseDto<DirectMessageDto>> getDirectMessages(
         @RequestParam UUID userId,
         @RequestParam(required = false) String cursor,
         @RequestParam(required = false) UUID idAfter,
-        @RequestParam(defaultValue = "10") int limit,
-        @RequestParam(defaultValue = "createdAt,DESC") String sort
+        @RequestParam(defaultValue = "10") int limit
     ) {
-        return ResponseEntity.ok(
-            directMessageService.getDirectMessages(userId, cursor, idAfter, limit, sort)
-        );
+        CursorPageResponseDto<DirectMessageDto> result = directMessageService.getDirectMessages(
+            userId, cursor, idAfter, limit);
+        return ResponseEntity.ok(result);
     }
 }
