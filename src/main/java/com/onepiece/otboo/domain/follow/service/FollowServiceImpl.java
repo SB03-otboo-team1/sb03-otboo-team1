@@ -1,8 +1,9 @@
 package com.onepiece.otboo.domain.follow.service;
 
+import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
@@ -18,9 +19,14 @@ import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.storage.FileStorage;
+import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -176,25 +182,43 @@ public class FollowServiceImpl implements FollowService {
      */
     @Override
     @Transactional(readOnly = true)
-    public FollowSummaryResponse getFollowSummary(UUID userId, UUID viewerId) {
+    public FollowSummaryDto getFollowSummary(UUID userId) {
         User targetUser = userRepository.findById(userId)
             .orElseThrow(() -> UserNotFoundException.byId(userId));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnAuthorizedException();
+        }
+
+        String email = extractEmail(authentication);
+        User me = userRepository.findByEmail(email)
+            .orElseThrow(() -> UserNotFoundException.byEmail(email));
+
+        // 카운트
         long followerCount = followRepository.countByFollowing(targetUser);
         long followingCount = followRepository.countByFollower(targetUser);
 
-        boolean isFollowing = false;
-        if (viewerId != null) {
-            User viewer = userRepository.findById(viewerId)
-                .orElseThrow(() -> UserNotFoundException.byId(viewerId));
-            isFollowing = followRepository.existsByFollowerAndFollowing(viewer, targetUser);
-        }
+        Optional<Follow> meFollowsTarget = followRepository.findByFollowerAndFollowing(me,
+            targetUser);
+        Optional<Follow> targetFollowsMe = followRepository.findByFollowerAndFollowing(targetUser,
+            me);
 
-        return new FollowSummaryResponse(
-            userId,
+        return new FollowSummaryDto(
+            targetUser.getId(),
             followerCount,
             followingCount,
-            isFollowing
+            meFollowsTarget.isPresent(),
+            meFollowsTarget.map(Follow::getId).orElse(null),
+            targetFollowsMe.isPresent()
         );
+    }
+
+    private String extractEmail(Authentication auth) {
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails cud) {
+            return cud.getUsername();
+        }
+        return Objects.toString(auth.getName(), null);
     }
 }

@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.follow.repository;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.user.entity.User;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -20,4 +21,5 @@ public interface FollowRepository extends JpaRepository<Follow, UUID>, FollowRep
 
     long countByFollower(User follower);
 
+    Optional<Follow> findByFollowerAndFollowing(User me, User targetUser);
 }

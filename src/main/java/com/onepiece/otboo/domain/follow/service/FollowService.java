@@ -2,7 +2,7 @@ package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -36,5 +36,5 @@ public interface FollowService {
 
     void deleteFollow(FollowRequest request);
 
-    FollowSummaryResponse getFollowSummary(UUID userId, UUID viewerId);
+    FollowSummaryDto getFollowSummary(UUID userId);
 }
