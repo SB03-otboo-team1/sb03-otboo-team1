@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,5 +30,5 @@ public interface RecommendationApi {
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     ResponseEntity<RecommendationDto> getRecommendation(
-        @Parameter(name = "weatherId", description = "날씨 ID") @RequestParam(required = true) UUID weatherId);
+        @Parameter(name = "weatherId", description = "날씨 ID") @RequestParam(required = true) @NotNull UUID weatherId);
 }

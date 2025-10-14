@@ -119,15 +119,16 @@ public class RecommendationServiceImpl implements RecommendationService {
         // 계절, 날씨, 사용자 데이터 활용하기
         RecommendationParameter parameter = extractData(recommendation);
 
-        double maxTemp = parameter.getMaxTemp();
+        Double maxTemp = parameter.getMaxTemp();
         double curTemp = parameter.getCurTemp();
         double feelHot = parameter.getFeelHot();
         double feelCold = parameter.getFeelCold();
 
+        // 체감 온도
         double feelTemp = curTemp + feelHot - feelCold;
 
         // 아우터 제외
-        boolean excludeOuter = maxTemp >= 30 || feelTemp >= 30;
+        boolean excludeOuter = (maxTemp != null && maxTemp >= 30) || feelTemp >= 30;
 
         // 상하의 / 원피스 케이스 나누기
         UUID userId = recommendation.getProfile().getUser().getId();

@@ -249,8 +249,7 @@ CREATE TABLE IF NOT EXISTS recommendation
     weather_id uuid                     NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (weather_id) REFERENCES weather_data (id) ON DELETE CASCADE,
-    UNIQUE (user_id, weather_id)
+    FOREIGN KEY (weather_id) REFERENCES weather_data (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS recommendation_clothes

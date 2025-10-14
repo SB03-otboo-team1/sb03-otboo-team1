@@ -23,7 +23,7 @@ public class SecurityUtil {
         }
         try {
             return userId.equals(UUID.fromString(authentication.getName()));
-        } catch (UnAuthorizedException e) {
+        } catch (IllegalArgumentException e) {
             throw new UnAuthorizedException();
         }
     }
