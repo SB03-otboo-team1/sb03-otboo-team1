@@ -4,19 +4,14 @@ import com.onepiece.otboo.domain.follow.controller.api.FollowApi;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
-import com.onepiece.otboo.global.enums.SortBy;
-import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,36 +31,30 @@ public class FollowController implements FollowApi {
     }
 
     @Override
-    @GetMapping("/followers/{userId}")
-    public ResponseEntity<CursorPageResponseDto<FollowerResponse>> getFollowers(
-        @PathVariable("userId") UUID followeeId,
+    @GetMapping("/followers")
+    public ResponseEntity<CursorPageResponseDto<FollowDto>> getFollowers(
+        @RequestParam UUID followeeId,
         @RequestParam(required = false) String cursor,
         @RequestParam(required = false) UUID idAfter,
         @RequestParam(defaultValue = "10") int limit,
-        @RequestParam(required = false) String nameLike,
-        @RequestParam(defaultValue = "CREATED_AT") SortBy sortBy,
-        @RequestParam(defaultValue = "ASCENDING") SortDirection sortDirection
+        @RequestParam(required = false) String nameLike
     ) {
-        CursorPageResponseDto<FollowerResponse> responses =
-            followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike, sortBy,
-                sortDirection);
+        CursorPageResponseDto<FollowDto> responses =
+            followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike);
         return ResponseEntity.ok(responses);
     }
 
     @Override
-    @GetMapping("/followings/{userId}")
-    public ResponseEntity<CursorPageResponseDto<FollowingResponse>> getFollowings(
-        @PathVariable("userId") UUID followerId,
+    @GetMapping("/followings")
+    public ResponseEntity<CursorPageResponseDto<FollowDto>> getFollowings(
+        @RequestParam UUID followerId,
         @RequestParam(required = false) String cursor,
         @RequestParam(required = false) UUID idAfter,
         @RequestParam(defaultValue = "10") int limit,
-        @RequestParam(required = false) String nameLike,
-        @RequestParam(defaultValue = "CREATED_AT") SortBy sortBy,
-        @RequestParam(defaultValue = "ASCENDING") SortDirection sortDirection
+        @RequestParam(required = false) String nameLike
     ) {
-        CursorPageResponseDto<FollowingResponse> responses =
-            followService.getFollowings(followerId, cursor, idAfter, limit, nameLike, sortBy,
-                sortDirection);
+        CursorPageResponseDto<FollowDto> responses =
+            followService.getFollowings(followerId, cursor, idAfter, limit, nameLike);
         return ResponseEntity.ok(responses);
     }
 

@@ -4,8 +4,6 @@ import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.exception.FollowNotAllowedException;
@@ -80,31 +78,31 @@ public class FollowServiceImpl implements FollowService {
      */
     @Override
     @Transactional(readOnly = true)
-    public CursorPageResponseDto<FollowerResponse> getFollowers(
+    public CursorPageResponseDto<FollowDto> getFollowers(
         UUID followeeId,
         String cursor,
         UUID idAfter,
         int limit,
-        String nameLike,
-        SortBy sortBy,
-        SortDirection sortDirection
+        String nameLike
     ) {
         User followee = userRepository.findById(followeeId)
             .orElseThrow(() -> UserNotFoundException.byId(followeeId));
 
-        List<FollowerResponse> results = followRepository.findFollowersWithProfileCursor(
-            followee, cursor, idAfter, limit, nameLike, sortBy, sortDirection
+        List<Follow> fetched = followRepository.findFollowersWithProfileCursor(
+            followee, cursor, idAfter, limit, nameLike
         );
 
-        boolean hasNext = results.size() > limit;
-        if (hasNext) {
-            results = results.subList(0, limit);
-        }
+        boolean hasNext = fetched.size() > limit;
+        List<Follow> page = hasNext ? fetched.subList(0, limit) : fetched;
+
+        List<FollowDto> results = page.stream()
+            .map(f -> followMapper.toDto(f, fileStorage))
+            .toList();
 
         String nextCursor = null;
         UUID nextIdAfter = null;
-        if (!results.isEmpty()) {
-            FollowerResponse last = results.get(results.size() - 1);
+        if (!page.isEmpty()) {
+            Follow last = page.get(page.size() - 1);
             nextCursor = last.getCreatedAt().toString();
             nextIdAfter = last.getId();
         }
@@ -117,8 +115,8 @@ public class FollowServiceImpl implements FollowService {
             nextIdAfter,
             hasNext,
             totalCount,
-            sortBy,
-            sortDirection
+            SortBy.CREATED_AT,
+            SortDirection.DESCENDING
         );
     }
 
@@ -127,31 +125,31 @@ public class FollowServiceImpl implements FollowService {
      */
     @Override
     @Transactional(readOnly = true)
-    public CursorPageResponseDto<FollowingResponse> getFollowings(
+    public CursorPageResponseDto<FollowDto> getFollowings(
         UUID followerId,
         String cursor,
         UUID idAfter,
         int limit,
-        String nameLike,
-        SortBy sortBy,
-        SortDirection sortDirection
+        String nameLike
     ) {
         User follower = userRepository.findById(followerId)
             .orElseThrow(() -> UserNotFoundException.byId(followerId));
 
-        List<FollowingResponse> results = followRepository.findFollowingsWithProfileCursor(
-            follower, cursor, idAfter, limit, nameLike, sortBy, sortDirection
+        List<Follow> fetched = followRepository.findFollowingsWithProfileCursor(
+            follower, cursor, idAfter, limit, nameLike
         );
 
-        boolean hasNext = results.size() > limit;
-        if (hasNext) {
-            results = results.subList(0, limit);
-        }
+        boolean hasNext = fetched.size() > limit;
+        List<Follow> page = hasNext ? fetched.subList(0, limit) : fetched;
+
+        List<FollowDto> results = page.stream()
+            .map(f -> followMapper.toDto(f, fileStorage))
+            .toList();
 
         String nextCursor = null;
         UUID nextIdAfter = null;
-        if (!results.isEmpty()) {
-            FollowingResponse last = results.get(results.size() - 1);
+        if (!page.isEmpty()) {
+            Follow last = page.get(page.size() - 1);
             nextCursor = last.getCreatedAt().toString();
             nextIdAfter = last.getId();
         }
@@ -164,11 +162,11 @@ public class FollowServiceImpl implements FollowService {
             nextIdAfter,
             hasNext,
             totalCount,
-            sortBy,
-            sortDirection
+            SortBy.CREATED_AT,
+            SortDirection.DESCENDING
         );
     }
-
+    
     /**
      * 언팔로우 (팔로우 취소)
      */

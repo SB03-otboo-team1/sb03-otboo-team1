@@ -9,8 +9,6 @@ import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
 import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;

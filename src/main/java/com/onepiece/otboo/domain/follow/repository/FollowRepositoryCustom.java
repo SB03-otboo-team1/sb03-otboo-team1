@@ -1,32 +1,25 @@
 package com.onepiece.otboo.domain.follow.repository;
 
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
+import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.global.enums.SortBy;
-import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
 import java.util.UUID;
 
 public interface FollowRepositoryCustom {
 
-    List<FollowerResponse> findFollowersWithProfileCursor(
+    List<Follow> findFollowersWithProfileCursor(
         User followee,
         String cursor,
         UUID idAfter,
         int limit,
-        String nameLike,
-        SortBy sortBy,
-        SortDirection sortDirection
+        String nameLike
     );
 
-    List<FollowingResponse> findFollowingsWithProfileCursor(
+    List<Follow> findFollowingsWithProfileCursor(
         User follower,
         String cursor,
         UUID idAfter,
         int limit,
-        String nameLike,
-        SortBy sortBy,
-        SortDirection sortDirection
+        String nameLike
     );
 }

@@ -2,8 +2,6 @@ package com.onepiece.otboo.domain.follow.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
