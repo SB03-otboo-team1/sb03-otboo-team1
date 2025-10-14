@@ -12,8 +12,10 @@ public interface FollowRepository extends JpaRepository<Follow, UUID>, FollowRep
 
     boolean existsByFollowerAndFollowing(User follower, User following);
 
+    @EntityGraph(attributePaths = {"follower.profile", "following.profile"})
     List<Follow> findByFollower(User follower);
 
+    @EntityGraph(attributePaths = {"follower.profile", "following.profile"})
     List<Follow> findByFollowing(User following);
 
     void deleteByFollowerAndFollowing(User follower, User following);
@@ -22,7 +24,8 @@ public interface FollowRepository extends JpaRepository<Follow, UUID>, FollowRep
 
     long countByFollower(User follower);
 
-    Optional<Follow> findByFollowerAndFollowing(User me, User targetUser);
+    @EntityGraph(attributePaths = {"follower.profile", "following.profile"})
+    Optional<Follow> findByFollowerAndFollowing(User follower, User following);
 
     @EntityGraph(attributePaths = {"follower.profile", "following.profile"})
     Optional<Follow> findById(UUID id);

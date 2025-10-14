@@ -10,7 +10,6 @@ import com.onepiece.otboo.domain.follow.exception.FollowNotAllowedException;
 import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
-import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
@@ -36,7 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class FollowServiceImpl implements FollowService {
 
     private final FollowRepository followRepository;
-    private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
     private final FileStorage fileStorage;

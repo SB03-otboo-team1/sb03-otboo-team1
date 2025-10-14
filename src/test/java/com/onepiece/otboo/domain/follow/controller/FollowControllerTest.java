@@ -13,16 +13,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
 import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
 import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.service.FollowService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
-import com.onepiece.otboo.global.enums.SortBy;
-import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.exception.ErrorCode;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +33,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(FollowController.class)
-@AutoConfigureMockMvc(addFilters = false) // Security 무시
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("FollowController 단위 테스트")
 class FollowControllerTest {
 
@@ -55,12 +53,22 @@ class FollowControllerTest {
         UUID followeeId = UUID.randomUUID();
         FollowRequest request = new FollowRequest(followerId, followeeId);
 
+        AuthorDto follower = AuthorDto.builder()
+            .userId(followerId)
+            .name("팔로워닉네임")
+            .profileImageUrl("follower.png")
+            .build();
+
+        AuthorDto followee = AuthorDto.builder()
+            .userId(followeeId)
+            .name("팔로이닉네임")
+            .profileImageUrl("followee.png")
+            .build();
+
         FollowDto response = FollowDto.builder()
             .id(UUID.randomUUID())
-            .followerId(followerId)
-            .nickname("팔로워닉네임")
-            .profileImageUrl("follower.png")
-            .createdAt(Instant.now())
+            .follower(follower)
+            .followee(followee)
             .build();
 
         given(followService.createFollow(any(FollowRequest.class))).willReturn(response);
@@ -69,126 +77,145 @@ class FollowControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.followerId").value(followerId.toString()))
-            .andExpect(jsonPath("$.nickname").value("팔로워닉네임"));
+            .andExpect(jsonPath("$.follower.userId").value(followerId.toString()))
+            .andExpect(jsonPath("$.follower.name").value("팔로워닉네임"))
+            .andExpect(jsonPath("$.followee.userId").value(followeeId.toString()))
+            .andExpect(jsonPath("$.followee.name").value("팔로이닉네임"));
     }
 
     @Test
-    @DisplayName("팔로워 목록 조회 성공 (커서 기반)")
+    @DisplayName("팔로워 목록 조회 성공")
     void getFollowers_success() throws Exception {
-        UUID userId = UUID.randomUUID();
+        UUID followeeId = UUID.randomUUID();
 
-        FollowerResponse followerResponse = FollowerResponse.builder()
-            .id(UUID.randomUUID())
-            .followerId(UUID.randomUUID())
-            .nickname("팔로워닉네임")
+        AuthorDto follower = AuthorDto.builder()
+            .userId(UUID.randomUUID())
+            .name("팔로워닉네임")
             .profileImageUrl("profile.png")
-            .createdAt(Instant.now())
             .build();
 
-        CursorPageResponseDto<FollowerResponse> mockResponse =
-            new CursorPageResponseDto<>(
-                List.of(followerResponse),
-                "cursor123",
-                UUID.randomUUID(),
-                false,
-                1L,
-                SortBy.CREATED_AT,
-                SortDirection.ASCENDING
-            );
+        AuthorDto followee = AuthorDto.builder()
+            .userId(followeeId)
+            .name("팔로이닉네임")
+            .profileImageUrl("followee.png")
+            .build();
 
-        given(followService.getFollowers(eq(userId), any(), any(), anyInt(), any(), any(), any()))
+        FollowDto dto = FollowDto.builder()
+            .id(UUID.randomUUID())
+            .follower(follower)
+            .followee(followee)
+            .build();
+
+        CursorPageResponseDto<FollowDto> mockResponse = new CursorPageResponseDto<>(
+            List.of(dto),
+            "cursor123",
+            UUID.randomUUID(),
+            false,
+            1L,
+            null,
+            null
+        );
+
+        given(followService.getFollowers(eq(followeeId), any(), any(), anyInt(), any()))
             .willReturn(mockResponse);
 
-        mockMvc.perform(get("/api/follows/followers/{userId}", userId))
+        mockMvc.perform(get("/api/follows/followers")
+                .param("followeeId", followeeId.toString()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data[0].nickname").value("팔로워닉네임"));
+            .andExpect(jsonPath("$.data[0].follower.name").value("팔로워닉네임"))
+            .andExpect(jsonPath("$.data[0].followee.userId").value(followeeId.toString()));
     }
 
     @Test
-    @DisplayName("팔로잉 목록 조회 성공 (커서 기반)")
+    @DisplayName("팔로잉 목록 조회 성공")
     void getFollowings_success() throws Exception {
-        UUID userId = UUID.randomUUID();
-        UUID followingId = UUID.randomUUID();
+        UUID followerId = UUID.randomUUID();
 
-        FollowingResponse followingResponse = FollowingResponse.builder()
-            .id(UUID.randomUUID())
-            .followingId(followingId)
-            .nickname("팔로잉닉네임")
+        AuthorDto follower = AuthorDto.builder()
+            .userId(followerId)
+            .name("팔로워닉네임")
             .profileImageUrl("profile.png")
-            .createdAt(Instant.now())
             .build();
 
-        CursorPageResponseDto<FollowingResponse> mockResponse =
-            new CursorPageResponseDto<>(List.of(followingResponse), "cursor456", UUID.randomUUID(),
-                false, 1L, SortBy.CREATED_AT, SortDirection.ASCENDING);
+        AuthorDto followee = AuthorDto.builder()
+            .userId(UUID.randomUUID())
+            .name("팔로이닉네임")
+            .profileImageUrl("followee.png")
+            .build();
 
-        given(followService.getFollowings(eq(userId), any(), any(), anyInt(), any(), any(), any()))
+        FollowDto dto = FollowDto.builder()
+            .id(UUID.randomUUID())
+            .follower(follower)
+            .followee(followee)
+            .build();
+
+        CursorPageResponseDto<FollowDto> mockResponse = new CursorPageResponseDto<>(
+            List.of(dto),
+            "cursor456",
+            UUID.randomUUID(),
+            false,
+            1L,
+            null,
+            null
+        );
+
+        given(followService.getFollowings(eq(followerId), any(), any(), anyInt(), any()))
             .willReturn(mockResponse);
 
-        mockMvc.perform(get("/api/follows/followings/{userId}", userId))
+        mockMvc.perform(get("/api/follows/followings")
+                .param("followerId", followerId.toString()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data[0].followingId").value(followingId.toString()))
-            .andExpect(jsonPath("$.data[0].nickname").value("팔로잉닉네임"));
+            .andExpect(jsonPath("$.data[0].followee.name").value("팔로이닉네임"))
+            .andExpect(jsonPath("$.data[0].follower.userId").value(followerId.toString()));
     }
 
     @Test
     @DisplayName("언팔로우 성공")
     void deleteFollow_success() throws Exception {
-        UUID followerId = UUID.randomUUID();
-        UUID followeeId = UUID.randomUUID();
-        FollowRequest request = new FollowRequest(followerId, followeeId);
+        UUID followId = UUID.randomUUID();
+        doNothing().when(followService).deleteFollow(eq(followId));
 
-        doNothing().when(followService).deleteFollow(any(FollowRequest.class));
-
-        mockMvc.perform(delete("/api/follows")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(delete("/api/follows/{followId}", followId))
             .andExpect(status().isNoContent());
     }
 
     @Test
-    @DisplayName("언팔로우 실패 - Follow 관계 없음")
-    void deleteFollow_fail_followNotFound() throws Exception {
-        UUID followerId = UUID.randomUUID();
-        UUID followeeId = UUID.randomUUID();
-        FollowRequest request = new FollowRequest(followerId, followeeId);
+    @DisplayName("언팔로우 실패 - FollowNotFoundException 발생")
+    void deleteFollow_fail_notFound() throws Exception {
+        UUID followId = UUID.randomUUID();
+        doThrow(new FollowNotFoundException(ErrorCode.FOLLOW_NOT_FOUND))
+            .when(followService).deleteFollow(eq(followId));
 
-        doThrow(FollowNotFoundException.of(followerId, followeeId))
-            .when(followService).deleteFollow(any(FollowRequest.class));
-
-        mockMvc.perform(delete("/api/follows")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(delete("/api/follows/{followId}", followId))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.exceptionName").value("FollowNotFoundException"))
-            .andExpect(jsonPath("$.message").value(
-                ErrorCode.FOLLOW_NOT_FOUND.getMessage()));
+            .andExpect(jsonPath("$.exceptionName").value("FollowNotFoundException"));
     }
-
 
     @Test
     @DisplayName("팔로우 요약 조회 성공")
     void getFollowSummary_success() throws Exception {
         UUID userId = UUID.randomUUID();
-        UUID viewerId = UUID.randomUUID();
+        UUID followedByMeId = UUID.randomUUID();
 
         FollowSummaryDto response = FollowSummaryDto.builder()
-            .userId(userId)
-            .followerCount(5)
-            .followingCount(3)
-            .isFollowing(true)
+            .followeeId(userId)
+            .followerCount(10L)
+            .followingCount(7L)
+            .followedByMe(true)
+            .followedByMeId(followedByMeId)
+            .followingMe(false)
             .build();
 
-        given(followService.getFollowSummary(eq(userId), eq(viewerId))).willReturn(response);
+        given(followService.getFollowSummary(eq(userId))).willReturn(response);
 
-        mockMvc.perform(get("/api/follows/summary/{userId}", userId)
-                .param("viewerId", viewerId.toString())
-                .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/follows/summary")
+                .param("userId", userId.toString()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.userId").value(userId.toString()))
-            .andExpect(jsonPath("$.followerCount").value(5))
-            .andExpect(jsonPath("$.followingCount").value(3))
-            .andExpect(jsonPath("$.isFollowing").value(true));
+            .andExpect(jsonPath("$.followeeId").value(userId.toString()))
+            .andExpect(jsonPath("$.followerCount").value(10))
+            .andExpect(jsonPath("$.followingCount").value(7))
+            .andExpect(jsonPath("$.followedByMe").value(true))
+            .andExpect(jsonPath("$.followedByMeId").value(followedByMeId.toString()))
+            .andExpect(jsonPath("$.followingMe").value(false));
     }
 }

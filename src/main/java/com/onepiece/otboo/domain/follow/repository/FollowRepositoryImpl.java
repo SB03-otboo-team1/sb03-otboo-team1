@@ -27,28 +27,36 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         int limit,
         String nameLike
     ) {
-        QFollow follow = QFollow.follow;
+        QFollow f = QFollow.follow;
+
+        // 별칭 고정 (재사용 필수)
         QUser followerUser = new QUser("followerUser");
         QUser followeeUser = new QUser("followeeUser");
-        QProfile followerProfile = new QProfile("followerProfile"); // follower의 프로필
-        QProfile followeeProfile = new QProfile("followeeProfile"); // followee의 프로필
+
+        QProfile followerProfile = new QProfile("followerProfile");
+        QProfile followeeProfile = new QProfile("followeeProfile");
 
         BooleanBuilder where = new BooleanBuilder()
-            .and(follow.following.eq(followee));
+            .and(f.following.eq(followee));
 
-        // nameLike → follower의 프로필 닉네임 기준
         if (StringUtils.hasText(nameLike)) {
             where.and(followerProfile.nickname.containsIgnoreCase(nameLike));
         }
 
-        // 커서 조건
-        applyCursor(where, follow, cursor, idAfter);
+        applyCursor(where, f, cursor, idAfter);
+        OrderSpecifier<?>[] orders = buildOrders(f);
 
-        // 정렬 지정 (항상 DESC)
-        OrderSpecifier<?>[] orders = buildOrders(follow);
-
-        return baseQuery(limit, follow, followerUser, followeeUser, followerProfile,
-            followeeProfile, where, orders);
+        return queryFactory
+            .selectFrom(f)
+            .join(f.follower, followerUser).fetchJoin()
+            .join(f.following, followeeUser).fetchJoin()
+            // 경로 조인 권장: user.profile
+            .leftJoin(followerUser.profile, followerProfile).fetchJoin()
+            .leftJoin(followeeUser.profile, followeeProfile).fetchJoin()
+            .where(where)
+            .orderBy(orders)
+            .limit(limit + 1L) // hasNext 판단용
+            .fetch();
     }
 
     @Override
@@ -59,74 +67,57 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
         int limit,
         String nameLike
     ) {
-        QFollow follow = QFollow.follow;
+        QFollow f = QFollow.follow;
+
         QUser followerUser = new QUser("followerUser");
         QUser followingUser = new QUser("followingUser");
+
         QProfile followerProfile = new QProfile("followerProfile");
         QProfile followingProfile = new QProfile("followingProfile");
 
         BooleanBuilder where = new BooleanBuilder()
-            .and(follow.follower.eq(follower));
+            .and(f.follower.eq(follower));
 
-        // nameLike → following의 프로필 닉네임 기준
         if (StringUtils.hasText(nameLike)) {
             where.and(followingProfile.nickname.containsIgnoreCase(nameLike));
         }
 
-        applyCursor(where, follow, cursor, idAfter);
-        OrderSpecifier<?>[] orders = buildOrders(follow);
+        applyCursor(where, f, cursor, idAfter);
+        OrderSpecifier<?>[] orders = buildOrders(f);
 
-        return baseQuery(limit, follow, followerUser, followingUser, followerProfile,
-            followingProfile, where, orders);
+        return queryFactory
+            .selectFrom(f)
+            .join(f.follower, followerUser).fetchJoin()
+            .join(f.following, followingUser).fetchJoin()
+            .leftJoin(followerUser.profile, followerProfile).fetchJoin()
+            .leftJoin(followingUser.profile, followingProfile).fetchJoin()
+            .where(where)
+            .orderBy(orders)
+            .limit(limit + 1L) // hasNext 판단용
+            .fetch();
     }
 
     /**
-     * 커서 조건: DESC 기준 (createdAt < cursor) OR (createdAt = cursor AND id < idAfter)
+     * DESC 커서 조건: createdAt < cursor  OR  (createdAt = cursor AND id < idAfter)
      */
-    private void applyCursor(BooleanBuilder where, QFollow follow, String cursor, UUID idAfter) {
+    private void applyCursor(BooleanBuilder where, QFollow f, String cursor, UUID idAfter) {
         if (cursor == null || idAfter == null) {
             return;
         }
-
         Instant cursorTime = Instant.parse(cursor);
         where.and(
-            follow.createdAt.lt(cursorTime)
-                .or(follow.createdAt.eq(cursorTime).and(follow.id.lt(idAfter)))
+            f.createdAt.lt(cursorTime)
+                .or(f.createdAt.eq(cursorTime).and(f.id.lt(idAfter)))
         );
     }
 
     /**
-     * 정렬 조건: 항상 DESC
+     * 정렬: createdAt DESC, id DESC
      */
-    private OrderSpecifier<?>[] buildOrders(QFollow follow) {
+    private OrderSpecifier<?>[] buildOrders(QFollow f) {
         return new OrderSpecifier<?>[]{
-            follow.createdAt.desc(),
-            follow.id.desc()
+            f.createdAt.desc(),
+            f.id.desc()
         };
-    }
-
-    /**
-     * Follow 엔티티 fetchJoin 공통 쿼리 limit+1 로 hasNext 판별 가능
-     */
-    private List<Follow> baseQuery(
-        int limit,
-        QFollow follow,
-        QUser leftUser,     // followerUser
-        QUser rightUser,    // followingUser or followeeUser
-        QProfile leftProfile,
-        QProfile rightProfile,
-        BooleanBuilder where,
-        OrderSpecifier<?>[] orders
-    ) {
-        return queryFactory
-            .selectFrom(follow)
-            .join(follow.follower, new QUser(leftUser.getMetadata())).fetchJoin()
-            .join(follow.following, new QUser(rightUser.getMetadata())).fetchJoin()
-            .leftJoin(leftProfile).on(leftProfile.user.eq(leftUser)).fetchJoin()
-            .leftJoin(rightProfile).on(rightProfile.user.eq(rightUser)).fetchJoin()
-            .where(where)
-            .orderBy(orders)
-            .limit(limit + 1L)
-            .fetch();
     }
 }
