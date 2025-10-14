@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -157,8 +159,11 @@ public class FeedQueryService {
 
         List<UUID> ids = rows.stream().map(Feed::getId).toList();
         Set<UUID> likedIds = (me != null && !ids.isEmpty())
-            ? new HashSet<>(feedLikeRepository.findLikedFeedIds(me, ids))
+            ? feedLikeRepository.findAllByUser_IdAndFeed_IdIn(me, ids).stream()
+            .map(fl -> fl.getFeed().getId())
+            .collect(Collectors.toSet())
             : Set.of();
+
 
         List<FeedResponse> data = rows.stream()
             .map(feedMapper::toResponse)

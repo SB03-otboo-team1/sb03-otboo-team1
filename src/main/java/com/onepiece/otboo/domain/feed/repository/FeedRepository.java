@@ -11,5 +11,6 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Feed f set f.likeCount = :likeCount where f.id = :feedId")
-    void updateLikeCount(UUID feedId, long likeCount);
+    int updateLikeCount(@org.springframework.data.repository.query.Param("feedId") UUID feedId,
+                        @org.springframework.data.repository.query.Param("likeCount") long likeCount);
 }

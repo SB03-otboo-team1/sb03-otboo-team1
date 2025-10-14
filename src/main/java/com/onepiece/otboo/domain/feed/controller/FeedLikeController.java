@@ -2,48 +2,48 @@ package com.onepiece.otboo.domain.feed.controller;
 
 import com.onepiece.otboo.domain.feed.controller.api.FeedLikeApi;
 import com.onepiece.otboo.domain.feed.service.FeedLikeService;
-import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/feeds")
 public class FeedLikeController implements FeedLikeApi {
 
     private final FeedLikeService feedLikeService;
-    private final UserRepository userRepository;
 
+    @PostMapping("/{feedId}/like")
     @Override
-    public ResponseEntity<Void> like(UUID feedId) {
-        feedLikeService.like(feedId, currentUserId());
+    public ResponseEntity<Void> like(@PathVariable UUID feedId,
+                                     @AuthenticationPrincipal CustomUserDetails user) {
+        feedLikeService.like(user.getUserId(), feedId);
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{feedId}/like")
     @Override
-    public ResponseEntity<Void> unlike(UUID feedId) {
-        feedLikeService.unlike(feedId, currentUserId());
+    public ResponseEntity<Void> unlike(@PathVariable UUID feedId,
+                                       @AuthenticationPrincipal CustomUserDetails user) {
+        feedLikeService.unlike(user.getUserId(), feedId);
         return ResponseEntity.noContent().build();
     }
 
-    private UUID currentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new AccessDeniedException("인증 정보가 없습니다.");
-        }
-        // Spring Security의 Principal에서 직접 사용자 정보 가져오기
-        Object principal = auth.getPrincipal();
-        if (principal instanceof UserDetails userDetails) {
-            // CustomUserDetails에 userId 필드가 있다고 가정
-            return ((CustomUserDetails) userDetails).getUserId();
-            }
-        throw new AccessDeniedException("올바르지 않은 인증 정보입니다.");
+    @PostMapping("/{feedId}/like/toggle")
+    @Override
+    public ResponseEntity<LikeToggleResponse> toggle(@PathVariable UUID feedId,
+                                                     @AuthenticationPrincipal CustomUserDetails user) {
+        boolean liked = feedLikeService.toggle(user.getUserId(), feedId);
+        long count = feedLikeService.countByFeed(feedId);
+        return ResponseEntity.ok(new LikeToggleResponse(liked, count));
+    }
+
+    @GetMapping("/{feedId}/likes/count")
+    @Override
+    public ResponseEntity<CountResponse> count(@PathVariable UUID feedId) {
+        return ResponseEntity.ok(new CountResponse(feedLikeService.countByFeed(feedId)));
     }
 }
