@@ -1,6 +1,5 @@
 package com.onepiece.otboo.domain.clothes.controller;
 
-import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.clothes.controller.api.ClothesApi;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
@@ -10,7 +9,7 @@ import com.onepiece.otboo.domain.clothes.service.ClothesService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
-import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import com.onepiece.otboo.global.util.SecurityUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
@@ -22,8 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,6 +62,8 @@ public class ClothesController implements ClothesApi {
         CursorPageResponseDto<ClothesDto> response = clothesService.getClothesWithCursor(
             ownerId, cursor, idAfter, limit, sortBy, sortDirection, typeEqual);
 
+        log.info("의상 목록 조회 작업 완료 - response: {}", response);
+
         return ResponseEntity.ok(response);
     }
 
@@ -73,37 +72,17 @@ public class ClothesController implements ClothesApi {
         @Valid @RequestPart ClothesCreateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) throws IOException {
-        // 인증된 사용자 ID 가져오기
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UUID authenticatedUserId = resolveRequesterId(auth);
 
         log.info("의상 등록 API 호출 - request: {}", request);
 
-        // request의 ownerId와 인증된 사용자 ID 비교
-        if (!request.ownerId().equals(authenticatedUserId)) {
-            log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", request.ownerId(),
-                authenticatedUserId);
-            throw new UnAuthorizedException();
-        }
+        // 인증된 사용자와 일치하는지 확인
+        SecurityUtil.isRequester(request.ownerId());
 
         ClothesDto clothes = clothesService.createClothes(request, imageFile);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(clothes);
-    }
+        log.info("의상 등록 작업 완료 - clothes: {}", clothes);
 
-    private UUID resolveRequesterId(Authentication auth) {
-        if (auth == null) {
-            throw new UnAuthorizedException();
-        }
-        Object principal = auth.getPrincipal();
-        if (principal instanceof CustomUserDetails cud) {
-            return cud.getUserId();
-        }
-        try {
-            return UUID.fromString(auth.getName());
-        } catch (IllegalArgumentException e) {
-            throw new UnAuthorizedException();
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(clothes);
     }
 
     @PatchMapping(path = "/{clothesId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -112,22 +91,18 @@ public class ClothesController implements ClothesApi {
         @Valid @RequestPart ClothesUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) throws IOException {
-        // 인증된 사용자 ID 가져오기
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UUID authenticatedUserId = resolveRequesterId(auth);
 
         log.info("의상 수정 API 호출 - request: {}", request);
 
         ClothesDto oldClothes = clothesService.getClothes(clothesId);
         UUID ownerId = oldClothes.ownerId();
 
-        // request의 ownerId와 인증된 사용자 ID 비교
-        if (!ownerId.equals(authenticatedUserId)) {
-            log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", ownerId, authenticatedUserId);
-            throw new UnAuthorizedException();
-        }
+        // 인증된 사용자와 일치하는지 확인
+        SecurityUtil.isRequester(ownerId);
 
         ClothesDto clothes = clothesService.updateClothes(clothesId, request, imageFile);
+
+        log.info("의상 수정 작업 완료 - clothes: {}", clothes);
 
         return ResponseEntity.ok(clothes);
     }
@@ -136,20 +111,13 @@ public class ClothesController implements ClothesApi {
     public ResponseEntity<Void> deleteClothes(
         @PathVariable UUID clothesId
     ) {
-        // 인증된 사용자 ID 가져오기
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UUID authenticatedUserId = resolveRequesterId(auth);
-
         log.info("의상 삭제 API 호출 - clothesId: {}", clothesId);
 
         ClothesDto clothes = clothesService.getClothes(clothesId);
         UUID ownerId = clothes.ownerId();
 
-        // request의 ownerId와 인증된 사용자 ID 비교
-        if (!ownerId.equals(authenticatedUserId)) {
-            log.warn("권한 없음 - 요청한 ownerId: {}, 인증된 userId: {}", ownerId, authenticatedUserId);
-            throw new UnAuthorizedException();
-        }
+        // 인증된 사용자와 일치하는지 확인
+        SecurityUtil.isRequester(ownerId);
 
         clothesService.deleteClothes(clothesId);
 
