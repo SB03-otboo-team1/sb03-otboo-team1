@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.clothes.service;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
+import com.onepiece.otboo.domain.clothes.dto.data.ParsedClothesInfoDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesUpdateRequest;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
@@ -18,6 +19,7 @@ import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepositor
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
+import com.onepiece.otboo.domain.clothes.service.parser.ClothesInfoParser;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
@@ -53,6 +55,7 @@ public class ClothesServiceImpl implements ClothesService {
     private final ClothesMapper clothesMapper;
     private final ClothesAttributeMapper clothesAttributeMapper;
     private final FileStorage fileStorage;
+    private final ClothesInfoParser clothesInfoParser;
 
     @Value("${aws.storage.prefix.clothes}")
     private String CLOTHES_PREFIX;
@@ -230,4 +233,21 @@ public class ClothesServiceImpl implements ClothesService {
         clothesRepository.deleteById(clothesId);
     }
 
+    @Override
+    public ClothesDto getClothesByUrl(UUID userId, String url) throws IOException {
+
+        ParsedClothesInfoDto dto = clothesInfoParser.parse(url);
+
+        dto.attributes().keySet();
+        dto.attributes().values();
+
+        ClothesDto clothes = ClothesDto.builder()
+            .ownerId(userId)
+            .name(dto.clothesName())
+            .type(ClothesType.valueOf(dto.clothesType()))
+            .imageUrl(dto.imageUrl())
+            .attributes(clothesAttributeMapper.toAttributeDto(dto.attributes(), defRepository,
+                optionsRepository))
+            .build();
+    }
 }

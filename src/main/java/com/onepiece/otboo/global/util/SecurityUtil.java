@@ -28,9 +28,26 @@ public class SecurityUtil {
         }
     }
 
-    public static void requireAuthorizedUser(UUID userId) {
+    public static UUID requireAuthorizedUser(Authentication auth) {
+        UUID userId = resolveRequesterId(auth);
         if (!isRequester(userId)) {
             throw new GlobalException(ErrorCode.FORBIDDEN);
+        }
+        return userId;
+    }
+
+    private static UUID resolveRequesterId(Authentication auth) {
+        if (auth == null) {
+            throw new GlobalException(ErrorCode.FEED_FORBIDDEN);
+        }
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails cud) {
+            return cud.getUserId();
+        }
+        try {
+            return UUID.fromString(auth.getName());
+        } catch (IllegalArgumentException e) {
+            throw new GlobalException(ErrorCode.FEED_FORBIDDEN);
         }
     }
 }

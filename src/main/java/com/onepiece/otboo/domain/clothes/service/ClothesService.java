@@ -25,4 +25,6 @@ public interface ClothesService {
         throws IOException;
 
     void deleteClothes(UUID clothesId);
+
+    ClothesDto getClothesByUrl(UUID userId, String url) throws IOException;
 }

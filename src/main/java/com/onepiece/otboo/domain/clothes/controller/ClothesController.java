@@ -21,6 +21,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -124,5 +126,23 @@ public class ClothesController implements ClothesApi {
         log.info("의상 삭제 작업 완료 - clothesId: {}", clothesId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
+    public ResponseEntity<ClothesDto> getClothesByUrl(
+        @PathVariable String url
+    ) throws IOException {
+        log.info("구매 링크로 옷 정보 불러오기 API 호출 - url: {}", url);
+
+        // 인증된 사용자 userId 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = SecurityUtil.requireAuthorizedUser(auth);
+
+        ClothesDto clothes = clothesService.getClothesByUrl(userId, url);
+
+        log.info("구매 링크로 옷 정보 불러오기 작업 완료 - clothes: {}", clothes);
+
+        return null;
     }
 }

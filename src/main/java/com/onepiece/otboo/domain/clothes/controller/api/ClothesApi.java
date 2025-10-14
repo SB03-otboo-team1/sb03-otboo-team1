@@ -92,5 +92,5 @@ public interface ClothesApi {
     })
     ResponseEntity<ClothesDto> getClothesByUrl(
         @PathVariable(name = "url") String url
-    );
+    ) throws IOException;
 }
