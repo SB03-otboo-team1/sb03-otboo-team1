@@ -1,5 +1,7 @@
 package com.onepiece.otboo.domain.auth.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -18,6 +20,7 @@ import com.onepiece.otboo.infra.security.testconfig.TestSecurityConfig;
 import jakarta.servlet.http.Cookie;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +97,8 @@ class AuthControllerTest {
         Mockito.when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
         Mockito.when(mockUser.getTemporaryPasswordExpirationTime())
             .thenReturn(Instant.now().plusSeconds(600));
+        Mockito.when(mailService.sendTemporaryPasswordEmail(anyString(), anyString(), any()))
+            .thenReturn(CompletableFuture.completedFuture(true));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/reset-password")
                 .contentType("application/json")
