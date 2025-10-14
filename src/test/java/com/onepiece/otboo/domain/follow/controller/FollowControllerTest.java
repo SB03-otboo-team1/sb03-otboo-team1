@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
-import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
@@ -57,7 +57,7 @@ class FollowControllerTest {
         UUID followeeId = UUID.randomUUID();
         FollowRequest request = new FollowRequest(followerId, followeeId);
 
-        FollowResponse response = FollowResponse.builder()
+        FollowDto response = FollowDto.builder()
             .id(UUID.randomUUID())
             .followerId(followerId)
             .nickname("팔로워닉네임")

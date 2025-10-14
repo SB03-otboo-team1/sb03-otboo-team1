@@ -2,15 +2,17 @@ package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
-import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.exception.DuplicateFollowException;
+import com.onepiece.otboo.domain.follow.exception.FollowNotAllowedException;
 import com.onepiece.otboo.domain.follow.exception.FollowNotFoundException;
 import com.onepiece.otboo.domain.follow.mapper.FollowMapper;
 import com.onepiece.otboo.domain.follow.repository.FollowRepository;
+import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
@@ -36,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FollowServiceImpl implements FollowService {
 
     private final FollowRepository followRepository;
+    private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
     private final FileStorage fileStorage;
@@ -44,12 +47,16 @@ public class FollowServiceImpl implements FollowService {
      * 팔로우 생성
      */
     @Override
-    public FollowResponse createFollow(FollowRequest request) {
-        User follower = userRepository.findById(request.followerId())
-            .orElseThrow(() -> UserNotFoundException.byId(request.followerId()));
+    public FollowDto createFollow(FollowRequest request) {
+        UUID followerId = request.followerId();
+        UUID followeeId = request.followeeId();
 
-        User followee = userRepository.findById(request.followeeId())
-            .orElseThrow(() -> UserNotFoundException.byId(request.followeeId()));
+        if (followerId.equals(followeeId)) {
+            throw new FollowNotAllowedException(ErrorCode.FOLLOW_NOT_ALLOW);
+        }
+
+        User follower = findUser(followerId);
+        User followee = findUser(followeeId);
 
         if (followRepository.existsByFollowerAndFollowing(follower, followee)) {
             throw new DuplicateFollowException(ErrorCode.DUPLICATE_FOLLOW);
@@ -62,7 +69,10 @@ public class FollowServiceImpl implements FollowService {
                 .build()
         );
 
-        return followMapper.toResponse(saved, fileStorage);
+        Follow loaded = followRepository.findById(saved.getId())
+            .orElse(saved);
+
+        return followMapper.toDto(loaded, fileStorage);
     }
 
     /**
@@ -212,6 +222,11 @@ public class FollowServiceImpl implements FollowService {
             meFollowsTarget.map(Follow::getId).orElse(null),
             targetFollowsMe.isPresent()
         );
+    }
+
+    private User findUser(UUID userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> UserNotFoundException.byId(userId));
     }
 
     private String extractEmail(Authentication auth) {

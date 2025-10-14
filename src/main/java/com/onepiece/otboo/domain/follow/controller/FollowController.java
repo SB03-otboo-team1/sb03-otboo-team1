@@ -2,7 +2,7 @@ package com.onepiece.otboo.domain.follow.controller;
 
 import com.onepiece.otboo.domain.follow.controller.api.FollowApi;
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
-import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
@@ -30,8 +30,8 @@ public class FollowController implements FollowApi {
 
     @Override
     @PostMapping
-    public ResponseEntity<FollowResponse> createFollow(@RequestBody FollowRequest request) {
-        FollowResponse response = followService.createFollow(request);
+    public ResponseEntity<FollowDto> createFollow(@RequestBody FollowRequest request) {
+        FollowDto response = followService.createFollow(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

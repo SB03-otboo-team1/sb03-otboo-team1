@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.follow.controller.api;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
-import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public interface FollowApi {
 
     @Operation(summary = "팔로우 생성", description = "사용자가 다른 사용자를 팔로우합니다.")
-    ResponseEntity<FollowResponse> createFollow(FollowRequest request);
+    ResponseEntity<FollowDto> createFollow(FollowRequest request);
 
     @Operation(summary = "팔로워 목록 조회", description = "특정 사용자를 팔로우하는 모든 사용자 목록을 조회합니다.")
     ResponseEntity<CursorPageResponseDto<FollowerResponse>> getFollowers(

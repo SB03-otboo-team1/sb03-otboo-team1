@@ -1,7 +1,7 @@
 package com.onepiece.otboo.domain.follow.service;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
-import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowSummaryDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface FollowService {
 
-    FollowResponse createFollow(FollowRequest request);
+    FollowDto createFollow(FollowRequest request);
 
     CursorPageResponseDto<FollowerResponse> getFollowers(
         UUID followeeId,

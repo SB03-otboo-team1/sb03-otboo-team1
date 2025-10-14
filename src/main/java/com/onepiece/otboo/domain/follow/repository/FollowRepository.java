@@ -5,6 +5,7 @@ import com.onepiece.otboo.domain.user.entity.User;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FollowRepository extends JpaRepository<Follow, UUID>, FollowRepositoryCustom {
@@ -22,4 +23,7 @@ public interface FollowRepository extends JpaRepository<Follow, UUID>, FollowRep
     long countByFollower(User follower);
 
     Optional<Follow> findByFollowerAndFollowing(User me, User targetUser);
+
+    @EntityGraph(attributePaths = {"follower.profile", "following.profile"})
+    Optional<Follow> findById(UUID id);
 }

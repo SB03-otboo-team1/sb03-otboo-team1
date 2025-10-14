@@ -8,7 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.follow.dto.request.FollowRequest;
-import com.onepiece.otboo.domain.follow.dto.response.FollowResponse;
+import com.onepiece.otboo.domain.follow.dto.response.FollowDto;
 import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
 import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
@@ -97,7 +97,7 @@ class FollowServiceImplTest {
         given(followRepository.existsByFollowerAndFollowing(follower, following)).willReturn(false);
         given(followRepository.save(any(Follow.class))).willReturn(follow);
 
-        FollowResponse mockResponse = FollowResponse.builder()
+        FollowDto mockResponse = FollowDto.builder()
             .id(UUID.randomUUID())
             .followerId(follower.getId())
             .nickname("팔로워닉네임")
@@ -108,7 +108,7 @@ class FollowServiceImplTest {
         given(followMapper.toResponse(follow, fileStorage))
             .willReturn(mockResponse);
 
-        FollowResponse response = followService.createFollow(request);
+        FollowDto response = followService.createFollow(request);
 
         assertThat(response).isNotNull();
         assertThat(response.getFollowerId()).isEqualTo(follower.getId());
