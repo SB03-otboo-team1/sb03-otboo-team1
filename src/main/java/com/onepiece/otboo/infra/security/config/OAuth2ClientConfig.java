@@ -23,7 +23,8 @@ public class OAuth2ClientConfig {
         CustomOAuth2FailureHandler delegatingFailureHandler
     ) throws Exception {
         http
-            .securityMatcher("/oauth2/**", "/login/oauth2/**")
+            .securityMatcher("/oauth2/authorization/**", "/login/oauth2/code/**")
+            .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
             .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)

@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 
@@ -34,8 +36,9 @@ public class MailService {
     @Value("${spring.mail.sender-email}")
     private String senderEmail;
 
-    public boolean sendTemporaryPasswordEmail(String email, String temporaryPassword,
-        Instant expirationTime) {
+    @Async("mailTaskExecutor")
+    public CompletableFuture<Boolean> sendTemporaryPasswordEmail(String email,
+        String temporaryPassword, Instant expirationTime) {
         try {
             String html = loadTemplateHtml();
 
@@ -54,9 +57,11 @@ public class MailService {
             helper.setText(html, true);
             mailSender.send(mimeMessage);
 
-            return true;
+            log.info("임시 비밀번호 이메일 발송 성공 - 수신자: {}", email);
+            return CompletableFuture.completedFuture(true);
         } catch (Exception e) {
-            return false;
+            log.error("임시 비밀번호 이메일 발송 실패 - 수신자: {}", email, e);
+            return CompletableFuture.completedFuture(false);
         }
     }
 
