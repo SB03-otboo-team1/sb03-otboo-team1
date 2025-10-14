@@ -166,23 +166,16 @@ public class FollowServiceImpl implements FollowService {
             SortDirection.DESCENDING
         );
     }
-    
+
     /**
      * 언팔로우 (팔로우 취소)
      */
     @Override
-    public void deleteFollow(FollowRequest request) {
-        User follower = userRepository.findById(request.followerId())
-            .orElseThrow(() -> UserNotFoundException.byId(request.followerId()));
-
-        User followee = userRepository.findById(request.followeeId())
-            .orElseThrow(() -> UserNotFoundException.byId(request.followeeId()));
-
-        if (!followRepository.existsByFollowerAndFollowing(follower, followee)) {
-            throw FollowNotFoundException.of(follower.getId(), followee.getId());
+    public void deleteFollow(UUID followId) {
+        if (!followRepository.existsById(followId)) {
+            throw new FollowNotFoundException(ErrorCode.FOLLOW_NOT_FOUND);
         }
-
-        followRepository.deleteByFollowerAndFollowing(follower, followee);
+        followRepository.deleteById(followId);
     }
 
     /**
@@ -191,8 +184,7 @@ public class FollowServiceImpl implements FollowService {
     @Override
     @Transactional(readOnly = true)
     public FollowSummaryDto getFollowSummary(UUID userId) {
-        User targetUser = userRepository.findById(userId)
-            .orElseThrow(() -> UserNotFoundException.byId(userId));
+        User targetUser = findUser(userId);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

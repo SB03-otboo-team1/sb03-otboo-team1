@@ -26,7 +26,7 @@ public interface FollowService {
         String nameLike
     );
 
-    void deleteFollow(FollowRequest request);
+    void deleteFollow(UUID followId);
 
     FollowSummaryDto getFollowSummary(UUID userId);
 }

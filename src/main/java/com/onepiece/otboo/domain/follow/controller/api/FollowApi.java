@@ -36,7 +36,7 @@ public interface FollowApi {
     );
 
     @Operation(summary = "언팔로우", description = "사용자가 특정 사용자를 언팔로우합니다.")
-    ResponseEntity<Void> deleteFollow(FollowRequest request);
+    ResponseEntity<Void> deleteFollow(UUID followId);
 
     @Operation(summary = "팔로우 요약 조회", description = "팔로워 수, 팔로잉 수, viewer 기준 팔로우 여부를 반환합니다.")
     ResponseEntity<FollowSummaryDto> getFollowSummary(UUID userId);
