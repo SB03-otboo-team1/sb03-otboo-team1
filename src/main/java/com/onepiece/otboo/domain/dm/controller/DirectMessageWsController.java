@@ -16,7 +16,7 @@ public class DirectMessageWsController {
 
     private final DirectMessageService directMessageService;
 
-    @MessageMapping("/direct-message-send")
+    @MessageMapping("/direct-messages_send")
     public DirectMessageDto create(@Payload DirectMessageRequest request) {
         log.info("[DirectMessageWsController] DM 전송 요청 - request: {}", request);
 

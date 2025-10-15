@@ -15,7 +15,6 @@ import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import com.onepiece.otboo.global.storage.FileStorage;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +34,7 @@ public class DirectMessageServiceImpl implements DirectMessageService {
     private final UserRepository userRepository;
     private final DirectMessageMapper directMessageMapper;
     private final FileStorage storage;
+    private final FileStorage fileStorage;
 
     /**
      * DM 생성
@@ -45,11 +45,13 @@ public class DirectMessageServiceImpl implements DirectMessageService {
             throw new CannotSendMessageToSelfException();
         }
 
-        User sender = userRepository.findById(request.getSenderId())
-            .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+        log.info("[DirectMessageService] DM 생성 요청 - sender: {}, receiver: {}",
+            request.getSenderId(),
+            request.getReceiverId());
 
-        User receiver = userRepository.findById(request.getReceiverId())
-            .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
+        User sender = findUser(request.getSenderId());
+
+        User receiver = findUser(request.getReceiverId());
 
         DirectMessage dm = DirectMessage.builder()
             .sender(sender)
@@ -59,14 +61,7 @@ public class DirectMessageServiceImpl implements DirectMessageService {
 
         DirectMessage saved = directMessageRepository.save(dm);
 
-//        return DirectMessageDto.builder()
-//            .id(saved.getId())
-//            .createdAt(saved.getCreatedAt())
-//            .sender(new DirectMessageDto.UserDto(sender.getId(), sender.getEmail()))
-//            .receiver(new DirectMessageDto.UserDto(receiver.getId(), receiver.getEmail()))
-//            .content(saved.getContent())
-//            .build();
-        return null;
+        return directMessageMapper.toDto(saved, fileStorage);
     }
 
     /**
