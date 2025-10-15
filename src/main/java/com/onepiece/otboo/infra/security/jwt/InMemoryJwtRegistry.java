@@ -7,9 +7,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("test | test-integration")
 public class InMemoryJwtRegistry implements JwtRegistry {
 
     private static final long ONE_HOUR_SECONDS = 3600L;
