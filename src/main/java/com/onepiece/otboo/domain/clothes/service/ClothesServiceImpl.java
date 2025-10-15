@@ -222,11 +222,41 @@ public class ClothesServiceImpl implements ClothesService {
             newImageUrl = fileStorage.uploadFile(CLOTHES_PREFIX, imageFile);
         }
 
+        List<ClothesAttributes> attributes = attributeRepository.findByClothesId(clothesId);
+
+        List<ClothesAttributes> newAttributes =
+            request.attributes().stream().map(
+                dto -> {
+                    ClothesAttributeDefs def = defRepository.findById(dto.definitionId())
+                        .orElseThrow(
+                            () -> ClothesAttributeDefNotFoundException.byId(dto.definitionId())
+                        );
+                    String value = dto.value();
+                    return ClothesAttributes.builder()
+                        .clothes(clothes)
+                        .definition(def)
+                        .optionValue(value)
+                        .build();
+                }
+            ).toList();
+
+        if (!newAttributes.isEmpty() && !newAttributes.equals(attributes)) {
+            attributeRepository.deleteAll(attributes);
+            attributes = attributeRepository.saveAll(newAttributes);
+        }
+
         clothes.update(newName, newType, newImageUrl);
 
         Clothes updatedClothes = clothesRepository.save(clothes);
 
-        return clothesMapper.toDto(updatedClothes, Collections.emptyList(), fileStorage);
+        List<ClothesAttributeWithDefDto> clothesAttributeWithDefDto =
+            attributes.stream().map(a -> {
+                ClothesAttributeDefs def = a.getDefinition();
+                String value = a.getOptionValue();
+                return clothesAttributeMapper.toAttributeWithDefDto(def, value);
+            }).toList();
+
+        return clothesMapper.toDto(updatedClothes, clothesAttributeWithDefDto, fileStorage);
     }
 
     @Override
