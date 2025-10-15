@@ -1,12 +1,13 @@
 package com.onepiece.otboo.domain.notification.repository;
 
 import com.onepiece.otboo.domain.notification.entity.Notification;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 public interface NotificationRepositoryCustom {
 
-    List<Notification> findNotifications(UUID receiverId, UUID idAfter, int limit);
+    List<Notification> findNotifications(UUID receiverId, Instant createdAtBefore, int limit);
 
     long countByReceiverId(UUID receiverId);
 }

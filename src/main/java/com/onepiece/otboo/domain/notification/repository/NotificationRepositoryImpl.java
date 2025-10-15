@@ -4,6 +4,7 @@ import static com.onepiece.otboo.domain.notification.entity.QNotification.notifi
 
 import com.onepiece.otboo.domain.notification.entity.Notification;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -16,24 +17,27 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom 
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Notification> findNotifications(UUID receiverId, UUID idAfter, int limit) {
+    public List<Notification> findNotifications(UUID receiverId, Instant createdAtBefore,
+        int limit) {
         return queryFactory
             .selectFrom(notification)
             .where(
                 notification.receiverId.eq(receiverId),
-                idAfter != null ? notification.id.lt(idAfter) : null
+                createdAtBefore != null ? notification.createdAt.lt(createdAtBefore) : null
             )
-            .orderBy(notification.createdAt.desc())
+            .orderBy(notification.id.desc())
             .limit(limit + 1)
             .fetch();
     }
 
     @Override
     public long countByReceiverId(UUID receiverId) {
-        return queryFactory
+        Long count = queryFactory
             .select(notification.count())
             .from(notification)
             .where(notification.receiverId.eq(receiverId))
-            .fetchFirst();
+            .fetchOne();
+
+        return count != null ? count : 0L;
     }
 }

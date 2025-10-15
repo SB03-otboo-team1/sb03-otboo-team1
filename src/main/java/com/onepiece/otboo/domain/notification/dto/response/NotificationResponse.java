@@ -31,10 +31,4 @@ public class NotificationResponse {
 
     @Schema(description = "알림 레벨", example = "INFO")
     private String level;
-
-    @Schema(description = "읽음 여부", example = "false")
-    private boolean isRead;
-
-    @Schema(description = "읽은 시각 (읽지 않은 경우 null)", example = "2025-10-13T03:15:27.123Z")
-    private Instant readAt;
 }
