@@ -74,7 +74,6 @@ public class UserController implements UserApi {
     }
 
     @Override
-    @PreAuthorize("#userId == principal.userId or hasRole('ADMIN')")
     @GetMapping("/{userId}/profiles")
     public ResponseEntity<ProfileDto> getUserProfile(@PathVariable UUID userId) {
 
@@ -128,7 +127,7 @@ public class UserController implements UserApi {
         @PathVariable UUID userId,
         @Valid @RequestPart ProfileUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile profileImage)
-    throws IOException {
+        throws IOException {
 
         log.info("[UserController] 프로필 업데이트 요청 - userId: {}", userId);
 

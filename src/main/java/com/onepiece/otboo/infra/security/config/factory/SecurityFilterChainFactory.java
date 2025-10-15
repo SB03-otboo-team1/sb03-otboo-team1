@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
 
 @Component
-@Profile({"dev", "prod", "test-security"})
+@Profile("!test")
 @RequiredArgsConstructor
 public class SecurityFilterChainFactory {
 

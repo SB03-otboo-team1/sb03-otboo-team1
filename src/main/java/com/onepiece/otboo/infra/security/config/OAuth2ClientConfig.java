@@ -1,6 +1,7 @@
 package com.onepiece.otboo.infra.security.config;
 
 import com.onepiece.otboo.domain.auth.service.CustomOAuth2UserService;
+import com.onepiece.otboo.infra.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.onepiece.otboo.infra.security.oauth2.handler.CustomOAuth2FailureHandler;
 import com.onepiece.otboo.infra.security.oauth2.handler.CustomOAuth2SuccessHandler;
 import org.springframework.context.annotation.Bean;
@@ -20,16 +21,21 @@ public class OAuth2ClientConfig {
         HttpSecurity http,
         CustomOAuth2UserService customOAuth2UserService,
         CustomOAuth2SuccessHandler delegatingSuccessHandler,
-        CustomOAuth2FailureHandler delegatingFailureHandler
+        CustomOAuth2FailureHandler delegatingFailureHandler,
+        HttpCookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository
     ) throws Exception {
         http
-            .securityMatcher("/oauth2/**", "/login/oauth2/**")
+            .securityMatcher("/oauth2/authorization/**", "/login/oauth2/code/**")
+            .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
             .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
                 .successHandler(delegatingSuccessHandler)
                 .failureHandler(delegatingFailureHandler)
+                .authorizationEndpoint(authEndpoint -> authEndpoint
+                    .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository)
+                )
             );
         return http.build();
     }

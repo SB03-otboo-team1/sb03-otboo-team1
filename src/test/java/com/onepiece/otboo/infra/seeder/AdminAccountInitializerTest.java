@@ -9,6 +9,7 @@ import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
+import com.onepiece.otboo.infra.security.lock.AdminAccountLock;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,8 @@ class AdminAccountInitializerTest {
     private UserRepository userRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private AdminAccountLock adminAccountLock;
     @InjectMocks
     private AdminAccountInitializer adminAccountInitializer;
 

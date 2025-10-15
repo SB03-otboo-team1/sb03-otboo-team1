@@ -11,3 +11,4 @@ public interface NotificationRepository
 
     long countByReceiverId(UUID receiverId);
 }
+

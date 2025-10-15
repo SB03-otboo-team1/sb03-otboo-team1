@@ -5,6 +5,7 @@ import static com.onepiece.otboo.domain.location.entity.QLocation.location;
 import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.weather.batch.processor.Weather5DayProcessor;
 import com.onepiece.otboo.domain.weather.batch.reader.QuerydslPagingItemReader;
+import com.onepiece.otboo.domain.weather.batch.tasklet.WeatherAlertSendTasklet;
 import com.onepiece.otboo.domain.weather.batch.writer.WeatherDataWriter;
 import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
@@ -33,13 +34,14 @@ public class WeatherBatchConfig {
     private final PlatformTransactionManager transactionManager;
     private final WeatherRepository weatherRepository;
     private final Weather5DayProcessor weather5DayProcessor;
-
+    private final WeatherAlertSendTasklet weatherAlertSendTasklet;
     private final EntityManagerFactory entityManagerFactory;
 
     @Bean
     public Job collectWeatherJob() {
         return new JobBuilder("collectWeatherJob", jobRepository)
             .start(collectWeatherStep())
+            .next(sendWeatherAlertStep())
             .build();
     }
 
@@ -57,6 +59,13 @@ public class WeatherBatchConfig {
             .retryLimit(2)
             .retry(RuntimeException.class)
             .skipLimit(1000)
+            .build();
+    }
+
+    @Bean
+    public Step sendWeatherAlertStep() {
+        return new StepBuilder("sendWeatherAlertStep", jobRepository)
+            .tasklet(weatherAlertSendTasklet, transactionManager)
             .build();
     }
 
