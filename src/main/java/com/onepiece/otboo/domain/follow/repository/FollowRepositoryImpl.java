@@ -1,15 +1,10 @@
 package com.onepiece.otboo.domain.follow.repository;
 
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
-import com.onepiece.otboo.domain.follow.dto.response.QFollowerResponse;
-import com.onepiece.otboo.domain.follow.dto.response.QFollowingResponse;
+import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.follow.entity.QFollow;
 import com.onepiece.otboo.domain.profile.entity.QProfile;
 import com.onepiece.otboo.domain.user.entity.QUser;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.global.enums.SortBy;
-import com.onepiece.otboo.global.enums.SortDirection;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -17,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 
 @RequiredArgsConstructor
 public class FollowRepositoryImpl implements FollowRepositoryCustom {
@@ -24,120 +20,104 @@ public class FollowRepositoryImpl implements FollowRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<FollowingResponse> findFollowingsWithProfileCursor(
-        User follower,
-        String cursor,
-        UUID idAfter,
-        int limit,
-        String nameLike,
-        SortBy sortBy,
-        SortDirection sortDirection
-    ) {
-        QFollow follow = QFollow.follow;
-        QUser user = QUser.user;
-        QProfile profile = QProfile.profile;
-
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(follow.follower.eq(follower));
-
-        if (nameLike != null && !nameLike.isBlank()) {
-            builder.and(profile.nickname.containsIgnoreCase(nameLike));
-        }
-
-        if (cursor != null && idAfter != null) {
-            Instant cursorTime = Instant.parse(cursor);
-            if (sortDirection.equals(SortDirection.ASCENDING)) {
-                builder.and(follow.createdAt.gt(cursorTime)
-                    .or(follow.createdAt.eq(cursorTime).and(follow.id.gt(idAfter))));
-            } else {
-                builder.and(follow.createdAt.lt(cursorTime)
-                    .or(follow.createdAt.eq(cursorTime).and(follow.id.lt(idAfter))));
-            }
-        }
-
-        OrderSpecifier<?> orderByCreatedAt =
-            sortDirection.equals(SortDirection.ASCENDING)
-                ? follow.createdAt.asc()
-                : follow.createdAt.desc();
-
-        OrderSpecifier<?> orderById =
-            sortDirection.equals(SortDirection.ASCENDING)
-                ? follow.id.asc()
-                : follow.id.desc();
-
-        return queryFactory
-            .select(new QFollowingResponse(
-                follow.id,
-                user.id,
-                profile.nickname,
-                profile.profileImageUrl,
-                follow.createdAt
-            ))
-            .from(follow)
-            .join(follow.following, user)
-            .join(profile).on(profile.user.eq(user))
-            .where(builder)
-            .orderBy(orderByCreatedAt, orderById)
-            .limit(limit + 1)
-            .fetch();
-    }
-
-    @Override
-    public List<FollowerResponse> findFollowersWithProfileCursor(
+    public List<Follow> findFollowersWithProfileCursor(
         User followee,
         String cursor,
         UUID idAfter,
         int limit,
-        String nameLike,
-        SortBy sortBy,
-        SortDirection sortDirection
+        String nameLike
     ) {
-        QFollow follow = QFollow.follow;
-        QUser user = QUser.user;
-        QProfile profile = QProfile.profile;
+        QFollow f = QFollow.follow;
 
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(follow.following.eq(followee));
+        // 별칭 고정 (재사용 필수)
+        QUser followerUser = new QUser("followerUser");
+        QUser followeeUser = new QUser("followeeUser");
 
-        if (nameLike != null && !nameLike.isBlank()) {
-            builder.and(profile.nickname.containsIgnoreCase(nameLike));
+        QProfile followerProfile = new QProfile("followerProfile");
+        QProfile followeeProfile = new QProfile("followeeProfile");
+
+        BooleanBuilder where = new BooleanBuilder()
+            .and(f.following.eq(followee));
+
+        if (StringUtils.hasText(nameLike)) {
+            where.and(followerProfile.nickname.containsIgnoreCase(nameLike));
         }
 
-        if (cursor != null && idAfter != null) {
-            Instant cursorTime = Instant.parse(cursor);
-            if (sortDirection.equals(SortDirection.ASCENDING)) {
-                builder.and(follow.createdAt.gt(cursorTime)
-                    .or(follow.createdAt.eq(cursorTime).and(follow.id.gt(idAfter))));
-            } else {
-                builder.and(follow.createdAt.lt(cursorTime)
-                    .or(follow.createdAt.eq(cursorTime).and(follow.id.lt(idAfter))));
-            }
-        }
-
-        OrderSpecifier<?> orderByCreatedAt =
-            sortDirection.equals(SortDirection.ASCENDING)
-                ? follow.createdAt.asc()
-                : follow.createdAt.desc();
-
-        OrderSpecifier<?> orderById =
-            sortDirection.equals(SortDirection.ASCENDING)
-                ? follow.id.asc()
-                : follow.id.desc();
+        applyCursor(where, f, cursor, idAfter);
+        OrderSpecifier<?>[] orders = buildOrders(f);
 
         return queryFactory
-            .select(new QFollowerResponse(
-                follow.id,
-                user.id,
-                profile.nickname,
-                profile.profileImageUrl,
-                follow.createdAt
-            ))
-            .from(follow)
-            .join(follow.follower, user)
-            .join(profile).on(profile.user.eq(user))
-            .where(builder)
-            .orderBy(orderByCreatedAt, orderById)
-            .limit(limit + 1)
+            .selectFrom(f)
+            .join(f.follower, followerUser).fetchJoin()
+            .join(f.following, followeeUser).fetchJoin()
+            // 경로 조인 권장: user.profile
+            .leftJoin(followerUser.profile, followerProfile).fetchJoin()
+            .leftJoin(followeeUser.profile, followeeProfile).fetchJoin()
+            .where(where)
+            .orderBy(orders)
+            .limit(limit + 1L) // hasNext 판단용
             .fetch();
+    }
+
+    @Override
+    public List<Follow> findFollowingsWithProfileCursor(
+        User follower,
+        String cursor,
+        UUID idAfter,
+        int limit,
+        String nameLike
+    ) {
+        QFollow f = QFollow.follow;
+
+        QUser followerUser = new QUser("followerUser");
+        QUser followingUser = new QUser("followingUser");
+
+        QProfile followerProfile = new QProfile("followerProfile");
+        QProfile followingProfile = new QProfile("followingProfile");
+
+        BooleanBuilder where = new BooleanBuilder()
+            .and(f.follower.eq(follower));
+
+        if (StringUtils.hasText(nameLike)) {
+            where.and(followingProfile.nickname.containsIgnoreCase(nameLike));
+        }
+
+        applyCursor(where, f, cursor, idAfter);
+        OrderSpecifier<?>[] orders = buildOrders(f);
+
+        return queryFactory
+            .selectFrom(f)
+            .join(f.follower, followerUser).fetchJoin()
+            .join(f.following, followingUser).fetchJoin()
+            .leftJoin(followerUser.profile, followerProfile).fetchJoin()
+            .leftJoin(followingUser.profile, followingProfile).fetchJoin()
+            .where(where)
+            .orderBy(orders)
+            .limit(limit + 1L) // hasNext 판단용
+            .fetch();
+    }
+
+    /**
+     * DESC 커서 조건: createdAt < cursor  OR  (createdAt = cursor AND id < idAfter)
+     */
+    private void applyCursor(BooleanBuilder where, QFollow f, String cursor, UUID idAfter) {
+        if (cursor == null || idAfter == null) {
+            return;
+        }
+        Instant cursorTime = Instant.parse(cursor);
+        where.and(
+            f.createdAt.lt(cursorTime)
+                .or(f.createdAt.eq(cursorTime).and(f.id.lt(idAfter)))
+        );
+    }
+
+    /**
+     * 정렬: createdAt DESC, id DESC
+     */
+    private OrderSpecifier<?>[] buildOrders(QFollow f) {
+        return new OrderSpecifier<?>[]{
+            f.createdAt.desc(),
+            f.id.desc()
+        };
     }
 }

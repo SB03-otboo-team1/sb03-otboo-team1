@@ -10,8 +10,8 @@ public final class SecurityAuthorizeRequestHelper {
     private static final Endpoint[] COMMON_PUBLIC_ENDPOINTS = {
         new Endpoint(null, "/"),
         new Endpoint(null, "/index.html"),
-        new Endpoint(null, "logo_symbol.svg"),
-        new Endpoint(null, "vite.svg"),
+        new Endpoint(null, "/logo_symbol.svg"),
+        new Endpoint(null, "/vite.svg"),
         new Endpoint(null, "/error"),
         new Endpoint(null, "/favicon.ico"),
         new Endpoint(null, "/assets/**"),
@@ -24,8 +24,9 @@ public final class SecurityAuthorizeRequestHelper {
     };
 
     private static final Endpoint[] SWAGGER_ENDPOINTS = {
-        new Endpoint(null, "/swagger-ui/**"),
-        new Endpoint(null, "/v3/api-docs/**")
+        new Endpoint(null, "/api/swagger-ui/**"),
+        new Endpoint(null, "/api/v3/api-docs"),
+        new Endpoint(null, "/api/v3/api-docs/**")
     };
 
     public static Endpoint[] commonPublicEndpoints() {

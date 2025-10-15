@@ -9,6 +9,9 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "요청 경로를 찾을 수 없음", "존재하지 않는 경로입니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "허용되지 않은 HTTP 메서드", "지원하지 않는 메서드입니다."),
 
+    // Redis
+    REDIS_LOCK_ACQUISITION_FAILED(HttpStatus.CONFLICT, "분산 락 획득 실패", "다른 인스턴스가 락을 보유 중입니다."),
+
     // HTTP
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 Content-Type입니다.",
         "요청의 Content-Type을 확인해 주세요."),
@@ -21,6 +24,7 @@ public enum ErrorCode {
     // FOLLOW
     DUPLICATE_FOLLOW(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "이미 해당 사용자를 팔로우하고 있습니다."),
     FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "팔로우 확인 실패", "팔로우 관계가 존재하지 않습니다."),
+    FOLLOW_NOT_ALLOW(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "자기 자신은 팔로우할 수 없습니다."),
 
     // DM
     DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM 확인 실패", "DM을 찾을 수 없습니다."),

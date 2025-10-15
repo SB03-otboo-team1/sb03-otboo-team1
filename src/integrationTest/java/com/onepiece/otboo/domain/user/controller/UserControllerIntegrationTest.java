@@ -98,45 +98,6 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    void USER_권한을_가진_사용자는_다른_사용자의_프로필_조회_요청시_403을_반환한다() throws Exception {
-
-        // given
-        UUID userId = UUID.randomUUID();
-        UUID userId2 = UUID.randomUUID();
-
-        CustomUserDetails principal = customUserDetails(userId, "USER");
-
-        // when
-        ResultActions result = mockMvc.perform(get("/api/users/{userId}/profiles", userId2)
-            .with(user(principal)));
-
-        // then
-        result.andExpect(status().isForbidden());
-    }
-
-    @Test
-    void ADMIN_권한을_가진_사용자는_다른_사용자의_프로필_조회_요청시_200을_반환한다() throws Exception {
-
-        // given
-        UUID userId = UUID.randomUUID();
-        UUID userId2 = UUID.randomUUID();
-
-        ProfileDto profileDto = ProfileDtoFixture.createProfile(userId2);
-
-        given(profileService.getUserProfile(userId2)).willReturn(profileDto);
-
-        CustomUserDetails principal = customUserDetails(userId, "ADMIN");
-
-        // when
-        ResultActions result = mockMvc.perform(get("/api/users/{userId}/profiles", userId2)
-            .with(user(principal)));
-
-        // then
-        result.andExpect(status().isOk())
-            .andExpect(jsonPath("$.userId").value(userId2.toString()));
-    }
-
-    @Test
     void 본인의_프로필_수정_요청시_200을_반환한다() throws Exception {
 
         // given

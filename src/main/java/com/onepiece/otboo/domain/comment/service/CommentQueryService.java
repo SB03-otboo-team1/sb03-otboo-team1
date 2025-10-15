@@ -115,15 +115,17 @@ public class CommentQueryService {
         if (cursor == null || cursor.isBlank()) {
             return new Cursor(null, null);
         }
-        try {
-            byte[] decoded = Base64.getUrlDecoder().decode(cursor);
-            String token = new String(decoded, StandardCharsets.UTF_8);
-            String[] parts = token.split(CURSOR_SEP, 3);
-            if (parts.length != 3) return new Cursor(null, null);
-            long epochSecond = Long.parseLong(parts[0]);
-            int nano = Integer.parseInt(parts[1]);
-            UUID idLt = UUID.fromString(parts[2]);
-            Instant createdAtLt = Instant.ofEpochSecond(epochSecond, nano);
+            try {
+                byte[] decoded = Base64.getUrlDecoder().decode(cursor);
+                String token = new String(decoded, StandardCharsets.UTF_8);
+                String[] parts = token.split(CURSOR_SEP, 3);
+                if (parts.length != 3) {
+                    return new Cursor(null, null);
+                }
+                long epochSecond = Long.parseLong(parts[0]);
+                int nano = Integer.parseInt(parts[1]);
+                Instant createdAtLt = Instant.ofEpochSecond(epochSecond, nano);
+                UUID idLt = UUID.fromString(parts[2]);
             return new Cursor(createdAtLt, idLt);
         } catch (Exception e) {
             return new Cursor(null, null);
