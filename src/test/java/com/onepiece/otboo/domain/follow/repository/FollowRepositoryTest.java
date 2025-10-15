@@ -2,17 +2,14 @@ package com.onepiece.otboo.domain.follow.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.onepiece.otboo.domain.follow.dto.response.FollowerResponse;
-import com.onepiece.otboo.domain.follow.dto.response.FollowingResponse;
 import com.onepiece.otboo.domain.follow.entity.Follow;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.entity.SocialAccount;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.config.TestJpaConfig;
-import com.onepiece.otboo.global.enums.SortBy;
-import com.onepiece.otboo.global.enums.SortDirection;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +27,7 @@ class FollowRepositoryTest {
     private FollowRepository followRepository;
 
     @Autowired
-    private com.onepiece.otboo.domain.user.repository.UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private ProfileRepository profileRepository;
@@ -164,12 +161,10 @@ class FollowRepositoryTest {
             .following(following)
             .build());
 
-        List<FollowingResponse> responses = followRepository
-            .findFollowingsWithProfileCursor(follower, null, null, 10, null, SortBy.CREATED_AT,
-                SortDirection.ASCENDING);
+        List<Follow> responses = followRepository
+            .findFollowingsWithProfileCursor(follower, null, null, 10, null);
 
         assertThat(responses).hasSize(1);
-        assertThat(responses.get(0).getNickname()).isEqualTo("팔로잉닉네임");
     }
 
     @Test
@@ -184,11 +179,9 @@ class FollowRepositoryTest {
             .following(following)
             .build());
 
-        List<FollowerResponse> responses = followRepository
-            .findFollowersWithProfileCursor(following, null, null, 10, null, SortBy.CREATED_AT,
-                SortDirection.ASCENDING);
+        List<Follow> responses = followRepository
+            .findFollowersWithProfileCursor(following, null, null, 10, null);
 
         assertThat(responses).hasSize(1);
-        assertThat(responses.get(0).getNickname()).isEqualTo("팔로워닉네임");
     }
 }
