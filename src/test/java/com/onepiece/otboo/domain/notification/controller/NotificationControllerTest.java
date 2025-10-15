@@ -4,12 +4,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.doNothing;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.onepiece.otboo.domain.notification.Controller.NotificationController;
 import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.service.NotificationService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -49,15 +48,13 @@ class NotificationControllerTest {
             .content("민준님을 팔로우했습니다.")
             .level("INFO")
             .createdAt(Instant.now())
-            .isRead(false)
-            .readAt(null)
             .build();
 
         CursorPageResponseDto<NotificationResponse> mockResponse =
             new CursorPageResponseDto<>(
                 List.of(notificationResponse),
-                "cursor123",
-                UUID.randomUUID(),
+                "2025-10-15T09:00:00Z",
+                null,
                 false,
                 1L,
                 SortBy.CREATED_AT,
@@ -79,12 +76,12 @@ class NotificationControllerTest {
     }
 
     @Test
-    @DisplayName("알림 읽음 처리 성공 (PATCH /api/notifications/{id}/read)")
-    void markAsRead_Success() throws Exception {
+    @DisplayName("알림 삭제 성공 (DELETE /api/notifications/{id})")
+    void deleteNotification_Success() throws Exception {
         UUID notificationId = UUID.randomUUID();
-        doNothing().when(notificationService).markAsRead(notificationId);
+        doNothing().when(notificationService).deleteNotification(notificationId);
 
-        mockMvc.perform(patch("/api/notifications/{id}/read", notificationId)
+        mockMvc.perform(delete("/api/notifications/{id}", notificationId)
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
     }

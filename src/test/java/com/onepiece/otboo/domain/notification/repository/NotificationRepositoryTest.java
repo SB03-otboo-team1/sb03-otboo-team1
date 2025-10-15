@@ -38,7 +38,7 @@ class NotificationRepositoryTest {
     }
 
     @Test
-    @DisplayName("알림 목록 조회 성공 - 커서 기반 (limit+1 포함)")
+    @DisplayName("알림 목록 조회 성공 - 커서 기반 (createdAtBefore 기준, limit+1 포함)")
     void findNotifications_Success() {
         UUID receiverId = UUID.randomUUID();
 
@@ -48,6 +48,7 @@ class NotificationRepositoryTest {
                 .title("테스트 알림 " + i)
                 .content("내용 " + i)
                 .level(NotificationLevel.INFO)
+                .createdAt(Instant.now().minus(i, ChronoUnit.MINUTES))
                 .build();
             em.persist(n);
         }
@@ -63,8 +64,8 @@ class NotificationRepositoryTest {
     }
 
     @Test
-    @DisplayName("알림 목록 조회 성공 - idAfter 기준 커서 적용")
-    void findNotifications_WithIdAfter_Success() {
+    @DisplayName("알림 목록 조회 성공 - createdAtBefore 커서 적용")
+    void findNotifications_WithCreatedAtBefore_Success() {
         UUID receiverId = UUID.randomUUID();
 
         for (int i = 0; i < 5; i++) {
@@ -73,6 +74,7 @@ class NotificationRepositoryTest {
                 .title("알림 " + i)
                 .content("내용 " + i)
                 .level(NotificationLevel.INFO)
+                .createdAt(Instant.now().minus(i, ChronoUnit.MINUTES))
                 .build();
             em.persist(n);
         }
@@ -80,13 +82,13 @@ class NotificationRepositoryTest {
         em.clear();
 
         List<Notification> all = notificationRepository.findNotifications(receiverId, null, 5);
-        UUID idAfter = all.get(1).getId();
+        Instant createdAtBefore = all.get(1).getCreatedAt();
 
-        List<Notification> next = notificationRepository.findNotifications(receiverId, idAfter, 3);
+        List<Notification> next =
+            notificationRepository.findNotifications(receiverId, createdAtBefore, 3);
 
         if (!next.isEmpty()) {
-            assertThat(next.get(0).getCreatedAt())
-                .isCloseTo(all.get(1).getCreatedAt(), within(200, ChronoUnit.MILLIS));
+            assertThat(next.get(0).getCreatedAt()).isBeforeOrEqualTo(createdAtBefore);
         } else {
             assertThat(next).isEmpty();
         }
@@ -103,6 +105,7 @@ class NotificationRepositoryTest {
                 .title("테스트 알림 " + i)
                 .content("내용 " + i)
                 .level(NotificationLevel.INFO)
+                .createdAt(Instant.now())
                 .build();
             em.persist(n);
         }
@@ -115,15 +118,16 @@ class NotificationRepositoryTest {
     }
 
     @Test
-    @DisplayName("알림 읽음 처리 후 isRead=true, readAt이 설정된다")
-    void markAsRead_Persistence_Success() {
+    @DisplayName("delete() 호출 시 deletedAt이 설정된다")
+    void delete_Success() {
         UUID receiverId = UUID.randomUUID();
 
         Notification notification = Notification.builder()
             .receiverId(receiverId)
-            .title("읽음 테스트 알림")
-            .content("읽음 처리 전 상태입니다.")
+            .title("삭제 테스트 알림")
+            .content("삭제 처리 전 상태입니다.")
             .level(NotificationLevel.INFO)
+            .createdAt(Instant.now())
             .build();
 
         notificationRepository.save(notification);
@@ -131,16 +135,16 @@ class NotificationRepositoryTest {
         em.clear();
 
         Notification saved = notificationRepository.findById(notification.getId()).orElseThrow();
-        assertThat(saved.isRead()).isFalse();
+        assertThat(saved.getDeletedAt()).isNull();
 
-        saved.markAsRead();
+        saved.delete();
         notificationRepository.save(saved);
         em.flush();
         em.clear();
 
         Notification updated = notificationRepository.findById(notification.getId()).orElseThrow();
-        assertThat(updated.isRead()).isTrue();
-        assertThat(updated.getReadAt()).isNotNull();
-        assertThat(updated.getReadAt()).isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
+        assertThat(updated.getDeletedAt()).isNotNull();
+        assertThat(updated.getDeletedAt())
+            .isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
     }
 }
