@@ -115,19 +115,17 @@ public class CommentQueryService {
         if (cursor == null || cursor.isBlank()) {
             return new Cursor(null, null);
         }
-        try {
-            byte[] decoded = Base64.getUrlDecoder().decode(cursor);
-            String token = new String(decoded, StandardCharsets.UTF_8);
-            int idx = token.indexOf(CURSOR_SEP);
-            if (idx <= 0 || idx >= token.length() - 1) {
-                return new Cursor(null, null);
-            }
-            String epochStr = token.substring(0, idx);
-            String idStr = token.substring(idx + 1);
-
-            long epochMilli = Long.parseLong(epochStr);
-            Instant createdAtLt = Instant.ofEpochMilli(epochMilli);
-            UUID idLt = UUID.fromString(idStr);
+            try {
+                byte[] decoded = Base64.getUrlDecoder().decode(cursor);
+                String token = new String(decoded, StandardCharsets.UTF_8);
+                String[] parts = token.split(CURSOR_SEP, 3);
+                if (parts.length != 3) {
+                    return new Cursor(null, null);
+                }
+                long epochSecond = Long.parseLong(parts[0]);
+                int nano = Integer.parseInt(parts[1]);
+                Instant createdAtLt = Instant.ofEpochSecond(epochSecond, nano);
+                UUID idLt = UUID.fromString(parts[2]);
             return new Cursor(createdAtLt, idLt);
         } catch (Exception e) {
             return new Cursor(null, null);
@@ -135,7 +133,7 @@ public class CommentQueryService {
     }
 
     private String encodeCursor(Instant createdAt, UUID id) {
-        String raw = createdAt.toEpochMilli() + CURSOR_SEP + id;
+        String raw = createdAt.getEpochSecond() + CURSOR_SEP + createdAt.getNano() + CURSOR_SEP + id;
         return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
 
