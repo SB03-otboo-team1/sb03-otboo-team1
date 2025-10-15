@@ -37,7 +37,6 @@ public class DirectMessageServiceImpl implements DirectMessageService {
     private final UserRepository userRepository;
     private final DirectMessageMapper directMessageMapper;
     private final FileStorage storage;
-    private final FileStorage fileStorage;
     private final ApplicationEventPublisher publisher;
 
     /**
@@ -45,26 +44,26 @@ public class DirectMessageServiceImpl implements DirectMessageService {
      */
     @Override
     public DirectMessageDto createDirectMessage(DirectMessageRequest request) {
-        if (request.getSenderId().equals(request.getReceiverId())) {
+        if (request.senderId().equals(request.receiverId())) {
             throw new CannotSendMessageToSelfException();
         }
 
         log.info("[DirectMessageService] DM 생성 요청 - sender: {}, receiver: {}",
-            request.getSenderId(),
-            request.getReceiverId());
+            request.senderId(),
+            request.receiverId());
 
-        User sender = findUser(request.getSenderId());
+        User sender = findUser(request.senderId());
 
-        User receiver = findUser(request.getReceiverId());
+        User receiver = findUser(request.receiverId());
 
         DirectMessage dm = DirectMessage.builder()
             .sender(sender)
             .receiver(receiver)
-            .content(request.getContent())
+            .content(request.content())
             .build();
 
         DirectMessage saved = directMessageRepository.save(dm);
-        DirectMessageDto data = directMessageMapper.toDto(saved, fileStorage);
+        DirectMessageDto data = directMessageMapper.toDto(saved, storage);
 
         publisher.publishEvent(new DirectMessageCreatedEvent(data, Instant.now()));
 
