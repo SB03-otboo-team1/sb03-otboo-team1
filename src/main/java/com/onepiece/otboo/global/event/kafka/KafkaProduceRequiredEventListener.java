@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.notification.enums.AlertStatus;
 import com.onepiece.otboo.domain.weather.service.WeatherAlertOutboxService;
+import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
 import com.onepiece.otboo.global.event.event.WeatherChangeEvent;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,11 @@ public class KafkaProduceRequiredEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(WeatherChangeEvent event) {
+        send(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(DirectMessageCreatedEvent event) {
         send(event);
     }
 

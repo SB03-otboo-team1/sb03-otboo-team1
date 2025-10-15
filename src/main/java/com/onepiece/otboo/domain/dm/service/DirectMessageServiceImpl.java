@@ -13,12 +13,15 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
 import com.onepiece.otboo.global.storage.FileStorage;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,7 @@ public class DirectMessageServiceImpl implements DirectMessageService {
     private final DirectMessageMapper directMessageMapper;
     private final FileStorage storage;
     private final FileStorage fileStorage;
+    private final ApplicationEventPublisher publisher;
 
     /**
      * DM 생성
@@ -60,8 +64,11 @@ public class DirectMessageServiceImpl implements DirectMessageService {
             .build();
 
         DirectMessage saved = directMessageRepository.save(dm);
+        DirectMessageDto data = directMessageMapper.toDto(saved, fileStorage);
 
-        return directMessageMapper.toDto(saved, fileStorage);
+        publisher.publishEvent(new DirectMessageCreatedEvent(data, Instant.now()));
+
+        return data;
     }
 
     /**
