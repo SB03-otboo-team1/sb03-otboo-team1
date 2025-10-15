@@ -28,7 +28,7 @@ public class ClothesAttributes extends BaseUpdatableEntity {
     @JoinColumn(name = "definition_id", columnDefinition = "uuid", nullable = false)
     private ClothesAttributeDefs definition;
 
-    @Column(name = "option_value", nullable = false)
+    @Column(name = "option_value", nullable = false, length = 50)
     private String optionValue;
 
 }

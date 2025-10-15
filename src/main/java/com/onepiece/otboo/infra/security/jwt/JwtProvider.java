@@ -27,20 +27,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtProvider {
 
+    public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
+    // 테스트를 위한 package-private 접근 제한
+    final JWSSigner accessTokenSigner;
     private final CustomUserDetailsService userDetailsService;
     private final JwtRegistry jwtRegistry;
-
-    public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
-
     private final int accessTokenExpirationMs;
     private final int refreshTokenExpirationMs;
-
     private final JWSVerifier accessTokenVerifier;
     private final JWSSigner refreshTokenSigner;
     private final JWSVerifier refreshTokenVerifier;
-
-    // 테스트를 위한 package-private 접근 제한
-    final JWSSigner accessTokenSigner;
 
     public JwtProvider(
         @Value("${otboo.jwt.access-token.secret}") String accessTokenSecret,
@@ -110,10 +106,7 @@ public class JwtProvider {
         signedJWT.sign(signer);
         String token = signedJWT.serialize();
 
-        try {
-            jwtRegistry.registerToken(userDetails.getUserId(), tokenId, expiryDate.toInstant());
-        } catch (Exception ignored) {
-        }
+        jwtRegistry.registerToken(userDetails.getUserId(), tokenId, expiryDate.toInstant());
 
         return token;
     }
@@ -145,11 +138,7 @@ public class JwtProvider {
             }
 
             String jti = signedJWT.getJWTClaimsSet().getJWTID();
-            if (jti != null && jwtRegistry.isBlacklisted(jti)) {
-                return false;
-            }
-
-            return true;
+            return jti == null || !jwtRegistry.isBlacklisted(jti);
         } catch (Exception e) {
             return false;
         }

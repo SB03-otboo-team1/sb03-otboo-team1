@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
+@ActiveProfiles("test-integration")
 class AdminFeatureIntegrationTest {
 
     @Autowired
@@ -108,17 +108,6 @@ class AdminFeatureIntegrationTest {
         return new TestUserContext(userId, token);
     }
 
-    private static class TestUserContext {
-
-        final String userId;
-        final String token;
-
-        TestUserContext(String userId, String token) {
-            this.userId = userId;
-            this.token = token;
-        }
-    }
-
     private String extractUserId(MvcResult result) throws Exception {
         String response = result.getResponse().getContentAsString();
 
@@ -141,5 +130,9 @@ class AdminFeatureIntegrationTest {
             .andReturn();
         String responseBody = adminLoginResult.getResponse().getContentAsString();
         return "Bearer " + new ObjectMapper().readTree(responseBody).get("accessToken").asText();
+    }
+
+    private record TestUserContext(String userId, String token) {
+
     }
 }

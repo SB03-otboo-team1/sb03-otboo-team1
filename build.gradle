@@ -153,6 +153,9 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
     // =================== Integration test ===================
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
     integrationTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'

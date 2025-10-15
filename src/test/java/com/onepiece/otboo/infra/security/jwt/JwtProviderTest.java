@@ -21,13 +21,13 @@ class JwtProviderTest {
     @Mock
     private CustomUserDetailsService userDetailsService;
     @Mock
-    private InMemoryJwtRegistry registry;
+    private JwtRegistry jwtRegistry;
 
     private JwtProvider jwtProvider;
 
     @BeforeEach
     void setUp() throws JOSEException {
-        jwtProvider = JwtProviderFixture.create(userDetailsService, registry);
+        jwtProvider = JwtProviderFixture.create(userDetailsService, jwtRegistry);
     }
 
     @Test
@@ -35,7 +35,7 @@ class JwtProviderTest {
         CustomUserDetails userDetails = UserDetailsFixture.createUser();
         String token = jwtProvider.generateAccessToken(userDetails);
         String jti = jwtProvider.getTokenId(token);
-        when(registry.isBlacklisted(jti)).thenReturn(true);
+        when(jwtRegistry.isBlacklisted(jti)).thenReturn(true);
 
         boolean result = jwtProvider.validateAccessToken(token);
 

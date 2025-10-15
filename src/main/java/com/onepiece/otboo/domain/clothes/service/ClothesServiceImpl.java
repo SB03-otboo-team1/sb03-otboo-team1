@@ -113,10 +113,8 @@ public class ClothesServiceImpl implements ClothesService {
             List<ClothesAttributeWithDefDto> attributeWithDefDtos =
                 attr.stream().map(a -> {
                     ClothesAttributeDefs def = a.getDefinition();
-                    List<ClothesAttributeOptions> options = optionsByDefId.getOrDefault(def.getId(),
-                        List.of());
                     String value = a.getOptionValue();
-                    return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
+                    return clothesAttributeMapper.toAttributeWithDefDto(def, value);
                 }).toList();
 
             // ClothesDto 생성
@@ -191,10 +189,8 @@ public class ClothesServiceImpl implements ClothesService {
         List<ClothesAttributeWithDefDto> clothesAttributeWithDefDto =
             attributes.stream().map(a -> {
                 ClothesAttributeDefs def = a.getDefinition();
-                List<ClothesAttributeOptions> options = optionsRepository.findByDefinitionId(
-                    def.getId());
                 String value = a.getOptionValue();
-                return clothesAttributeMapper.toAttributeWithDefDto(def, options, value);
+                return clothesAttributeMapper.toAttributeWithDefDto(def, value);
             }).toList();
 
         // ClothesDto 반환
@@ -218,9 +214,20 @@ public class ClothesServiceImpl implements ClothesService {
 
         clothes.update(newName, newType, newImageUrl);
 
-        clothesRepository.save(clothes);
+        Clothes updatedClothes = clothesRepository.save(clothes);
 
-        return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
+        return clothesMapper.toDto(updatedClothes, Collections.emptyList(), fileStorage);
+    }
+
+    @Override
+    public void deleteClothes(UUID clothesId) {
+
+        Clothes clothes = clothesRepository.findById(clothesId)
+            .orElseThrow(() -> new ClothesNotFoundException("의상 정보를 찾을 수 없습니다. id: " + clothesId));
+
+        fileStorage.deleteFile(clothes.getImageUrl());
+        attributeRepository.deleteByClothesId(clothesId);
+        clothesRepository.deleteById(clothesId);
     }
 
 }
