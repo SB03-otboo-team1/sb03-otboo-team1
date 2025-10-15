@@ -13,6 +13,8 @@ import com.onepiece.otboo.domain.notification.exception.NotificationNotFoundExce
 import com.onepiece.otboo.domain.notification.mapper.NotificationMapper;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.enums.SortBy;
+import com.onepiece.otboo.global.enums.SortDirection;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -37,11 +39,10 @@ class NotificationServiceTest {
     private NotificationServiceImpl notificationService;
 
     @Test
-    @DisplayName("알림 목록 조회 성공")
+    @DisplayName("알림 목록 조회 성공 (createdAtBefore 커서 기반)")
     void getNotifications_Success() {
-        // given
         UUID receiverId = UUID.randomUUID();
-        UUID idAfter = null;
+        Instant createdAtBefore = null;
         int limit = 10;
 
         Notification notification = Notification.builder()
@@ -49,10 +50,11 @@ class NotificationServiceTest {
             .title("테스트 알림")
             .content("테스트 내용")
             .level(NotificationLevel.INFO)
+            .createdAt(Instant.now())
             .build();
 
         NotificationResponse response = NotificationResponse.builder()
-            .id(notification.getId())
+            .id(UUID.randomUUID())
             .receiverId(receiverId)
             .title("테스트 알림")
             .content("테스트 내용")
@@ -60,80 +62,82 @@ class NotificationServiceTest {
             .createdAt(notification.getCreatedAt())
             .build();
 
-        given(notificationRepository.findNotifications(receiverId, idAfter, limit))
+        given(notificationRepository.findNotifications(receiverId, createdAtBefore, limit))
             .willReturn(List.of(notification));
         given(notificationMapper.toResponse(notification)).willReturn(response);
         given(notificationRepository.countByReceiverId(receiverId)).willReturn(1L);
 
         CursorPageResponseDto<NotificationResponse> result =
-            notificationService.getNotifications(receiverId, idAfter, limit);
+            notificationService.getNotifications(receiverId, createdAtBefore, limit);
 
         assertThat(result.data()).hasSize(1);
         assertThat(result.data().get(0).getTitle()).isEqualTo("테스트 알림");
         assertThat(result.hasNext()).isFalse();
         assertThat(result.totalCount()).isEqualTo(1L);
+        assertThat(result.sortBy()).isEqualTo(SortBy.CREATED_AT);
+        assertThat(result.sortDirection()).isEqualTo(SortDirection.DESCENDING);
 
-        verify(notificationRepository).findNotifications(receiverId, idAfter, limit);
+        verify(notificationRepository).findNotifications(receiverId, createdAtBefore, limit);
         verify(notificationRepository).countByReceiverId(receiverId);
     }
 
     @Test
-    @DisplayName("알림 읽음 처리 성공 - isRead=true, readAt 설정 후 저장 호출")
-    void markAsRead_Success() {
+    @DisplayName("알림 삭제(읽음 대체) 성공 - deletedAt 설정 후 저장 호출")
+    void deleteNotification_Success() {
         UUID id = UUID.randomUUID();
         Notification notification = Notification.builder()
             .receiverId(UUID.randomUUID())
-            .title("읽음 테스트 알림")
+            .title("삭제 테스트 알림")
             .content("내용")
             .level(NotificationLevel.INFO)
+            .createdAt(Instant.now())
             .build();
 
         given(notificationRepository.findById(id)).willReturn(Optional.of(notification));
 
-        notificationService.markAsRead(id);
+        notificationService.deleteNotification(id);
 
-        assertThat(notification.isRead()).isTrue();
-        assertThat(notification.getReadAt()).isNotNull();
+        assertThat(notification.getDeletedAt()).isNotNull();
         verify(notificationRepository).findById(id);
-        verify(notificationRepository).save(notification);
+        verify(notificationRepository, never()).delete(notification); // Soft delete 방식
     }
 
     @Test
-    @DisplayName("알림 읽음 처리 실패 - 존재하지 않는 ID")
-    void markAsRead_Fail_NotFound() {
+    @DisplayName("알림 삭제 실패 - 존재하지 않는 ID")
+    void deleteNotification_Fail_NotFound() {
         UUID invalidId = UUID.randomUUID();
         given(notificationRepository.findById(invalidId)).willReturn(Optional.empty());
 
         org.junit.jupiter.api.Assertions.assertThrows(
             NotificationNotFoundException.class,
-            () -> notificationService.markAsRead(invalidId)
+            () -> notificationService.deleteNotification(invalidId)
         );
 
         verify(notificationRepository).findById(invalidId);
-        verify(notificationRepository, never()).save(any(Notification.class));
+        verify(notificationRepository, never()).delete(any(Notification.class));
     }
 
     @Test
-    @DisplayName("이미 읽은 알림에 markAsRead 호출 시 save 재호출되지 않음")
-    void markAsRead_AlreadyRead_NoSave() {
+    @DisplayName("이미 삭제된 알림에 delete() 호출 시 중복 저장되지 않음")
+    void deleteNotification_AlreadyDeleted_NoUpdate() {
         UUID id = UUID.randomUUID();
         Notification notification = Notification.builder()
             .receiverId(UUID.randomUUID())
-            .title("이미 읽은 알림")
+            .title("이미 삭제된 알림")
             .content("내용")
             .level(NotificationLevel.INFO)
+            .createdAt(Instant.now())
             .build();
 
-        notification.markAsRead();
-        Instant readAtBefore = notification.getReadAt();
+        notification.delete();
+        Instant deletedAtBefore = notification.getDeletedAt();
 
         given(notificationRepository.findById(id)).willReturn(Optional.of(notification));
 
-        notificationService.markAsRead(id);
+        notificationService.deleteNotification(id);
 
-        assertThat(notification.isRead()).isTrue();
-        assertThat(notification.getReadAt()).isEqualTo(readAtBefore);
+        assertThat(notification.getDeletedAt()).isEqualTo(deletedAtBefore);
         verify(notificationRepository).findById(id);
-        verify(notificationRepository, never()).save(notification);
+        verify(notificationRepository, never()).delete(notification);
     }
 }
