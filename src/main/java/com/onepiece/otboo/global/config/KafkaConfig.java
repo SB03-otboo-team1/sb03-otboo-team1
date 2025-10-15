@@ -35,13 +35,24 @@ public class KafkaConfig {
     private String instanceId;
 
     /**
-     * Processing(단일 처리) 컨테이너 팩토리 - 공유 그룹
+     * Processing(단일 처리) 컨테이너 팩토리 - 공유 그룹 (알림 생성)
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> processingKafkaListenerContainerFactory(
         DefaultErrorHandler errorHandler) {
 
         String groupId = appName + ".processing.notifications";
+        return buildListenerFactory(groupId, errorHandler);
+    }
+
+    /**
+     * Processing(단일 처리) 컨테이너 팩토리 - 공유 그룹 (WebSocket 메시지 구독)
+     */
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> subscriptionKafkaListenerContainerFactory(
+        DefaultErrorHandler errorHandler) {
+
+        String groupId = appName + ".processing.subscribe";
         return buildListenerFactory(groupId, errorHandler);
     }
 

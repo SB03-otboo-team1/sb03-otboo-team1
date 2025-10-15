@@ -20,7 +20,7 @@ public class WebSocketRequiredTopicListener {
 
     @KafkaListener(
         topics = "otboo.DirectMessageCreatedEvent",
-        containerFactory = "processingKafkaListenerContainerFactory"
+        containerFactory = "subscriptionKafkaListenerContainerFactory"
     )
     public void receiveDirectMessage(String kafkaEvent) {
         try {
