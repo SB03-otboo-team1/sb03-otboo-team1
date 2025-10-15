@@ -8,6 +8,7 @@ import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,25 +33,33 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Transactional(readOnly = true)
     @Override
-    public CursorPageResponseDto<NotificationResponse> getNotifications(UUID receiverId,
-        UUID idAfter, int limit) {
-
+    public CursorPageResponseDto<NotificationResponse> getNotifications(
+        UUID receiverId,
+        Instant createdAtBefore,
+        int limit
+    ) {
         List<Notification> notifications = notificationRepository.findNotifications(
-            receiverId, idAfter, limit);
+            receiverId, createdAtBefore, limit);
+
+        boolean hasNext = notifications.size() > limit;
+        if (hasNext) {
+            notifications = notifications.subList(0, limit);
+        }
+
+        Instant nextCursor = hasNext
+            ? notifications.get(notifications.size() - 1).getCreatedAt()
+            : null;
+
+        long totalCount = notificationRepository.countByReceiverId(receiverId);
 
         List<NotificationResponse> data = notifications.stream()
-            .limit(limit)
             .map(notificationMapper::toResponse)
             .collect(Collectors.toList());
 
-        boolean hasNext = notifications.size() > limit;
-        UUID nextIdAfter = hasNext ? data.get(data.size() - 1).getId() : null;
-        long totalCount = notificationRepository.countByReceiverId(receiverId);
-
         return new CursorPageResponseDto<>(
             data,
-            "cursor123",
-            nextIdAfter,
+            nextCursor != null ? nextCursor.toString() : null,
+            null,
             hasNext,
             totalCount,
             SortBy.CREATED_AT,
@@ -63,13 +72,11 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Transactional
     @Override
-    public void markAsRead(UUID id) {
+    public void deleteNotification(UUID id) {
         Notification notification = notificationRepository.findById(id)
             .orElseThrow(() -> new NotificationNotFoundException(id));
 
-        if (!notification.isRead()) {
-            notification.markAsRead();
-            notificationRepository.save(notification);
-        }
+        notification.delete();
+
     }
 }

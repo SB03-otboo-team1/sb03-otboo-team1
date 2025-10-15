@@ -44,11 +44,8 @@ public class Notification {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(nullable = false)
-    private boolean isRead = false;
-
     @Column
-    private Instant readAt;
+    private Instant deletedAt;
 
     @Builder
     public Notification(UUID receiverId, String title, String content,
@@ -60,10 +57,9 @@ public class Notification {
         this.createdAt = createdAt != null ? createdAt : Instant.now();
     }
 
-    public void markAsRead() {
-        if (!this.isRead) {
-            this.isRead = true;
-            this.readAt = Instant.now();
+    public void delete() {
+        if (this.deletedAt == null) {
+            this.deletedAt = Instant.now();
         }
     }
 
