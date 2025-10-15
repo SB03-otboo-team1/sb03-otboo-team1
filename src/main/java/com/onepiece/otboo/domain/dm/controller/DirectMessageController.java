@@ -1,6 +1,5 @@
 package com.onepiece.otboo.domain.dm.controller;
 
-import com.onepiece.otboo.domain.dm.dto.request.DirectMessageRequest;
 import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.service.DirectMessageService;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
@@ -8,8 +7,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,16 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class DirectMessageController {
 
     private final DirectMessageService directMessageService;
-
-    /**
-     * DM 생성
-     */
-    @PostMapping
-    public ResponseEntity<DirectMessageDto> createDirectMessage(
-        @RequestBody DirectMessageRequest request
-    ) {
-        return ResponseEntity.ok(directMessageService.createDirectMessage(request));
-    }
 
     /**
      * DM 목록 조회 (커서 기반 페이징)
