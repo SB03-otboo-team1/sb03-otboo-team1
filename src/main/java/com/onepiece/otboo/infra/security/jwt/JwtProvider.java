@@ -1,5 +1,16 @@
 package com.onepiece.otboo.infra.security.jwt;
 
+import java.time.Instant;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Component;
+
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -11,17 +22,9 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetailsService;
+
 import jakarta.servlet.http.Cookie;
-import java.time.Instant;
-import java.util.Date;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -110,10 +113,7 @@ public class JwtProvider {
         signedJWT.sign(signer);
         String token = signedJWT.serialize();
 
-        try {
-            jwtRegistry.registerToken(userDetails.getUserId(), tokenId, expiryDate.toInstant());
-        } catch (Exception ignored) {
-        }
+        jwtRegistry.registerToken(userDetails.getUserId(), tokenId, expiryDate.toInstant());
 
         return token;
     }

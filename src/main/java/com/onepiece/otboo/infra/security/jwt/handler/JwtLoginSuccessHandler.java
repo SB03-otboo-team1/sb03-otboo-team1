@@ -59,14 +59,15 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
             return;
         }
 
-        response.addCookie(jwtProvider.generateRefreshTokenCookie(refreshToken));
-
+        // 사용자 검증
         User user = userRepository.findById(userDetails.getUserId())
             .orElse(null);
         if (user == null) {
             responseHandler.handle(response, new SecurityUnauthorizedException());
             return;
         }
+
+        response.addCookie(jwtProvider.generateRefreshTokenCookie(refreshToken));
         Profile profile = profileRepository.findByUserId(userDetails.getUserId()).orElse(null);
         UserDto userDto = userMapper.toDto(user, profile);
         JwtDto jwtDto = new JwtDto(accessToken, userDto);
