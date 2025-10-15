@@ -33,10 +33,10 @@ public class CommentQueryService {
      * 피드별 댓글 목록 조회 (커서 페이징).
      *
      * 정렬: createdAt DESC, id DESC (tie-breaker)
-     * 커서 포맷: Base64(URL-safe) 로 인코딩된 "epochMilli:id"
-     *  - epochMilli: 마지막 행의 createdAt.toEpochMilli() (null이면 0)
+     * 커서 포맷: Base64(URL-safe) 로 인코딩된 "epochSecond:nano:id"
+     *  - epochSecond: 마지막 행의 createdAt.getEpochSecond()
+     *  - nano: 마지막 행의 createdAt.getNano()
      *  - id: 마지막 행의 UUID
-     *
      * @param feedId  대상 피드 ID
      * @param cursor  다음 페이지 커서 (직전 응답의 nextCursor)
      * @param idAfter 경계 ID (cursor가 없을 때 기준점으로 사용)
