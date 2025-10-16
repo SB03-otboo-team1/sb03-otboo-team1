@@ -3,6 +3,7 @@ package com.onepiece.otboo.domain.clothes.entity;
 import com.onepiece.otboo.global.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -20,11 +21,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ClothesAttributes extends BaseUpdatableEntity {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "clothes_id", columnDefinition = "uuid", nullable = false)
     private Clothes clothes;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "definition_id", columnDefinition = "uuid", nullable = false)
     private ClothesAttributeDefs definition;
 

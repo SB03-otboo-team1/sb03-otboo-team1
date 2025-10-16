@@ -43,9 +43,10 @@ public class ClothesTableSeeder implements DataSeeder {
             String name = "Item-" + i;
             String type = TYPES[i % TYPES.length];
             String image = "https://example.com/img/" + i + ".png";
+            Long feedCount = 0L;
             jdbcTemplate.update(
-                "INSERT INTO clothes (id, owner_id, name, type, image_url, created_at) VALUES (?,?,?,?,?,now())",
-                id, UUID.fromString(owner), name, type, image
+                "INSERT INTO clothes (id, owner_id, name, type, image_url, feed_count, created_at) VALUES (?,?,?,?,?,?,now())",
+                id, UUID.fromString(owner), name, type, image, feedCount
             );
             count++;
         }

@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS clothes
     name       varchar(255),
     type       varchar(20),
     image_url  text,
+    feed_count bigint                   NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE,
     FOREIGN KEY (owner_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -248,8 +249,7 @@ CREATE TABLE IF NOT EXISTS recommendation
     weather_id uuid                     NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (weather_id) REFERENCES weather_data (id) ON DELETE CASCADE,
-    UNIQUE (user_id, weather_id)
+    FOREIGN KEY (weather_id) REFERENCES weather_data (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS recommendation_clothes
@@ -259,6 +259,26 @@ CREATE TABLE IF NOT EXISTS recommendation_clothes
     recommendation_id uuid NOT NULL,
     UNIQUE (recommendation_id, clothes_id),
     FOREIGN KEY (clothes_id) REFERENCES clothes (id) ON DELETE CASCADE,
+    FOREIGN KEY (recommendation_id) REFERENCES recommendation (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS recommendation_parameter
+(
+    id                uuid PRIMARY KEY,
+    recommendation_id uuid                     NOT NULL,
+    season_int        int,
+    gender_int        int,
+    age               int,
+    temp_sens         int,
+    sky_status_int    int,
+    min_temp          double precision,
+    max_temp          double precision,
+    cur_temp          double precision,
+    humidity          double precision,
+    wind_speed        double precision,
+    feel_hot          double precision,
+    feel_cold         double precision,
+    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     FOREIGN KEY (recommendation_id) REFERENCES recommendation (id) ON DELETE CASCADE
 );
 

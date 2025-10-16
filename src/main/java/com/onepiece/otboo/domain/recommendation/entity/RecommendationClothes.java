@@ -1,5 +1,6 @@
-package com.onepiece.otboo.domain.clothes.entity;
+package com.onepiece.otboo.domain.recommendation.entity;
 
+import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,23 +18,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "clothes_attribute_options")
+@Table(name = "recommendation_clothes")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class ClothesAttributeOptions {
+public class RecommendationClothes {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
-    public UUID id;
+    private UUID id;
 
-    @Column(name = "option_value", nullable = false, length = 50)
-    public String optionValue;
-
+    @JoinColumn(name = "recommendation_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "definition_id", columnDefinition = "uuid", nullable = false)
-    private ClothesAttributeDefs definition;
+    private Recommendation recommendation;
+
+    @JoinColumn(name = "clothes_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Clothes clothes;
 
 }
