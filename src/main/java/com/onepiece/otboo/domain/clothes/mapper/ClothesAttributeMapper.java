@@ -7,7 +7,6 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
@@ -43,11 +42,11 @@ public interface ClothesAttributeMapper {
             .toList();
     }
 
-    @Mapping(target = "definitionId", source = "attr", qualifiedByName = "toDefId")
-    @Mapping(target = "definitionName", source = "attr")
-    @Mapping(target = "selectableValues", source = "attr", qualifiedByName = "toOptions")
-    @Mapping(target = "value", source = "dto.value")
-    ClothesAttributeWithDefDto toAttributeDto(Map<String, String> attr,
+    @Mapping(target = "definitionId", source = "attrName", qualifiedByName = "toDefId")
+    @Mapping(target = "definitionName", source = "attrName")
+    @Mapping(target = "selectableValues", source = "attrName", qualifiedByName = "toOptions")
+    @Mapping(target = "value", source = "attrValue")
+    ClothesAttributeWithDefDto toAttributeDto(String attrName, String attrValue,
         @Context ClothesAttributeDefRepository def,
         @Context ClothesAttributeOptionsRepository option);
 
@@ -59,12 +58,15 @@ public interface ClothesAttributeMapper {
     }
 
     @Named("toOptions")
-    default List<ClothesAttributeOptions> toOptions(String name,
+    default List<String> toOptions(String attrName,
         @Context ClothesAttributeDefRepository def,
         @Context ClothesAttributeOptionsRepository option) {
-        UUID defId = def.findByName(name).map(ClothesAttributeDefs::getId).orElse(null);
-        List<ClothesAttributeOptions> options = option.findByDefinitionId(defId);
 
-        return options;
+        UUID defId = def.findByName(attrName).map(ClothesAttributeDefs::getId).orElse(null);
+        List<ClothesAttributeOptions> options = option.findByDefinitionId(defId);
+        List<String> selectableValues = options.stream()
+            .map(ClothesAttributeOptions::getOptionValue).toList();
+
+        return selectableValues;
     }
 }

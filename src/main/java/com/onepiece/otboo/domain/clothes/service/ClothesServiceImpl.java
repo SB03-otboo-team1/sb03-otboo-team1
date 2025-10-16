@@ -55,7 +55,7 @@ public class ClothesServiceImpl implements ClothesService {
     private final ClothesMapper clothesMapper;
     private final ClothesAttributeMapper clothesAttributeMapper;
     private final FileStorage fileStorage;
-    private final ClothesInfoParser clothesInfoParser;
+    private final List<ClothesInfoParser> parsers;
 
     @Value("${aws.storage.prefix.clothes}")
     private String CLOTHES_PREFIX;
@@ -236,18 +236,21 @@ public class ClothesServiceImpl implements ClothesService {
     @Override
     public ClothesDto getClothesByUrl(UUID userId, String url) throws IOException {
 
-        ParsedClothesInfoDto dto = clothesInfoParser.parse(url);
+        ClothesInfoParser parser = ClothesInfoParser.choose(parsers, url);
+        ParsedClothesInfoDto dto = parser.parse(url);
 
-        dto.attributes().keySet();
-        dto.attributes().values();
-
-        ClothesDto clothes = ClothesDto.builder()
+        return ClothesDto.builder()
             .ownerId(userId)
             .name(dto.clothesName())
             .type(ClothesType.valueOf(dto.clothesType()))
             .imageUrl(dto.imageUrl())
-            .attributes(clothesAttributeMapper.toAttributeDto(dto.attributes(), defRepository,
-                optionsRepository))
+            .attributes(
+                dto.attributes().entrySet().stream().map(
+                    e -> clothesAttributeMapper.toAttributeDto(
+                        e.getKey(), e.getValue(), defRepository, optionsRepository
+                    )
+                ).toList()
+            )
             .build();
     }
 }
