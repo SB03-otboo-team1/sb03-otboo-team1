@@ -35,7 +35,6 @@ public class ClothesAttributeDefController implements ClothesAttributeDefApi {
     private final ClothesAttributeDefService clothesAttributeDefService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ClothesAttributeDefDto>> getClothesAttributeDefs(
         @RequestParam(defaultValue = "createdAt") SortBy sortBy,
         @RequestParam(defaultValue = "ASCENDING") SortDirection sortDirection,
@@ -45,7 +44,7 @@ public class ClothesAttributeDefController implements ClothesAttributeDefApi {
 
         List<ClothesAttributeDefDto> response =
             clothesAttributeDefService.getClothesAttributeDefs(
-            sortBy, sortDirection, keywordLike);
+                sortBy, sortDirection, keywordLike);
 
         log.info("의상 속성 조회 작업 완료");
 
