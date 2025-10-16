@@ -1,7 +1,10 @@
 package com.onepiece.otboo.domain.recommendation.mapper;
 
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.feed.dto.response.OotdDto;
+import com.onepiece.otboo.domain.feed.dto.response.OotdDto.OotdAttribute;
 import com.onepiece.otboo.domain.recommendation.dto.data.RecommendationDto;
 import com.onepiece.otboo.domain.recommendation.entity.Recommendation;
 import com.onepiece.otboo.domain.recommendation.entity.RecommendationClothes;
@@ -26,8 +29,17 @@ public interface RecommendationMapper {
     @Mapping(target = "type", source = "clothes.clothes.type")
     @Mapping(target = "name", source = "clothes.clothes.name")
     @Mapping(target = "imageUrl", source = "clothes.clothes.imageUrl", qualifiedByName = "toPublicUrl")
+    @Mapping(target = "attributes", source = "clothes.clothes.attributes")
     OotdDto clothesToOotdDto(RecommendationClothes clothes,
         @Context FileStorage fileStorage);
+
+    @Mapping(target = "definitionId", source = "attribute.definition.id")
+    @Mapping(target = "definitionName", source = "attribute.definition.name")
+    @Mapping(target = "selectableValues", source = "attribute.definition.options", qualifiedByName = "optionsToValues")
+    @Mapping(target = "value", source = "attribute.optionValue")
+    OotdAttribute toOotdAttribute(ClothesAttributes attribute);
+
+    List<OotdAttribute> toOotdAttribute(List<ClothesAttributes> attribute);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "recommendation", source = "recommendation")
@@ -46,5 +58,15 @@ public interface RecommendationMapper {
             return s3.generatePresignedUrl(key);
         }
         return key;
+    }
+
+    @Named("optionsToValues")
+    default List<String> optionsToValues(List<ClothesAttributeOptions> options) {
+        if (options == null) {
+            return List.of();
+        }
+        return options.stream()
+            .map(ClothesAttributeOptions::getOptionValue)
+            .toList();
     }
 }
