@@ -3,19 +3,21 @@ package com.onepiece.otboo.domain.weather.batch.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.BDDMockito.given;
 
 import com.onepiece.otboo.domain.location.entity.Location;
 import com.onepiece.otboo.domain.location.fixture.LocationFixture;
 import com.onepiece.otboo.domain.location.repository.LocationRepository;
 import com.onepiece.otboo.domain.weather.entity.Weather;
-import com.onepiece.otboo.domain.weather.fixture.KmaItemFixture;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
-import com.onepiece.otboo.infra.api.client.KmaClient;
-import java.time.LocalDate;
+import com.onepiece.otboo.infra.api.client.OpenWeatherClient;
+import com.onepiece.otboo.infra.api.client.OpenWeatherClient.Main;
+import com.onepiece.otboo.infra.api.client.OpenWeatherClient.Root;
+import com.onepiece.otboo.infra.api.client.OpenWeatherClient.W;
+import com.onepiece.otboo.infra.api.client.OpenWeatherClient.Wind;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -58,7 +60,7 @@ class WeatherBatchConfigTest {
     private WeatherRepository weatherRepository;
 
     @MockitoBean
-    private KmaClient kmaClient;
+    private OpenWeatherClient openWeatherClient;
 
     private UUID savedLocationId;
 
@@ -73,14 +75,44 @@ class WeatherBatchConfigTest {
         Location saved = locationRepository.save(LocationFixture.createLocation());
         savedLocationId = saved.getId();
 
-        given(kmaClient.getVillageForecast(anyInt(), anyInt(), any(LocalDate.class), anyString()))
-            .willAnswer(inv -> {
-                int nx = inv.getArgument(0, Integer.class);
-                int ny = inv.getArgument(1, Integer.class);
-                LocalDate baseDate = inv.getArgument(2, LocalDate.class);
-                String baseTime = inv.getArgument(3, String.class);
-                return KmaItemFixture.buildVillageItemsForFiveDays(nx, ny, baseDate, baseTime);
-            });
+        Root root = buildOpenWeatherStub();
+
+        given(openWeatherClient.get5Day3HourForecast(anyDouble(), anyDouble()))
+            .willReturn(root);
+    }
+
+    private Root buildOpenWeatherStub() {
+        Root root = new Root();
+        root.list = new ArrayList<>();
+
+        // 3시간 간격 5개 정도 샘플 아이템
+        long now = Instant.now().getEpochSecond();
+
+        for (int i = 0; i < 5; i++) {
+            OpenWeatherClient.Item item = new OpenWeatherClient.Item();
+            item.dt = now + i * 3 * 3600;
+
+            Main main = new Main();
+            main.temp = 293.15 + i;   // K (대충 값)
+            main.temp_min = 292.15 + i;
+            main.temp_max = 294.15 + i;
+            main.humidity = 60.0;
+            item.main = main;
+
+            W w = new W();
+            w.id = 500; // 비 코드 등
+            item.weather = List.of(w);
+
+            Wind wind = new Wind();
+            wind.speed = 3.2;
+            item.wind = wind;
+
+            item.pop = 0.2;
+
+            root.list.add(item);
+        }
+
+        return root;
     }
 
     @Test
