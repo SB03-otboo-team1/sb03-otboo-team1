@@ -1,6 +1,7 @@
 package com.onepiece.otboo.domain.notification.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.doNothing;
 import static org.mockito.BDDMockito.given;
@@ -19,31 +20,31 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(NotificationController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(NotificationController.class)
 class NotificationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private NotificationService notificationService;
 
     @Test
-    @DisplayName("알림 목록 조회 성공")
+    @DisplayName("알림 목록 조회 성공 (GET /api/notifications)")
     void getNotifications_Success() throws Exception {
-        UUID receiverId = UUID.randomUUID();
-
         NotificationResponse notificationResponse = NotificationResponse.builder()
             .id(UUID.randomUUID())
-            .receiverId(receiverId)
+            .receiverId(UUID.randomUUID())
             .title("새 팔로워 알림")
             .content("민준님을 팔로우했습니다.")
             .level("INFO")
@@ -54,18 +55,19 @@ class NotificationControllerTest {
             new CursorPageResponseDto<>(
                 List.of(notificationResponse),
                 "2025-10-15T09:00:00Z",
-                null,
+                UUID.randomUUID(),
                 false,
                 1L,
                 SortBy.CREATED_AT,
                 SortDirection.DESCENDING
             );
 
-        given(notificationService.getNotifications(eq(receiverId), any(), eq(10)))
+        given(notificationService.getNotifications(anyString(), any(), eq(10)))
             .willReturn(mockResponse);
 
         mockMvc.perform(get("/api/notifications")
-                .param("receiverId", receiverId.toString())
+                .param("cursor", "2025-10-14T10:15:30Z")
+                .param("idAfter", UUID.randomUUID().toString())
                 .param("limit", "10")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
