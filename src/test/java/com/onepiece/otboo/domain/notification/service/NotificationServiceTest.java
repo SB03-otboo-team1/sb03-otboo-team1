@@ -39,14 +39,14 @@ class NotificationServiceTest {
     private NotificationServiceImpl notificationService;
 
     @Test
-    @DisplayName("알림 목록 조회 성공 (createdAtBefore 커서 기반)")
+    @DisplayName("알림 목록 조회 성공 (cursor + idAfter 기반)")
     void getNotifications_Success() {
-        UUID receiverId = UUID.randomUUID();
-        Instant createdAtBefore = null;
+        String cursor = "2025-10-15T09:00:00Z";
+        UUID idAfter = UUID.randomUUID();
         int limit = 10;
 
         Notification notification = Notification.builder()
-            .receiverId(receiverId)
+            .receiverId(UUID.randomUUID())
             .title("테스트 알림")
             .content("테스트 내용")
             .level(NotificationLevel.INFO)
@@ -55,20 +55,20 @@ class NotificationServiceTest {
 
         NotificationResponse response = NotificationResponse.builder()
             .id(UUID.randomUUID())
-            .receiverId(receiverId)
+            .receiverId(notification.getReceiverId())
             .title("테스트 알림")
             .content("테스트 내용")
             .level("INFO")
             .createdAt(notification.getCreatedAt())
             .build();
 
-        given(notificationRepository.findNotifications(receiverId, createdAtBefore, limit))
+        given(notificationRepository.findNotifications(any(), any(), any(Integer.class)))
             .willReturn(List.of(notification));
         given(notificationMapper.toResponse(notification)).willReturn(response);
-        given(notificationRepository.countByReceiverId(receiverId)).willReturn(1L);
+        given(notificationRepository.countAll()).willReturn(1L);
 
         CursorPageResponseDto<NotificationResponse> result =
-            notificationService.getNotifications(receiverId, createdAtBefore, limit);
+            notificationService.getNotifications(cursor, idAfter, limit);
 
         assertThat(result.data()).hasSize(1);
         assertThat(result.data().get(0).getTitle()).isEqualTo("테스트 알림");
@@ -77,8 +77,8 @@ class NotificationServiceTest {
         assertThat(result.sortBy()).isEqualTo(SortBy.CREATED_AT);
         assertThat(result.sortDirection()).isEqualTo(SortDirection.DESCENDING);
 
-        verify(notificationRepository).findNotifications(receiverId, createdAtBefore, limit);
-        verify(notificationRepository).countByReceiverId(receiverId);
+        verify(notificationRepository).findNotifications(any(), any(), any(Integer.class));
+        verify(notificationRepository).countAll();
     }
 
     @Test

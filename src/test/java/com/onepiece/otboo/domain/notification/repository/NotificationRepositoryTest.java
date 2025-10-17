@@ -38,13 +38,11 @@ class NotificationRepositoryTest {
     }
 
     @Test
-    @DisplayName("알림 목록 조회 성공 - 커서 기반 (createdAtBefore 기준, limit+1 포함)")
+    @DisplayName("알림 목록 조회 성공 - 커서 기반 (createdAt + idAfter)")
     void findNotifications_Success() {
-        UUID receiverId = UUID.randomUUID();
-
         for (int i = 0; i < 5; i++) {
             Notification n = Notification.builder()
-                .receiverId(receiverId)
+                .receiverId(UUID.randomUUID())
                 .title("테스트 알림 " + i)
                 .content("내용 " + i)
                 .level(NotificationLevel.INFO)
@@ -55,42 +53,50 @@ class NotificationRepositoryTest {
         em.flush();
         em.clear();
 
-        List<Notification> notifications =
-            notificationRepository.findNotifications(receiverId, null, 3);
+        List<Notification> firstPage =
+            notificationRepository.findNotifications(null, null, 3);
 
-        assertThat(notifications).hasSizeBetween(3, 4);
-        assertThat(notifications.get(0).getReceiverId()).isEqualTo(receiverId);
-        assertThat(notifications.get(0).getTitle()).contains("테스트 알림");
+        assertThat(firstPage).hasSizeBetween(3, 4);
+
+        Instant nextCursor = firstPage.get(firstPage.size() - 1).getCreatedAt();
+        UUID nextIdAfter = firstPage.get(firstPage.size() - 1).getId();
+
+        List<Notification> secondPage =
+            notificationRepository.findNotifications(nextCursor, nextIdAfter, 3);
+
+        if (!secondPage.isEmpty()) {
+            assertThat(secondPage.get(0).getCreatedAt())
+                .isBeforeOrEqualTo(nextCursor);
+        }
     }
 
     @Test
-    @DisplayName("알림 목록 조회 성공 - createdAtBefore 커서 적용")
-    void findNotifications_WithCreatedAtBefore_Success() {
-        UUID receiverId = UUID.randomUUID();
+    @DisplayName("알림 목록 조회 성공 - 동일 createdAt 내 idAfter 적용")
+    void findNotifications_WithIdAfter_Success() {
+        Instant now = Instant.now();
 
         for (int i = 0; i < 5; i++) {
             Notification n = Notification.builder()
-                .receiverId(receiverId)
-                .title("알림 " + i)
+                .receiverId(UUID.randomUUID())
+                .title("동일시각 알림 " + i)
                 .content("내용 " + i)
                 .level(NotificationLevel.INFO)
-                .createdAt(Instant.now().minus(i, ChronoUnit.MINUTES))
+                .createdAt(now)
                 .build();
             em.persist(n);
         }
         em.flush();
         em.clear();
 
-        List<Notification> all = notificationRepository.findNotifications(receiverId, null, 5);
-        Instant createdAtBefore = all.get(1).getCreatedAt();
+        List<Notification> all = notificationRepository.findNotifications(null, null, 5);
+        Instant cursor = all.get(0).getCreatedAt();
+        UUID idAfter = all.get(2).getId();
 
-        List<Notification> next =
-            notificationRepository.findNotifications(receiverId, createdAtBefore, 3);
+        List<Notification> next = notificationRepository.findNotifications(cursor, idAfter, 2);
 
         if (!next.isEmpty()) {
-            assertThat(next.get(0).getCreatedAt()).isBeforeOrEqualTo(createdAtBefore);
-        } else {
-            assertThat(next).isEmpty();
+            assertThat(next.get(0).getCreatedAt()).isEqualTo(cursor);
+            assertThat(next.get(0).getId()).isLessThan(idAfter);
         }
     }
 
