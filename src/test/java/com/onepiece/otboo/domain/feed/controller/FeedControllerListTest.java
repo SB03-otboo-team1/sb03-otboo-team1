@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -53,6 +54,7 @@ class FeedControllerListTest {
     @Test
     @DisplayName("[비인증] 필수 파라미터만 전달 → 200 OK")
     void 비인증_필수파라미터만_OK_그리고_me_null() throws Exception {
+        SecurityContextHolder.clearContext();
         given(feedQueryService.listFeeds(any(), any(), anyInt(), any(), any(),
             any(), any(), any(), any(), isNull())).willReturn(빈응답());
 
