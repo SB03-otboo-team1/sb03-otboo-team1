@@ -1,0 +1,24 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+    activate:
+      on-profile: test-security
+
+logging:
+  level:
+    com.onepiece.otboo: debug
+    org.hibernate.SQL: debug
+    org.springframework.security: trace
+
+otboo:
+  security:
+    csrf:
+      ignored-paths:
+        - /h2-console/**
+        - /api/users/**
+        - /api/auth/**
+    swagger:
+      basic:
+        enabled: false
+        username: test-swagger
+        password: test-password
