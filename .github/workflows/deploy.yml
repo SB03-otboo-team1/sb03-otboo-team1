@@ -10,7 +10,7 @@ env:
   ECS_CLUSTER: onepiece-devil-cluster
   ECS_SERVICE: onepiece-otboo-app-task-service-jfq7knhu
   ECS_TASK_DEFINITION: onepiece-otboo-app-task
-  CONTAINER_NAME: onepiece-otboo-app
+  CONTAINER_NAME: otboo1
 
 concurrency:
   group: ecs-deploy-${{ github.ref }}
