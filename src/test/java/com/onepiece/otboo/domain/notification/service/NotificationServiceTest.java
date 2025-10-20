@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
-import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
+import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.exception.NotificationNotFoundException;
 import com.onepiece.otboo.domain.notification.mapper.NotificationMapper;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
@@ -49,7 +49,7 @@ class NotificationServiceTest {
             .receiverId(UUID.randomUUID())
             .title("테스트 알림")
             .content("테스트 내용")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 
@@ -89,7 +89,7 @@ class NotificationServiceTest {
             .receiverId(UUID.randomUUID())
             .title("삭제 테스트 알림")
             .content("내용")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 
@@ -125,7 +125,7 @@ class NotificationServiceTest {
             .receiverId(UUID.randomUUID())
             .title("이미 삭제된 알림")
             .content("내용")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 

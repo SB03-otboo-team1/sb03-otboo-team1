@@ -2,6 +2,7 @@ package com.onepiece.otboo.domain.notification.service;
 
 import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
+import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.exception.NotificationNotFoundException;
 import com.onepiece.otboo.domain.notification.mapper.NotificationMapper;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
@@ -19,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 알림 서비스 구현체
  * <p>
- * - 알림 목록 조회 (커서 기반) - 알림 읽음 처리
+ * - 알림 목록 조회 (커서 기반) - 알림 생성 - 알림 읽음 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -77,6 +78,28 @@ public class NotificationServiceImpl implements NotificationService {
             SortBy.CREATED_AT,
             SortDirection.DESCENDING
         );
+    }
+
+    /**
+     * 알림 생성
+     *
+     * @param receiverId 알림을 받을 사용자 ID
+     * @param title      알림 제목
+     * @param content    알림 내용
+     * @param level      알림 중요도 수준 (INFO, WARNING, ERROR)
+     */
+    @Transactional
+    @Override
+    public void create(UUID receiverId, String title, String content, Level level) {
+        Notification notification = Notification.builder()
+            .receiverId(receiverId)
+            .title(title)
+            .content(content)
+            .level(level)
+            .createdAt(Instant.now())
+            .build();
+
+        notificationRepository.save(notification);
     }
 
     /**

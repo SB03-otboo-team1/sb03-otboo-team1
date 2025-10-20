@@ -1,6 +1,6 @@
 package com.onepiece.otboo.domain.notification.entity;
 
-import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
+import com.onepiece.otboo.domain.notification.enums.Level;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -39,7 +39,7 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private NotificationLevel level;
+    private Level level;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -49,7 +49,7 @@ public class Notification {
 
     @Builder
     public Notification(UUID receiverId, String title, String content,
-        NotificationLevel level, Instant createdAt) {
+        Level level, Instant createdAt) {
         this.receiverId = receiverId;
         this.title = title;
         this.content = content;

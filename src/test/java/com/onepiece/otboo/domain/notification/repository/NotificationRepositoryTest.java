@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 import com.onepiece.otboo.domain.notification.entity.Notification;
-import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
+import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.global.config.TestJpaConfig;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -45,7 +45,7 @@ class NotificationRepositoryTest {
                 .receiverId(UUID.randomUUID())
                 .title("테스트 알림 " + i)
                 .content("내용 " + i)
-                .level(NotificationLevel.INFO)
+                .level(Level.INFO)
                 .createdAt(Instant.now().minus(i, ChronoUnit.MINUTES))
                 .build();
             em.persist(n);
@@ -80,7 +80,7 @@ class NotificationRepositoryTest {
                 .receiverId(UUID.randomUUID())
                 .title("동일시각 알림 " + i)
                 .content("내용 " + i)
-                .level(NotificationLevel.INFO)
+                .level(Level.INFO)
                 .createdAt(now)
                 .build();
             em.persist(n);
@@ -110,7 +110,7 @@ class NotificationRepositoryTest {
                 .receiverId(receiverId)
                 .title("테스트 알림 " + i)
                 .content("내용 " + i)
-                .level(NotificationLevel.INFO)
+                .level(Level.INFO)
                 .createdAt(Instant.now())
                 .build();
             em.persist(n);
@@ -132,7 +132,7 @@ class NotificationRepositoryTest {
             .receiverId(receiverId)
             .title("삭제 테스트 알림")
             .content("삭제 처리 전 상태입니다.")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 
