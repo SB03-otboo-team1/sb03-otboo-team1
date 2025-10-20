@@ -22,7 +22,7 @@ import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
 import com.onepiece.otboo.global.storage.FileStorage;
-import com.onepiece.otboo.global.storage.S3Storage; // ★ 추가
+import com.onepiece.otboo.global.storage.S3Storage;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -64,7 +64,7 @@ public class FeedService {
         AuthorDto authorDto = AuthorDto.builder()
             .userId(author.getId())
             .name(profile.getNickname())
-            .profileImageUrl(toPublicUrl(profile.getProfileImageUrl())) // ★ 변경
+            .profileImageUrl(toPublicUrl(profile.getProfileImageUrl()))
             .build();
 
         WeatherSummaryDto weatherDto = null;
@@ -180,13 +180,13 @@ public class FeedService {
             .map(c -> new OotdDto(
                 c.getId(),
                 c.getName(),
-                toPublicUrl(c.getImageUrl()), // ★ 변경
+                toPublicUrl(c.getImageUrl()),
                 c.getType().name(),
                 List.of()
             ))
             .toList();
 
-        boolean likedByMe = false; // 필요 시 좋아요 여부 계산
+        boolean likedByMe = false;
 
         return feedMapper.toResponse(feed, authorDto, weatherDto, ootds, likedByMe);
     }

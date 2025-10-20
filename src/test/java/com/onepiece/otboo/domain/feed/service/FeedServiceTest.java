@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.feed.service;
 
+import com.onepiece.otboo.domain.clothes.entity.Clothes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
 import com.onepiece.otboo.domain.feed.dto.request.FeedCreateRequest;
@@ -8,6 +9,7 @@ import com.onepiece.otboo.domain.feed.entity.Feed;
 import com.onepiece.otboo.domain.feed.entity.FeedClothes;
 import com.onepiece.otboo.domain.feed.mapper.FeedMapper;
 import com.onepiece.otboo.domain.feed.repository.FeedRepository;
+import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
@@ -78,8 +80,8 @@ class FeedServiceTest {
         when(weatherMapper.toTemperatureDto(any())).thenReturn(null);
         when(author.getId()).thenReturn(authorId);
 
-        var clothes1 = mock(com.onepiece.otboo.domain.clothes.entity.Clothes.class);
-        var clothes2 = mock(com.onepiece.otboo.domain.clothes.entity.Clothes.class);
+        var clothes1 = mock(Clothes.class);
+        var clothes2 = mock(Clothes.class);
         when(clothes1.getId()).thenReturn(c1);
         when(clothes2.getId()).thenReturn(c2);
         when(clothes1.getOwner()).thenReturn(author);
@@ -176,7 +178,7 @@ class FeedServiceTest {
         var authorId = UUID.randomUUID();
         var weatherId = UUID.randomUUID();
         var author = mock(User.class);
-        var profile = mock(com.onepiece.otboo.domain.profile.entity.Profile.class);
+        var profile = mock(Profile.class);
 
         when(userRepository.findById(authorId)).thenReturn(Optional.of(author));
         when(profileRepository.findByUserId(authorId)).thenReturn(Optional.of(profile));

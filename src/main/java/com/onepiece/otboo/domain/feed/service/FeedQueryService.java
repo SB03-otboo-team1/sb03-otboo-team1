@@ -29,7 +29,13 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +51,7 @@ public class FeedQueryService {
     private final FeedMapper feedMapper;
     private final FeedLikeRepository feedLikeRepository;
     private final WeatherMapper weatherMapper;
-    private final FileStorage storage; // ★ 추가
+    private final FileStorage storage;
 
     @Value("${app.cdn-base-url:}")
     private String cdnBaseUrl;
@@ -275,7 +281,6 @@ public class FeedQueryService {
         if (key == null || key.isBlank()) return null;
         if (key.startsWith("http://") || key.startsWith("https://")) return key;
 
-        // S3 구현이면 presigned URL
         if (storage instanceof S3Storage s3) {
             return s3.generatePresignedUrl(key);
         }

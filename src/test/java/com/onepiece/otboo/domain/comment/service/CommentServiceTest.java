@@ -14,6 +14,7 @@ import com.onepiece.otboo.domain.comment.dto.response.CommentDto;
 import com.onepiece.otboo.domain.comment.entity.Comment;
 import com.onepiece.otboo.domain.comment.mapper.CommentMapper;
 import com.onepiece.otboo.domain.comment.repository.CommentRepository;
+import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.feed.entity.Feed;
 import com.onepiece.otboo.domain.feed.repository.FeedRepository;
 import com.onepiece.otboo.domain.user.entity.User;
@@ -70,7 +71,7 @@ class CommentServiceTest {
             UUID.randomUUID(),
             Instant.now(),
             feedId,
-            new com.onepiece.otboo.domain.feed.dto.response.AuthorDto(authorId, "", null),
+            new AuthorDto(authorId, "", null),
             "댓글"
         );
         when(mapper.toDto(savedComment)).thenReturn(expected);

@@ -25,6 +25,7 @@ import com.onepiece.otboo.domain.weather.enums.SkyStatus;
 import com.onepiece.otboo.domain.weather.mapper.WeatherMapper;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.storage.FileStorage;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
@@ -50,13 +51,15 @@ class FeedQueryServiceListTest {
     FeedLikeRepository feedLikeRepository;
     WeatherMapper weatherMapper;
     FeedQueryService sut;
+    FileStorage storage = mock(FileStorage.class);
+
 
     @BeforeEach
     void setUp() {
         qf = mock(JPAQueryFactory.class);
         feedMapper = mock(FeedMapper.class);
         feedLikeRepository = mock(FeedLikeRepository.class);
-        sut = new FeedQueryService(qf, feedMapper, feedLikeRepository, weatherMapper);
+        sut = new FeedQueryService(qf, feedMapper, feedLikeRepository, weatherMapper, storage);
     }
 
     // -------------------- 예외 케이스 --------------------

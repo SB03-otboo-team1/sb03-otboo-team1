@@ -28,8 +28,8 @@ import static org.mockito.Mockito.*;
 class FeedServiceUpdateTest {
 
     @Mock FeedRepository feedRepository;
-    @Mock UserRepository userRepository;         // 생성자 주입 시그니처 맞춤용
-    @Mock WeatherRepository weatherRepository;   // 생성자 주입 시그니처 맞춤용
+    @Mock UserRepository userRepository;
+    @Mock WeatherRepository weatherRepository;
     @Mock FeedMapper feedMapper;
 
     @InjectMocks
