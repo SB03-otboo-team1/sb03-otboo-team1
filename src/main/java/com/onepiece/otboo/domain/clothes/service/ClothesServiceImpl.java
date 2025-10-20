@@ -214,8 +214,10 @@ public class ClothesServiceImpl implements ClothesService {
 
         List<ClothesAttributes> attributes = attributeRepository.findByClothesId(clothesId);
 
+        List<ClothesAttributeDto> reqAttrs =
+            request.attributes() == null ? List.of() : request.attributes();
         List<ClothesAttributes> newAttributes =
-            request.attributes().stream().map(
+            reqAttrs.stream().map(
                 dto -> {
                     ClothesAttributeDefs def = defRepository.findById(dto.definitionId())
                         .orElseThrow(
