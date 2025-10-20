@@ -37,15 +37,12 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 @ExtendWith(MockitoExtension.class)
 class S3StorageTest {
 
+    private final String KEY = "image/";
     @Mock
     private S3Client s3Client;
-
     @Mock
     private S3Presigner s3Presigner;
-
     private S3Storage s3Storage;
-
-    private final String KEY = "image/";
 
     @BeforeEach
     void setUp() {
@@ -79,13 +76,13 @@ class S3StorageTest {
     }
 
     @Test
-    void 파일_타입이_image가_아닌_경우_업로드에_실패한다() {
+    void 파일_타입이_null인_경우_업로드에_실패한다() {
 
         // given
         MockMultipartFile file = new MockMultipartFile(
             "file",
             "test.txt",
-            "text/plain",
+            null,
             "text-content".getBytes()
         );
 
