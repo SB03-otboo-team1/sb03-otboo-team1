@@ -91,6 +91,6 @@ public interface ClothesApi {
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     ResponseEntity<ClothesDto> getClothesByUrl(
-        @PathVariable(name = "url") String url
+        @RequestParam(name = "url") String url
     ) throws IOException;
 }

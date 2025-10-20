@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -126,10 +127,10 @@ public class ClothesController implements ClothesApi {
         return ResponseEntity.noContent().build();
     }
 
-    @Override
     @PreAuthorize("hasRole('USER') || hasRole('ADMIN')")
+    @GetMapping(path = "/extractions")
     public ResponseEntity<ClothesDto> getClothesByUrl(
-        @PathVariable String url
+        @RequestParam String url
     ) throws IOException {
         log.info("구매 링크로 옷 정보 불러오기 API 호출 - url: {}", url);
 
@@ -141,6 +142,6 @@ public class ClothesController implements ClothesApi {
 
         log.info("구매 링크로 옷 정보 불러오기 작업 완료 - clothes: {}", clothes);
 
-        return null;
+        return ResponseEntity.ok(clothes);
     }
 }
