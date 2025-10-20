@@ -17,7 +17,7 @@ public class BatchScheduler {
     private final JobLauncher jobLauncher;
     private final Job collectWeatherJob;
 
-    //@Scheduled(cron = "0 15 0,3,6,9,12,15,18,21 * * *", zone = "Asia/Seoul")
+    //@Scheduled(cron = "0 15 0,6,12,18 * * *", zone = "Asia/Seoul")
     @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Seoul")
     public void runCollectWeatherJob() {
         try {

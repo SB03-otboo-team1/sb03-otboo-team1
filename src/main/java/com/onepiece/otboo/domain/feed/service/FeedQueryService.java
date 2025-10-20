@@ -8,6 +8,7 @@ import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.domain.feed.dto.response.OotdDto;
 import com.onepiece.otboo.domain.feed.entity.Feed;
 import com.onepiece.otboo.domain.feed.mapper.FeedMapper;
+import com.onepiece.otboo.domain.feed.repository.FeedLikeRepository;
 import com.onepiece.otboo.domain.weather.dto.response.PrecipitationDto;
 import com.onepiece.otboo.domain.weather.dto.response.TemperatureDto;
 import com.onepiece.otboo.domain.weather.dto.response.WeatherSummaryDto;
@@ -22,7 +23,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,7 @@ public class FeedQueryService {
 
     private final JPAQueryFactory qf;
     private final FeedMapper feedMapper;
+    private final FeedLikeRepository feedLikeRepository;
 
     @Transactional(readOnly = true)
     public CursorPageResponseDto<FeedResponse> listFeeds(
@@ -151,9 +155,22 @@ public class FeedQueryService {
             rows = new ArrayList<>(rows.subList(0, limit));
         }
 
+        List<UUID> ids = rows.stream().map(Feed::getId).toList();
+        Set<UUID> likedIds = (me != null && !ids.isEmpty())
+            ? feedLikeRepository.findAllByUser_IdAndFeed_IdIn(me, ids).stream()
+            .map(fl -> fl.getFeed().getId())
+            .collect(Collectors.toSet())
+            : Set.of();
+
         List<FeedResponse> data = rows.stream()
             .map(feedMapper::toResponse)
-            .map(this::ensureDefaults)        // ← null 방지
+            .map(r -> new FeedResponse(
+                r.id(), r.createdAt(), r.updatedAt(),
+                r.author(), r.weather(), r.ootds(),
+                r.content(), r.likeCount(), r.commentCount(),
+                likedIds.contains(r.id())
+            ))
+            .map(this::ensureDefaults)
             .toList();
 
         String nextCursor = null;

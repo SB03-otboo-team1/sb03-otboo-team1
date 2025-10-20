@@ -156,6 +156,12 @@ dependencies {
     // kafka
     implementation 'org.springframework.kafka:spring-kafka'
 
+    // WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // security-messaging
+    implementation 'org.springframework.security:spring-security-messaging'
+
     // =================== Integration test ===================
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
     integrationTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'

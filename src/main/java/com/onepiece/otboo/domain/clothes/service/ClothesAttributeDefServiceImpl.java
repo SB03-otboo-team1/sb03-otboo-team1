@@ -12,12 +12,12 @@ import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepos
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -32,6 +32,7 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
 
 
     @Override
+    @Transactional(readOnly = true)
     public List<ClothesAttributeDefDto> getClothesAttributeDefs(
         SortBy sortBy, SortDirection sortDirection, String keywordLike
     ) {
