@@ -1,6 +1,5 @@
 package com.onepiece.otboo.domain.clothes.controller;
 
-import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.clothes.controller.api.ClothesApi;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
@@ -21,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -79,7 +79,7 @@ public class ClothesController implements ClothesApi {
 
         // 인증된 사용자와 일치하는지 확인
         if (!SecurityUtil.isRequester(request.ownerId())) {
-            throw new UnAuthorizedException();
+            throw new AccessDeniedException("Forbidden");
         }
 
         ClothesDto clothes = clothesService.createClothes(request, imageFile);
@@ -103,7 +103,7 @@ public class ClothesController implements ClothesApi {
 
         // 인증된 사용자와 일치하는지 확인
         if (!SecurityUtil.isRequester(ownerId)) {
-            throw new UnAuthorizedException();
+            throw new AccessDeniedException("Forbidden");
         }
 
         ClothesDto clothes = clothesService.updateClothes(clothesId, request, imageFile);
@@ -124,7 +124,7 @@ public class ClothesController implements ClothesApi {
 
         // 인증된 사용자와 일치하는지 확인
         if (!SecurityUtil.isRequester(ownerId)) {
-            throw new UnAuthorizedException();
+            throw new AccessDeniedException("Forbidden");
         }
 
         clothesService.deleteClothes(clothesId);

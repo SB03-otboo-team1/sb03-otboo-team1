@@ -55,6 +55,8 @@ public interface ClothesApi {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "옷 등록 성공"),
         @ApiResponse(responseCode = "400", description = "옷 등록 실패"),
+        @ApiResponse(responseCode = "401", description = "권한 없음"),
+        @ApiResponse(responseCode = "403", description = "인증된 사용자 불일치"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     ResponseEntity<ClothesDto> createClothes(
@@ -66,6 +68,8 @@ public interface ClothesApi {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "옷 수정 성공"),
         @ApiResponse(responseCode = "400", description = "옷 수정 실패"),
+        @ApiResponse(responseCode = "401", description = "권한 없음"),
+        @ApiResponse(responseCode = "403", description = "인증된 사용자 불일치"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     ResponseEntity<ClothesDto> updateClothes(
@@ -78,6 +82,8 @@ public interface ClothesApi {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "옷 삭제 성공"),
         @ApiResponse(responseCode = "400", description = "옷 삭제 실패"),
+        @ApiResponse(responseCode = "401", description = "권한 없음"),
+        @ApiResponse(responseCode = "403", description = "인증된 사용자 불일치"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     ResponseEntity<Void> deleteClothes(
@@ -88,6 +94,8 @@ public interface ClothesApi {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "구매 링크로 옷 정보 불러오기 성공"),
         @ApiResponse(responseCode = "400", description = "구매 링크로 옷 정보 불러오기 실패"),
+        @ApiResponse(responseCode = "401", description = "권한 없음"),
+        @ApiResponse(responseCode = "403", description = "인증된 사용자 불일치"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     ResponseEntity<ClothesDto> getClothesByUrl(
