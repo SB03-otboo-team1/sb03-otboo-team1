@@ -15,6 +15,9 @@ spring:
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
+server:
+  port: ${SERVER_PORT:80}
+
 logging:
   level:
     root: info
@@ -25,7 +28,8 @@ otboo:
   security:
     cors:
       allowed-origins:
-        - "https://prod.otboo.com"
+        - "http://otboo-lord-balencer-342590016.ap-northeast-2.elb.amazonaws.com"
+        - "https://otboo-lord-balencer-342590016.ap-northeast-2.elb.amazonaws.com"
         - "http://localhost:3000"
       allowed-methods:
         - GET
