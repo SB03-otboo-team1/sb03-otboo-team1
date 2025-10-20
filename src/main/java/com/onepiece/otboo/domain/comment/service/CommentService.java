@@ -6,6 +6,7 @@ import com.onepiece.otboo.domain.comment.entity.Comment;
 import com.onepiece.otboo.domain.comment.mapper.CommentMapper;
 import com.onepiece.otboo.domain.comment.repository.CommentRepository;
 import com.onepiece.otboo.domain.feed.entity.Feed;
+import com.onepiece.otboo.domain.feed.repository.FeedRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,6 +23,7 @@ public class CommentService {
     private final EntityManager em;
     private final CommentRepository repository;
     private final CommentMapper mapper;
+    private final FeedRepository feedRepository;
 
     public CommentDto create(UUID feedIdFromPath, CommentCreateRequest req) {
         if (req.feedId() != null && !req.feedId().equals(feedIdFromPath)) {
@@ -49,7 +51,12 @@ public class CommentService {
             .content(trimmedContent)
             .build();
 
-        repository.save(comment);
-        return mapper.toDto(comment);
+        Comment saved = repository.save(comment);
+
+        CommentDto dto = mapper.toDto(saved);
+
+        feedRepository.increaseCommentCount(feedIdFromPath, 1L);
+
+        return dto;
     }
 }

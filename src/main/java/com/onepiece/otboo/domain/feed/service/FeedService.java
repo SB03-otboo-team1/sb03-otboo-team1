@@ -29,7 +29,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 
 @Service
 @RequiredArgsConstructor
@@ -45,8 +47,11 @@ public class FeedService {
     private final WeatherMapper weatherMapper;
     private final ClothesRepository clothesRepository;
 
+    @Value("${app.cdn-base-url:}")
+    private String cdnBaseUrl;
+
     public FeedResponse create(FeedCreateRequest req) {
-        // 1) 작성자 / 프로필
+
         UUID authorId = Objects.requireNonNull(req.authorId(), "authorId must not be null");
         User author = userRepository.findById(authorId)
             .orElseThrow(() -> new GlobalException(ErrorCode.USER_NOT_FOUND));
@@ -56,10 +61,9 @@ public class FeedService {
         AuthorDto authorDto = AuthorDto.builder()
             .userId(author.getId())
             .name(profile.getNickname())
-            .profileImageUrl(profile.getProfileImageUrl())
+            .profileImageUrl(resolveImageUrl(profile.getProfileImageUrl()))
             .build();
 
-        // 2) 날씨(선택)
         WeatherSummaryDto weatherDto = null;
         if (req.weatherId() != null) {
             Weather weather = weatherRepository.findById(req.weatherId())
@@ -72,19 +76,17 @@ public class FeedService {
                 weatherMapper.toTemperatureDto(weather)
             );
         }
-        // 3) 의상 로딩 + 소유권 검증 + 중복 제거
         List<UUID> clothesIds = req.distinctClothesIds();
         List<Clothes> clothesList = clothesRepository.findAllById(clothesIds);
         if (clothesList.size() != clothesIds.size()) {
             throw new GlobalException(ErrorCode.CLOTHES_NOT_FOUND);
         }
-        boolean ownershipMismatch = clothesList.stream()
-            .allMatch(c -> c.getOwner() != null && author.getId().equals(c.getOwner().getId()));
-        if (ownershipMismatch) {
+        boolean allOwnedByAuthor = clothesList.stream()
+            .allMatch(c -> c.getOwner() != null && authorId.equals(c.getOwner().getId()));
+        if (!allOwnedByAuthor) {
             throw new GlobalException(ErrorCode.CLOTHES_OWNERSHIP_MISMATCH);
         }
 
-        // 4) Feed 생성 및 FeedClothes 연결 (Cascade로 함께 저장)
         Feed feed = Feed.builder()
             .authorId(authorId)
             .weatherId(req.weatherId())
@@ -106,22 +108,19 @@ public class FeedService {
 
         Feed saved = feedRepository.save(feed);
 
-        // 5) OOTD DTO 구성 (미리보기 이미지에 imageUrl 사용)
         List<OotdDto> ootds = new ArrayList<>();
         for (Clothes c : clothesList) {
             ootds.add(new OotdDto(
                 c.getId(),
                 c.getName(),
-                c.getImageUrl(),
+                resolveImageUrl(c.getImageUrl()),
                 c.getType().name(),
                 List.of()
             ));
         }
 
-        // 6) 생성 직후 likedByMe는 항상 false
         boolean likedByMe = false;
 
-        // 7) 모든 필드를 채워 반환
         return feedMapper.toResponse(saved, authorDto, weatherDto, ootds, likedByMe);
     }
 
@@ -149,4 +148,12 @@ public class FeedService {
         return feedMapper.toResponse(feed);
     }
 
+    private String resolveImageUrl(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+        String base = (cdnBaseUrl == null || cdnBaseUrl.isBlank())
+            ? "" : (cdnBaseUrl.endsWith("/") ? cdnBaseUrl.substring(0, cdnBaseUrl.length()-1) : cdnBaseUrl);
+        String path = raw.startsWith("/") ? raw : "/" + raw;
+        return base.isEmpty() ? path : base + path;
+    }
 }

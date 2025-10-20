@@ -21,6 +21,7 @@ public final class SecurityAuthorizeRequestHelper {
         new Endpoint(HttpMethod.POST, "/api/auth/reset-password"),
         new Endpoint(HttpMethod.POST, "/api/auth/sign-in"),
         new Endpoint(HttpMethod.POST, "/api/users"),
+        new Endpoint(HttpMethod.GET, "/clothes/**"),
         new Endpoint(HttpMethod.GET, "/ws/**")
     };
 
