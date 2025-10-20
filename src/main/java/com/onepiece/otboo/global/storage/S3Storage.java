@@ -114,7 +114,7 @@ public class S3Storage implements FileStorage {
     }
 
     private void validateImage(String contentType, long size) {
-        if (contentType == null || !contentType.startsWith("image/")) {
+        if (contentType == null) {
             throw new InvalidFileTypeException(contentType);
         }
         if (size > MAX_SIZE) {

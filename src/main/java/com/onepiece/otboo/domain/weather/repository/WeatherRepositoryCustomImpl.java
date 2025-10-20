@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.weather.repository;
 
+import static com.onepiece.otboo.domain.location.entity.QLocation.location;
 import static com.onepiece.otboo.domain.weather.entity.QWeather.weather;
 
 import com.onepiece.otboo.domain.weather.entity.Weather;
@@ -18,6 +19,7 @@ public class WeatherRepositoryCustomImpl implements WeatherRepositoryCustom {
     public List<Weather> findRange(UUID locationId, Instant from, Instant to) {
         return queryFactory
             .selectFrom(weather)
+            .join(weather.location, location).fetchJoin()
             .where(
                 weather.location.id.eq(locationId),
                 weather.forecastAt.goe(from),
