@@ -33,9 +33,11 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom 
         }
 
         BooleanExpression beforeCreatedAt = notification.createdAt.lt(cursor);
-        BooleanExpression sameTimeSmallerId =
-            notification.createdAt.eq(cursor)
-                .and(idAfter != null ? notification.id.lt(idAfter) : null);
+        BooleanExpression sameTimeSmallerId = notification.createdAt.eq(cursor);
+
+        if (idAfter != null) {
+            sameTimeSmallerId = sameTimeSmallerId.and(notification.id.lt(idAfter));
+        }
 
         return beforeCreatedAt.or(sameTimeSmallerId);
     }
