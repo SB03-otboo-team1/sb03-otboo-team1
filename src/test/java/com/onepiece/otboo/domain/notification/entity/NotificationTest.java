@@ -3,7 +3,7 @@ package com.onepiece.otboo.domain.notification.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.within;
 
-import com.onepiece.otboo.domain.notification.enums.NotificationLevel;
+import com.onepiece.otboo.domain.notification.enums.Level;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -22,7 +22,7 @@ class NotificationTest {
             .receiverId(receiverId)
             .title("새 팔로워 알림")
             .content("민준님을 팔로우했습니다.")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 
@@ -30,7 +30,7 @@ class NotificationTest {
         assertThat(notification.getReceiverId()).isEqualTo(receiverId);
         assertThat(notification.getTitle()).isEqualTo("새 팔로워 알림");
         assertThat(notification.getContent()).contains("팔로우");
-        assertThat(notification.getLevel()).isEqualTo(NotificationLevel.INFO);
+        assertThat(notification.getLevel()).isEqualTo(Level.INFO);
         assertThat(notification.getCreatedAt()).isNotNull();
         assertThat(notification.getCreatedAt())
             .isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
@@ -48,7 +48,7 @@ class NotificationTest {
             .receiverId(UUID.randomUUID())
             .title("테스트 알림 1")
             .content("내용 1")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 
@@ -56,7 +56,7 @@ class NotificationTest {
             .receiverId(UUID.randomUUID())
             .title("테스트 알림 2")
             .content("내용 2")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 
@@ -74,7 +74,7 @@ class NotificationTest {
             .receiverId(UUID.randomUUID())
             .title("팔로워 알림")
             .content("새 팔로워가 있습니다.")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 
@@ -94,7 +94,7 @@ class NotificationTest {
             .receiverId(UUID.randomUUID())
             .title("테스트 알림")
             .content("이미 삭제된 알림입니다.")
-            .level(NotificationLevel.INFO)
+            .level(Level.INFO)
             .createdAt(Instant.now())
             .build();
 

@@ -4,115 +4,75 @@ import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
 import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.exception.NotificationNotFoundException;
+import com.onepiece.otboo.domain.notification.mapper.NotificationMapper;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
-import com.onepiece.otboo.global.sse.SseService;
+import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 알림 서비스 구현체
- * - 알림 생성 (SSE 실시간 전송 포함)
- * - 알림 목록 조회 (커서 기반)
- * - 알림 읽음 처리 (Soft Delete)
+ * <p>
+ * - 알림 목록 조회 (커서 기반) - 알림 생성 - 알림 읽음 처리
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final ApplicationEventPublisher publisher;
-    private final SseService sseService;
+    private final NotificationMapper notificationMapper;
 
     /**
-     * 알림 생성 + SSE 전송
+     * 알림 목록 조회 (cursor + idAfter 기반)
      */
-    @Override
-    @Transactional
-    public void create(Set<UUID> receiverIds, String title, String content, Level level) {
-        if (receiverIds.isEmpty()) {
-            log.warn("[NotificationService] 알림 수신자가 없음");
-            return;
-        }
-
-        log.info("[NotificationService] 알림 생성 시작 - receiverIds: {}", receiverIds);
-
-        receiverIds.forEach(receiverId -> {
-            Notification notification = Notification.builder()
-                .receiverId(receiverId)
-                .title(title)
-                .content(content)
-                .level(level)
-                .build();
-
-            notificationRepository.save(notification);
-            log.info("[NotificationService] 알림 저장 완료 - receiverId: {}", receiverId);
-
-            NotificationResponse response = NotificationResponse.builder()
-                .id(notification.getId())
-                .receiverId(notification.getReceiverId())
-                .title(notification.getTitle())
-                .content(notification.getContent())
-                .level(notification.getLevel())
-                .createdAt(notification.getCreatedAt())
-                .build();
-
-            sseService.send(receiverId, response);
-            log.info("[NotificationService] SSE 전송 완료 - receiverId: {}", receiverId);
-        });
-    }
-
-    /**
-     * 알림 목록 조회 (커서 기반)
-     */
-    @Override
     @Transactional(readOnly = true)
+    @Override
     public CursorPageResponseDto<NotificationResponse> getNotifications(
-        UUID receiverId,
+        String cursor,
         UUID idAfter,
         int limit
     ) {
-        log.info("[NotificationService] 알림 목록 조회 시작 - receiverId: {}", receiverId);
+        Instant cursorInstant = null;
+        if (cursor != null && !cursor.isBlank()) {
+            try {
+                cursorInstant = Instant.parse(cursor);
+            } catch (Exception ignored) {
+                throw new IllegalArgumentException("잘못된 cursor 형식입니다. ISO-8601 형식이어야 합니다.");
+            }
+        }
 
         List<Notification> notifications =
-            notificationRepository.findNotifications(receiverId, idAfter, limit + 1);
+            notificationRepository.findNotifications(cursorInstant, idAfter, limit + 1);
 
         boolean hasNext = notifications.size() > limit;
         if (hasNext) {
             notifications = notifications.subList(0, limit);
         }
 
-        UUID nextCursor = hasNext
+        Instant nextCursor = hasNext
+            ? notifications.get(notifications.size() - 1).getCreatedAt()
+            : null;
+        UUID nextIdAfter = hasNext
             ? notifications.get(notifications.size() - 1).getId()
             : null;
 
-        long totalCount = notificationRepository.countByReceiverId(receiverId);
+        long totalCount = notificationRepository.countAll();
 
         List<NotificationResponse> data = notifications.stream()
-            .map(n -> NotificationResponse.builder()
-                .id(n.getId())
-                .receiverId(n.getReceiverId())
-                .title(n.getTitle())
-                .content(n.getContent())
-                .level(n.getLevel())
-                .createdAt(n.getCreatedAt())
-                .build())
+            .map(notificationMapper::toResponse)
             .collect(Collectors.toList());
 
         return new CursorPageResponseDto<>(
             data,
             nextCursor != null ? nextCursor.toString() : null,
-            null,
+            nextIdAfter,
             hasNext,
             totalCount,
             SortBy.CREATED_AT,
@@ -121,15 +81,36 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     /**
-     * 알림 읽음 처리 (Soft Delete)
+     * 알림 생성
+     *
+     * @param receiverId 알림을 받을 사용자 ID
+     * @param title      알림 제목
+     * @param content    알림 내용
+     * @param level      알림 중요도 수준 (INFO, WARNING, ERROR)
      */
-    @Override
     @Transactional
+    @Override
+    public void create(UUID receiverId, String title, String content, Level level) {
+        Notification notification = Notification.builder()
+            .receiverId(receiverId)
+            .title(title)
+            .content(content)
+            .level(level)
+            .createdAt(Instant.now())
+            .build();
+
+        notificationRepository.save(notification);
+    }
+
+    /**
+     * 알림 읽음 처리 (삭제 대체)
+     */
+    @Transactional
+    @Override
     public void deleteNotification(UUID id) {
         Notification notification = notificationRepository.findById(id)
             .orElseThrow(() -> new NotificationNotFoundException(id));
 
         notification.delete();
-        log.info("[NotificationService] 알림 읽음 처리 완료 - id: {}", id);
     }
 }
