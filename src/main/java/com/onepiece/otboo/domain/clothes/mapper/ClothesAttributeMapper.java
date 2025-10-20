@@ -4,6 +4,7 @@ import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeDefDto;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesAttributeWithDefDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeOptions;
+import com.onepiece.otboo.domain.clothes.exception.ClothesAttributeDefNotFoundException;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
 import java.util.List;
@@ -52,7 +53,9 @@ public interface ClothesAttributeMapper {
 
     @Named("toDefId")
     default UUID toDefId(String name, @Context ClothesAttributeDefRepository def) {
-        UUID defId = def.findByName(name).map(ClothesAttributeDefs::getId).orElse(null);
+        UUID defId = def.findByName(name).orElseThrow(
+            () -> new ClothesAttributeDefNotFoundException("해당 의상 속성 정보를 찾을 수 없습니다. name: " + name)
+        ).getId();
 
         return defId;
     }
