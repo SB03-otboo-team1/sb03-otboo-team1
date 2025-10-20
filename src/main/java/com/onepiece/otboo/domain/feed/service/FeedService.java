@@ -21,6 +21,8 @@ import com.onepiece.otboo.domain.weather.mapper.WeatherMapper;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
+import com.onepiece.otboo.global.storage.FileStorage;
+import com.onepiece.otboo.global.storage.S3Storage; // ★ 추가
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,10 +30,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +48,7 @@ public class FeedService {
     private final WeatherRepository weatherRepository;
     private final WeatherMapper weatherMapper;
     private final ClothesRepository clothesRepository;
+    private final FileStorage storage;
 
     @Value("${app.cdn-base-url:}")
     private String cdnBaseUrl;
@@ -61,7 +64,7 @@ public class FeedService {
         AuthorDto authorDto = AuthorDto.builder()
             .userId(author.getId())
             .name(profile.getNickname())
-            .profileImageUrl(resolveImageUrl(profile.getProfileImageUrl()))
+            .profileImageUrl(toPublicUrl(profile.getProfileImageUrl())) // ★ 변경
             .build();
 
         WeatherSummaryDto weatherDto = null;
@@ -76,6 +79,7 @@ public class FeedService {
                 weatherMapper.toTemperatureDto(weather)
             );
         }
+
         List<UUID> clothesIds = req.distinctClothesIds();
         List<Clothes> clothesList = clothesRepository.findAllById(clothesIds);
         if (clothesList.size() != clothesIds.size()) {
@@ -113,7 +117,7 @@ public class FeedService {
             ootds.add(new OotdDto(
                 c.getId(),
                 c.getName(),
-                resolveImageUrl(c.getImageUrl()),
+                toPublicUrl(c.getImageUrl()),
                 c.getType().name(),
                 List.of()
             ));
@@ -127,10 +131,10 @@ public class FeedService {
     @Transactional
     public void delete(UUID feedId, UUID requesterId) {
         Feed feed = feedRepository.findById(feedId)
-            .orElseThrow(() -> new GlobalException(ErrorCode.FEED_NOT_FOUND)); // 404
+            .orElseThrow(() -> new GlobalException(ErrorCode.FEED_NOT_FOUND));
 
         if (!feed.getAuthorId().equals(requesterId)) {
-            throw new GlobalException(ErrorCode.FEED_FORBIDDEN); // 403
+            throw new GlobalException(ErrorCode.FEED_FORBIDDEN);
         }
 
         feedRepository.delete(feed);
@@ -145,15 +149,61 @@ public class FeedService {
         }
 
         feed.updateContent(req.content());
-        return feedMapper.toResponse(feed);
+
+        // Author
+        Profile profile = profileRepository.findByUserId(feed.getAuthorId())
+            .orElseThrow(() -> new GlobalException(ErrorCode.PROFILE_NOT_FOUND));
+        AuthorDto authorDto = AuthorDto.builder()
+            .userId(feed.getAuthorId())
+            .name(profile.getNickname())
+            .profileImageUrl(toPublicUrl(profile.getProfileImageUrl()))
+            .build();
+
+        // Weather (optional)
+        WeatherSummaryDto weatherDto = null;
+        if (feed.getWeatherId() != null) {
+            Weather weather = weatherRepository.findById(feed.getWeatherId())
+                .orElseThrow(() -> new GlobalException(ErrorCode.WEATHER_NOT_FOUND));
+            weatherDto = new WeatherSummaryDto(
+                weather.getId(),
+                weather.getSkyStatus(),
+                weatherMapper.toPrecipitationDto(weather),
+                weatherMapper.toTemperatureDto(weather)
+            );
+        }
+
+        // OOTDs
+        Set<UUID> clothesIds = feed.getFeedClothes().stream()
+            .map(FeedClothes::getClothesId)
+            .collect(Collectors.toSet());
+        List<OotdDto> ootds = clothesRepository.findAllById(clothesIds).stream()
+            .map(c -> new OotdDto(
+                c.getId(),
+                c.getName(),
+                toPublicUrl(c.getImageUrl()), // ★ 변경
+                c.getType().name(),
+                List.of()
+            ))
+            .toList();
+
+        boolean likedByMe = false; // 필요 시 좋아요 여부 계산
+
+        return feedMapper.toResponse(feed, authorDto, weatherDto, ootds, likedByMe);
     }
 
-    private String resolveImageUrl(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-        String base = (cdnBaseUrl == null || cdnBaseUrl.isBlank())
-            ? "" : (cdnBaseUrl.endsWith("/") ? cdnBaseUrl.substring(0, cdnBaseUrl.length()-1) : cdnBaseUrl);
-        String path = raw.startsWith("/") ? raw : "/" + raw;
-        return base.isEmpty() ? path : base + path;
+    private String toPublicUrl(String key) {
+        if (key == null || key.isBlank()) return null;
+        if (key.startsWith("http://") || key.startsWith("https://")) return key;
+
+        if (storage instanceof S3Storage s3) {
+            return s3.generatePresignedUrl(key);
+        }
+
+        if (cdnBaseUrl != null && !cdnBaseUrl.isBlank()) {
+            String left  = cdnBaseUrl.endsWith("/") ? cdnBaseUrl.substring(0, cdnBaseUrl.length() - 1) : cdnBaseUrl;
+            String right = key.startsWith("/") ? key.substring(1) : key;
+            return left + "/" + right;
+        }
+        return key;
     }
 }

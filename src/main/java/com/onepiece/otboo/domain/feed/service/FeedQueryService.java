@@ -1,10 +1,10 @@
 package com.onepiece.otboo.domain.feed.service;
 
+import static com.onepiece.otboo.domain.clothes.entity.QClothes.clothes;
 import static com.onepiece.otboo.domain.feed.entity.QFeed.feed;
 import static com.onepiece.otboo.domain.feed.entity.QFeedClothes.feedClothes;
-import static com.onepiece.otboo.domain.weather.entity.QWeather.weather;
 import static com.onepiece.otboo.domain.profile.entity.QProfile.profile;
-import static com.onepiece.otboo.domain.clothes.entity.QClothes.clothes;
+import static com.onepiece.otboo.domain.weather.entity.QWeather.weather;
 
 import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
@@ -22,6 +22,8 @@ import com.onepiece.otboo.domain.weather.mapper.WeatherMapper;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.storage.FileStorage;
+import com.onepiece.otboo.global.storage.S3Storage;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
@@ -43,6 +45,7 @@ public class FeedQueryService {
     private final FeedMapper feedMapper;
     private final FeedLikeRepository feedLikeRepository;
     private final WeatherMapper weatherMapper;
+    private final FileStorage storage; // ★ 추가
 
     @Value("${app.cdn-base-url:}")
     private String cdnBaseUrl;
@@ -129,6 +132,7 @@ public class FeedQueryService {
             .collect(Collectors.toSet())
             : Set.of();
 
+        // ---- Authors ----
         List<UUID> authorIds = rows.stream().map(Feed::getAuthorId).distinct().toList();
         Map<UUID, AuthorDto> authorMap = new HashMap<>();
         if (!authorIds.isEmpty()) {
@@ -141,14 +145,21 @@ public class FeedQueryService {
                 .from(profile)
                 .where(profile.user.id.in(authorIds))
                 .fetch();
+
             for (Tuple t : authorTuples) {
                 UUID uid = t.get(profile.user.id);
                 String nickname = t.get(profile.nickname);
                 String img = t.get(profile.profileImageUrl);
-                AuthorDto.builder().userId(uid).name(nickname).profileImageUrl(resolveImageUrl(img)).build();
+
+                authorMap.put(uid, AuthorDto.builder()
+                    .userId(uid)
+                    .name(nickname)
+                    .profileImageUrl(toPublicUrl(img))
+                    .build());
             }
         }
 
+        // ---- Weather ----
         List<UUID> weatherIds = rows.stream().map(Feed::getWeatherId).filter(Objects::nonNull).distinct().toList();
         Map<UUID, WeatherSummaryDto> weatherMap = new HashMap<>();
         if (!weatherIds.isEmpty()) {
@@ -166,6 +177,7 @@ public class FeedQueryService {
             }
         }
 
+        // ---- OOTDs ----
         Map<UUID, List<OotdDto>> ootdMap = new HashMap<>();
         if (!feedIds.isEmpty()) {
             List<Tuple> ootdTuples = qf
@@ -181,11 +193,13 @@ public class FeedQueryService {
                 String cName = t.get(clothes.name);
                 String imgRaw = t.get(clothes.imageUrl);
                 String typeStr = t.get(clothes.type).name();
+
                 ootdMap.computeIfAbsent(fId, k -> new ArrayList<>())
-                    .add(new OotdDto(cId, cName, resolveImageUrl(imgRaw), typeStr, List.of()));
+                    .add(new OotdDto(cId, cName, toPublicUrl(imgRaw), typeStr, List.of()));
             }
         }
 
+        // ---- Assemble ----
         List<FeedResponse> data = rows.stream()
             .map(f -> feedMapper.toResponse(
                 f,
@@ -257,14 +271,20 @@ public class FeedQueryService {
         );
     }
 
-    private String resolveImageUrl(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-        if (cdnBaseUrl == null || cdnBaseUrl.isBlank()) {
-            return raw.startsWith("/") ? raw : "/" + raw;
+    private String toPublicUrl(String key) {
+        if (key == null || key.isBlank()) return null;
+        if (key.startsWith("http://") || key.startsWith("https://")) return key;
+
+        // S3 구현이면 presigned URL
+        if (storage instanceof S3Storage s3) {
+            return s3.generatePresignedUrl(key);
         }
-        String base = cdnBaseUrl.endsWith("/") ? cdnBaseUrl.substring(0, cdnBaseUrl.length() - 1) : cdnBaseUrl;
-        String path = raw.startsWith("/") ? raw : "/" + raw;
-        return base + path;
+
+        if (cdnBaseUrl != null && !cdnBaseUrl.isBlank()) {
+            String left  = cdnBaseUrl.endsWith("/") ? cdnBaseUrl.substring(0, cdnBaseUrl.length() - 1) : cdnBaseUrl;
+            String right = key.startsWith("/") ? key.substring(1) : key;
+            return left + "/" + right;
+        }
+        return key;
     }
 }
