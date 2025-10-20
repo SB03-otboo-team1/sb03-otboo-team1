@@ -11,6 +11,7 @@ import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -83,24 +84,27 @@ public class NotificationServiceImpl implements NotificationService {
     /**
      * 알림 생성
      *
-     * @param receiverId 알림을 받을 사용자 ID
-     * @param title      알림 제목
-     * @param content    알림 내용
-     * @param level      알림 중요도 수준 (INFO, WARNING, ERROR)
+     * @param receiverIds 알림을 받을 사용자 ID
+     * @param title       알림 제목
+     * @param content     알림 내용
+     * @param level       알림 중요도 수준 (INFO, WARNING, ERROR)
      */
     @Transactional
     @Override
-    public void create(UUID receiverId, String title, String content, Level level) {
-        Notification notification = Notification.builder()
-            .receiverId(receiverId)
-            .title(title)
-            .content(content)
-            .level(level)
-            .createdAt(Instant.now())
-            .build();
+    public void create(Set<UUID> receiverIds, String title, String content, Level level) {
+        receiverIds.forEach(receiverId -> {
+            Notification notification = Notification.builder()
+                .receiverId(receiverId)
+                .title(title)
+                .content(content)
+                .level(level)
+                .createdAt(Instant.now())
+                .build();
 
-        notificationRepository.save(notification);
+            notificationRepository.save(notification);
+        });
     }
+
 
     /**
      * 알림 읽음 처리 (삭제 대체)
