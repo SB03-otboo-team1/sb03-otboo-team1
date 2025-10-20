@@ -1,16 +1,11 @@
 package com.onepiece.otboo.domain.dm.repository;
 
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto.UserDto;
+import static com.onepiece.otboo.domain.dm.entity.QDirectMessage.directMessage;
+
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
-import com.onepiece.otboo.domain.dm.entity.QDirectMessage;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.Order;
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.Instant;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -21,72 +16,58 @@ import org.springframework.stereotype.Repository;
 public class DirectMessageRepositoryImpl implements DirectMessageRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
-    private final QDirectMessage dm = QDirectMessage.directMessage;
 
     @Override
-    public List<DirectMessageDto> findDirectMessages(
-        UUID userId,
+    public List<DirectMessage> findDirectMessages(
+        UUID myId,
+        UUID otherId,
         String cursor,
         UUID idAfter,
-        int limit,
-        String sort
+        int limit
     ) {
-        BooleanBuilder whereBuilder = new BooleanBuilder();
-        whereBuilder.and(dm.sender.id.eq(userId).or(dm.receiver.id.eq(userId)));
+        // 대화 상대 조건 (양방향)
+        BooleanBuilder base = new BooleanBuilder()
+            .and(
+                directMessage.sender.id.eq(myId).and(directMessage.receiver.id.eq(otherId))
+                    .or(directMessage.sender.id.eq(otherId).and(directMessage.receiver.id.eq(myId)))
+            );
 
-        boolean isAscending = false;
-
-        if (cursor != null && !cursor.isEmpty()) {
-            try {
-                Instant cursorTime = Instant.parse(cursor);
-                BooleanBuilder cursorCondition = new BooleanBuilder();
-
-                cursorCondition.and(dm.createdAt.lt(cursorTime));
-                if (idAfter != null) {
-                    cursorCondition.or(dm.createdAt.eq(cursorTime).and(dm.id.lt(idAfter)));
-                }
-
-                whereBuilder.and(cursorCondition);
-            } catch (DateTimeParseException e) {
-                throw new IllegalArgumentException(
-                    "Invalid cursor format. Must be ISO-8601 datetime.");
-            }
-        } else if (idAfter != null) {
-            DirectMessage pivot = queryFactory.selectFrom(dm)
-                .where(dm.id.eq(idAfter))
-                .fetchOne();
-
-            if (pivot != null) {
-                BooleanBuilder afterCondition = new BooleanBuilder();
-                afterCondition.or(dm.createdAt.lt(pivot.getCreatedAt()));
-                afterCondition.or(
-                    dm.createdAt.eq(pivot.getCreatedAt()).and(dm.id.lt(pivot.getId())));
-                whereBuilder.and(afterCondition);
-            }
+        // DESC 고정: cursor가 있으면 (createdAt < cursor) OR (createdAt = cursor AND id < idAfter)
+        if (cursor != null && !cursor.isBlank()) {
+            Instant c = Instant.parse(cursor);
+            BooleanBuilder before = new BooleanBuilder()
+                .and(directMessage.createdAt.lt(c)
+                    .or(
+                        directMessage.createdAt.eq(c)
+                            .and(idAfter != null
+                                ? directMessage.id.lt(idAfter)
+                                : directMessage.id.isNotNull()
+                            )
+                    )
+                );
+            base.and(before);
         }
 
-        OrderSpecifier<?> primaryOrder = new OrderSpecifier<>(Order.DESC, dm.createdAt);
-        OrderSpecifier<?> secondaryOrder = new OrderSpecifier<>(Order.DESC, dm.id);
-
-        return queryFactory
-            .select(Projections.constructor(
-                DirectMessageDto.class,
-                dm.id,
-                dm.createdAt,
-                Projections.constructor(UserDto.class,
-                    dm.sender.id,
-                    dm.sender.email
-                ),
-                Projections.constructor(UserDto.class,
-                    dm.receiver.id,
-                    dm.receiver.email
-                ),
-                dm.content
-            ))
-            .from(dm)
-            .where(whereBuilder)
-            .orderBy(primaryOrder, secondaryOrder)
-            .limit(limit)
+        return queryFactory.selectFrom(directMessage)
+            .where(base)
+            .orderBy(
+                directMessage.createdAt.desc(),
+                directMessage.id.desc()
+            )
+            .limit(limit + 1)
             .fetch();
+    }
+
+    @Override
+    public long countConversation(UUID myId, UUID otherId) {
+        Long count = queryFactory.select(directMessage.count())
+            .from(directMessage)
+            .where(
+                directMessage.sender.id.eq(myId).and(directMessage.receiver.id.eq(otherId))
+                    .or(directMessage.sender.id.eq(otherId).and(directMessage.receiver.id.eq(myId)))
+            )
+            .fetchOne();
+
+        return count != null ? count : 0L;
     }
 }

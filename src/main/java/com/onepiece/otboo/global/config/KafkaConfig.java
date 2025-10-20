@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -24,6 +25,8 @@ import org.springframework.util.backoff.FixedBackOff;
 @RequiredArgsConstructor
 public class KafkaConfig {
 
+    private final KafkaProperties kafkaProperties;
+
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrap;
 
@@ -35,13 +38,24 @@ public class KafkaConfig {
     private String instanceId;
 
     /**
-     * Processing(단일 처리) 컨테이너 팩토리 - 공유 그룹
+     * Processing(단일 처리) 컨테이너 팩토리 - 공유 그룹 (알림 생성)
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> processingKafkaListenerContainerFactory(
         DefaultErrorHandler errorHandler) {
 
         String groupId = appName + ".processing.notifications";
+        return buildListenerFactory(groupId, errorHandler);
+    }
+
+    /**
+     * Processing(단일 처리) 컨테이너 팩토리 - 공유 그룹 (WebSocket 메시지 구독)
+     */
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> subscriptionKafkaListenerContainerFactory(
+        DefaultErrorHandler errorHandler) {
+
+        String groupId = appName + ".processing.subscribe";
         return buildListenerFactory(groupId, errorHandler);
     }
 
@@ -60,8 +74,22 @@ public class KafkaConfig {
      * 그룹 ID를 포함한 Consumer 프로퍼티 생성
      */
     private Map<String, Object> consumerProps(String groupId) {
-        Map<String, Object> p = baseProps();
+        Map<String, Object> p = kafkaProperties.buildConsumerProperties(null);
+
+        // 필요시 덮어쓰기/추가
         p.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        p.put(ConsumerConfig.CLIENT_ID_CONFIG,
+            kafkaProperties.getClientId() != null ? kafkaProperties.getClientId()
+                : appName + "." + instanceId);
+        p.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        p.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+        p.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        // 역직렬화 에러 핸들링 래퍼 유지
+        p.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        p.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        p.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        p.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, StringDeserializer.class);
         return p;
     }
 
