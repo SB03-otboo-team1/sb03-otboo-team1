@@ -24,6 +24,11 @@ public enum ErrorCode {
     // FOLLOW
     DUPLICATE_FOLLOW(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "이미 해당 사용자를 팔로우하고 있습니다."),
     FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "팔로우 확인 실패", "팔로우 관계가 존재하지 않습니다."),
+    FOLLOW_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "자기 자신을 팔로우할 수 없습니다."),
+
+    // DM
+    CANNOT_SEND_MESSAGE_TO_SELF(HttpStatus.BAD_REQUEST, "DM 전송 실패", "자기 자신에게 메시지를 보낼 수 없습니다."),
+    DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM 확인 실패", "메시지를 찾을 수 없습니다."),
 
     // Weather
     WEATHER_NOT_FOUND(HttpStatus.NOT_FOUND, "날씨 확인 실패", "날씨 정보를 찾을 수 없습니다."),
