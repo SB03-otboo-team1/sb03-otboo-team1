@@ -142,7 +142,12 @@ public class ClothesServiceImpl implements ClothesService {
     public ClothesDto getClothes(UUID clothesId) {
         Clothes clothes = clothesRepository.findById(clothesId)
             .orElseThrow(() -> new ClothesNotFoundException("해당 옷 정보를 찾을 수 없습니다."));
-        return clothesMapper.toDto(clothes, Collections.emptyList(), fileStorage);
+        List<ClothesAttributes> attrs = attributeRepository.findByClothesId(clothesId);
+        List<ClothesAttributeWithDefDto> attrDtos = attrs.stream()
+            .map(a -> clothesAttributeMapper.toAttributeWithDefDto(a.getDefinition(),
+                a.getOptionValue()))
+            .toList();
+        return clothesMapper.toDto(clothes, attrDtos, fileStorage);
     }
 
     @Override
@@ -166,7 +171,7 @@ public class ClothesServiceImpl implements ClothesService {
             .imageUrl(imageUrl)
             .build();
 
-        clothesRepository.save(clothes);
+        Clothes savedClothes = clothesRepository.save(clothes);
 
         // Attributes 생성해서 저장
         List<ClothesAttributeDto> attrDto = request.attributes();
@@ -179,25 +184,25 @@ public class ClothesServiceImpl implements ClothesService {
                     String value = a.value();
                     return
                         ClothesAttributes.builder()
-                            .clothes(clothes)
+                            .clothes(savedClothes)
                             .definition(def)
                             .optionValue(value)
                             .build();
                 }
             ).toList();
 
-        attributeRepository.saveAll(attributes);
+        List<ClothesAttributes> savedAttributes = attributeRepository.saveAll(attributes);
 
         // ClothesDto 생성용 ClothesAttributeWithDefDto 생성
         List<ClothesAttributeWithDefDto> clothesAttributeWithDefDto =
-            attributes.stream().map(a -> {
+            savedAttributes.stream().map(a -> {
                 ClothesAttributeDefs def = a.getDefinition();
                 String value = a.getOptionValue();
                 return clothesAttributeMapper.toAttributeWithDefDto(def, value);
             }).toList();
 
         // ClothesDto 반환
-        return clothesMapper.toDto(clothes, clothesAttributeWithDefDto, fileStorage);
+        return clothesMapper.toDto(savedClothes, clothesAttributeWithDefDto, fileStorage);
     }
 
     @Override
@@ -242,7 +247,7 @@ public class ClothesServiceImpl implements ClothesService {
         return ClothesDto.builder()
             .ownerId(userId)
             .name(dto.clothesName())
-            .type(ClothesType.valueOf(dto.clothesType()))
+            .type(dto.clothesType())
             .imageUrl(dto.imageUrl())
             .attributes(
                 dto.attributes().entrySet().stream().map(
