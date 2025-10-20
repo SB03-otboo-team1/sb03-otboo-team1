@@ -13,7 +13,7 @@ COPY src/ src/
 RUN ./gradlew clean bootJar --no-daemon
 
 # 2단계: 런타임 스테이지 (경량)
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-alpine
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-alpine3.22-jdk
 WORKDIR /app
 # curl 설치
 RUN apk add --no-cache curl
