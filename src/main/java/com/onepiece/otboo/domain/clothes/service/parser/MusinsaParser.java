@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.clothes.dto.data.ParsedClothesInfoDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
+import com.onepiece.otboo.domain.clothes.exception.ClothesParsingException;
+import com.onepiece.otboo.domain.clothes.exception.ParsingPageForbiddenException;
+import com.onepiece.otboo.domain.clothes.exception.ParsingPageNotFoundException;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -14,14 +17,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(1)
 public class MusinsaParser implements ClothesInfoParser {
 
     private final ObjectMapper objectMapper;
@@ -39,16 +45,31 @@ public class MusinsaParser implements ClothesInfoParser {
             .toList();
 
         try {
-            // HTML 요청
-            Document doc = Jsoup.connect(url)
+            Connection.Response response = Jsoup.connect(url)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
                 .timeout(8000)
-                .get();
+                .ignoreHttpErrors(true)
+                .execute();
+
+            // HTTP 상태 코드 확인
+            int statusCode = response.statusCode();
+            if (statusCode == 403 || statusCode == 429) {
+                throw new ParsingPageForbiddenException(
+                    "쇼핑몰에서 접근을 차단했습니다. 잠시 후 다시 시도해주세요. (상태 코드: " + statusCode + ")"
+                );
+            } else if (statusCode >= 400) {
+                throw new ParsingPageNotFoundException(
+                    "상품 페이지를 불러올 수 없습니다. (상태 코드: " + statusCode + ")"
+                );
+            }
+
+            // HTML 요청
+            Document doc = response.parse();
 
             Element script = doc.select("script:containsData(window.__MSS__.product.state)")
                 .first();
             if (script == null) {
-                throw new IllegalStateException("window.__MSS__.product.state 스크립트를 찾을 수 없습니다.");
+                throw new ClothesParsingException("window.__MSS__.product.state 스크립트를 찾을 수 없습니다.");
             }
 
             String scriptText = script.html();
@@ -70,7 +91,7 @@ public class MusinsaParser implements ClothesInfoParser {
             return new ParsedClothesInfoDto(name, type, imageUrl, attributes);
 
         } catch (IOException e) {
-            throw new RuntimeException("무신사 상품 파싱 중 오류 발생", e);
+            throw new ClothesParsingException("무신사 상품 정보를 가져오는데 실패했습니다: " + url);
         }
     }
 
@@ -80,7 +101,7 @@ public class MusinsaParser implements ClothesInfoParser {
         if (matcher.find()) {
             return matcher.group(1);
         }
-        throw new IllegalStateException("window.__MSS__.product.state JSON 추출 실패");
+        throw new ClothesParsingException("window.__MSS__.product.state JSON 추출 실패");
     }
 
     private String extractMainImage(JsonNode images) {

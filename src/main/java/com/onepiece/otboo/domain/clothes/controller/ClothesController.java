@@ -1,5 +1,6 @@
 package com.onepiece.otboo.domain.clothes.controller;
 
+import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
 import com.onepiece.otboo.domain.clothes.controller.api.ClothesApi;
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
 import com.onepiece.otboo.domain.clothes.dto.request.ClothesCreateRequest;
@@ -77,7 +78,9 @@ public class ClothesController implements ClothesApi {
         log.info("의상 등록 API 호출 - request: {}", request);
 
         // 인증된 사용자와 일치하는지 확인
-        SecurityUtil.isRequester(request.ownerId());
+        if (!SecurityUtil.isRequester(request.ownerId())) {
+            throw new UnAuthorizedException();
+        }
 
         ClothesDto clothes = clothesService.createClothes(request, imageFile);
 
@@ -99,7 +102,9 @@ public class ClothesController implements ClothesApi {
         UUID ownerId = oldClothes.ownerId();
 
         // 인증된 사용자와 일치하는지 확인
-        SecurityUtil.isRequester(ownerId);
+        if (!SecurityUtil.isRequester(ownerId)) {
+            throw new UnAuthorizedException();
+        }
 
         ClothesDto clothes = clothesService.updateClothes(clothesId, request, imageFile);
 
@@ -118,7 +123,9 @@ public class ClothesController implements ClothesApi {
         UUID ownerId = clothes.ownerId();
 
         // 인증된 사용자와 일치하는지 확인
-        SecurityUtil.isRequester(ownerId);
+        if (!SecurityUtil.isRequester(ownerId)) {
+            throw new UnAuthorizedException();
+        }
 
         clothesService.deleteClothes(clothesId);
 

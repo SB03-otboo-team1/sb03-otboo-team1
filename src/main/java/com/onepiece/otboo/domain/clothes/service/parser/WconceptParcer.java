@@ -1,9 +1,11 @@
 package com.onepiece.otboo.domain.clothes.service.parser;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.clothes.dto.data.ParsedClothesInfoDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
+import com.onepiece.otboo.domain.clothes.exception.ClothesParsingException;
+import com.onepiece.otboo.domain.clothes.exception.ParsingPageForbiddenException;
+import com.onepiece.otboo.domain.clothes.exception.ParsingPageNotFoundException;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -11,17 +13,19 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(2)
 public class WconceptParcer implements ClothesInfoParser {
 
-    private final ObjectMapper objectMapper;
     private final ClothesAttributeDefRepository defRepository;
 
     @Override
@@ -36,11 +40,26 @@ public class WconceptParcer implements ClothesInfoParser {
             .toList();
 
         try {
-            // HTML 요청
-            Document doc = Jsoup.connect(url)
+            Connection.Response response = Jsoup.connect(url)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
                 .timeout(8000)
-                .get();
+                .ignoreHttpErrors(true)
+                .execute();
+
+            // HTTP 상태 코드 확인
+            int statusCode = response.statusCode();
+            if (statusCode == 403 || statusCode == 429) {
+                throw new ParsingPageForbiddenException(
+                    "쇼핑몰에서 접근을 차단했습니다. 잠시 후 다시 시도해주세요. (상태 코드: " + statusCode + ")"
+                );
+            } else if (statusCode >= 400) {
+                throw new ParsingPageNotFoundException(
+                    "상품 페이지를 불러올 수 없습니다. (상태 코드: " + statusCode + ")"
+                );
+            }
+
+            // HTML 요청
+            Document doc = response.parse();
 
             String name = doc.select("input[id=hidItemName]").attr("value");
 
@@ -53,7 +72,7 @@ public class WconceptParcer implements ClothesInfoParser {
             return new ParsedClothesInfoDto(name, type, imageUrl, attributes);
 
         } catch (IOException e) {
-            throw new RuntimeException("무신사 상품 파싱 중 오류 발생", e);
+            throw new ClothesParsingException("W컨셉 상품 정보를 가져오는데 실패했습니다: " + url);
         }
     }
 
@@ -74,13 +93,10 @@ public class WconceptParcer implements ClothesInfoParser {
 
     private ClothesType extractType(Document doc) {
         String typeRaw = doc.select("input[id=hidAddCatFix]").attr("value");
-        System.out.println(
-            "[W컨셉 파서] doc.select(\"input[id=hidAddCatFix]\").attr(\"value\")" + typeRaw);
         String type1 = typeRaw.split("\\^")[2];
-        String type2 = typeRaw.split("\\^")[3];
-        String type3 = typeRaw.split("\\^")[4];
 
         if (type1.equals("의류")) {
+            String type2 = typeRaw.split("\\^")[3];
             if (type2.contains("원피스")) {
                 return ClothesType.DRESS;
             } else if (type2.contains("상의")) {
@@ -97,18 +113,17 @@ public class WconceptParcer implements ClothesInfoParser {
         } else if (type1.contains("신발")) {
             return ClothesType.SHOES;
         } else if (type1.equals("액세서리")) {
-            if (type2.equals("주얼리") || type2.contains("액세서리") || type2.equals("시계")
-                || type2.equals("14k골드") || type2.equals("스카프/안경테")) {
-                return ClothesType.ACCESSORY;
-            } else if (type2.equals("모자")) {
+            String type2 = typeRaw.split("\\^")[3];
+            String type3 = typeRaw.split("\\^")[4];
+            if (type2.equals("모자")) {
                 return ClothesType.HAT;
             } else if (type2.equals("스카프/머플러")) {
                 return ClothesType.SCARF;
+            } else if (type3.equals("양말")) {
+                return ClothesType.SOCKS;
+            } else {
+                return ClothesType.ACCESSORY;
             }
-        } else if (type3.equals("양말")) {
-            return ClothesType.SOCKS;
-        } else if (type2.equals("언더웨어")) {
-            return ClothesType.UNDERWEAR;
         } else {
             return ClothesType.ETC;
         }

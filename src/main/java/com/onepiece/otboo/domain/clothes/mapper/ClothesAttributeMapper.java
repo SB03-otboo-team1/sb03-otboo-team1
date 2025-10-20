@@ -66,6 +66,9 @@ public interface ClothesAttributeMapper {
         @Context ClothesAttributeOptionsRepository option) {
 
         UUID defId = def.findByName(attrName).map(ClothesAttributeDefs::getId).orElse(null);
+        if (defId == null) {
+            return List.of();
+        }
         List<ClothesAttributeOptions> options = option.findByDefinitionId(defId);
         List<String> selectableValues = options.stream()
             .map(ClothesAttributeOptions::getOptionValue).toList();

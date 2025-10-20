@@ -13,6 +13,8 @@ import com.onepiece.otboo.domain.clothes.entity.ClothesAttributes;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
 import com.onepiece.otboo.domain.clothes.exception.ClothesAttributeDefNotFoundException;
 import com.onepiece.otboo.domain.clothes.exception.ClothesNotFoundException;
+import com.onepiece.otboo.domain.clothes.exception.ClothesParsingException;
+import com.onepiece.otboo.domain.clothes.exception.UnsupportedShoppingMallException;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
@@ -240,22 +242,38 @@ public class ClothesServiceImpl implements ClothesService {
 
     @Override
     public ClothesDto getClothesByUrl(UUID userId, String url) throws IOException {
+        try {
+            ClothesInfoParser parser = ClothesInfoParser.choose(parsers, url);
+            ParsedClothesInfoDto dto = parser.parse(url);
 
-        ClothesInfoParser parser = ClothesInfoParser.choose(parsers, url);
-        ParsedClothesInfoDto dto = parser.parse(url);
+            return ClothesDto.builder()
+                .ownerId(userId)
+                .name(dto.clothesName())
+                .type(dto.clothesType())
+                .imageUrl(dto.imageUrl())
+                .attributes(
+                    dto.attributes().entrySet().stream().map(
+                        e -> clothesAttributeMapper.toAttributeDto(
+                            e.getKey(), e.getValue(), defRepository, optionsRepository
+                        )
+                    ).toList()
+                )
+                .build();
+        } catch (IllegalArgumentException e) {
+            // 지원하지 않는 쇼핑몰 URL
+            log.error("지원하지 않는 쇼핑몰 URL: {}", url, e);
+            throw new UnsupportedShoppingMallException("지원하지 않는 쇼핑몰 URL입니다: " + url);
 
-        return ClothesDto.builder()
-            .ownerId(userId)
-            .name(dto.clothesName())
-            .type(dto.clothesType())
-            .imageUrl(dto.imageUrl())
-            .attributes(
-                dto.attributes().entrySet().stream().map(
-                    e -> clothesAttributeMapper.toAttributeDto(
-                        e.getKey(), e.getValue(), defRepository, optionsRepository
-                    )
-                ).toList()
-            )
-            .build();
+        } catch (IllegalStateException e) {
+            // 파싱 중 데이터 형식 오류
+            log.error("상품 데이터 파싱 실패: {}", url, e);
+            throw new ClothesParsingException("상품 정보를 추출할 수 없습니다. 올바른 상품 URL인지 확인해주세요.");
+
+        } catch (RuntimeException e) {
+            // 네트워크 오류 등
+            log.error("상품 정보 조회 실패: {}", url, e);
+            throw new ClothesParsingException("상품 정보를 불러오는 중 오류가 발생했습니다.");
+        }
     }
+
 }

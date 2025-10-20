@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.clothes.dto.data.ParsedClothesInfoDto;
 import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
+import com.onepiece.otboo.domain.clothes.exception.ClothesParsingException;
+import com.onepiece.otboo.domain.clothes.exception.ParsingPageForbiddenException;
+import com.onepiece.otboo.domain.clothes.exception.ParsingPageNotFoundException;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -12,14 +15,17 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(3)
 public class ZigzagParser implements ClothesInfoParser {
 
     private final ObjectMapper objectMapper;
@@ -37,14 +43,29 @@ public class ZigzagParser implements ClothesInfoParser {
             .toList();
 
         try {
-            Document doc = Jsoup.connect(url)
+            Connection.Response response = Jsoup.connect(url)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
                 .timeout(8000)
-                .get();
+                .ignoreHttpErrors(true)
+                .execute();
+
+            // HTTP 상태 코드 확인
+            int statusCode = response.statusCode();
+            if (statusCode == 403 || statusCode == 429) {
+                throw new ParsingPageForbiddenException(
+                    "쇼핑몰에서 접근을 차단했습니다. 잠시 후 다시 시도해주세요. (상태 코드: " + statusCode + ")"
+                );
+            } else if (statusCode >= 400) {
+                throw new ParsingPageNotFoundException(
+                    "상품 페이지를 불러올 수 없습니다. (상태 코드: " + statusCode + ")"
+                );
+            }
+
+            Document doc = response.parse();
 
             Element nextData = doc.selectFirst("script#__NEXT_DATA__");
             if (nextData == null) {
-                throw new IllegalStateException("__NEXT_DATA__ 스크립트를 찾을 수 없습니다.");
+                throw new ClothesParsingException("__NEXT_DATA__ 스크립트를 찾을 수 없습니다.");
             }
 
             String json = nextData.html();
@@ -56,7 +77,7 @@ public class ZigzagParser implements ClothesInfoParser {
                 .path("product");
 
             if (productNode.isMissingNode()) {
-                throw new IllegalStateException("product 정보가 존재하지 않습니다.");
+                throw new ClothesParsingException("product 정보가 존재하지 않습니다.");
             }
 
             String name = productNode.path("name").asText();
@@ -70,7 +91,7 @@ public class ZigzagParser implements ClothesInfoParser {
             return new ParsedClothesInfoDto(name, type, imageUrl, attributes);
 
         } catch (IOException e) {
-            throw new RuntimeException("지그재그 상품 파싱 중 오류 발생", e);
+            throw new ClothesParsingException("지그재그 상품 정보를 가져오는데 실패했습니다: " + url);
         }
     }
 
@@ -90,8 +111,8 @@ public class ZigzagParser implements ClothesInfoParser {
         if (!categories.isArray() || categories.isEmpty()) {
             return ClothesType.ETC;
         }
-        String type1 = categories.get(1).path("value").asText();
-        String type2 = categories.get(2).path("value").asText();
+        String type1 = categories.path(1).path("value").asText();
+        String type2 = categories.path(2).path("value").asText();
 
         if (type1.equals("패션의류")) {
             String type3 = categories.get(3).path("value").asText();
