@@ -20,10 +20,7 @@ public class SecurityUtil {
         Object principal = authentication.getPrincipal();
         if (principal instanceof CustomUserDetails cud) {
             return userId.equals(cud.getUserId());
-        }
-        try {
-            return userId.equals(UUID.fromString(authentication.getName()));
-        } catch (IllegalArgumentException e) {
+        } else {
             throw new UnAuthorizedException();
         }
     }
@@ -43,10 +40,7 @@ public class SecurityUtil {
         Object principal = auth.getPrincipal();
         if (principal instanceof CustomUserDetails cud) {
             return cud.getUserId();
-        }
-        try {
-            return UUID.fromString(auth.getName());
-        } catch (IllegalArgumentException e) {
+        } else {
             throw new GlobalException(ErrorCode.FEED_FORBIDDEN);
         }
     }
