@@ -1,24 +1,28 @@
 package com.onepiece.otboo.domain.dm.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto;
 import com.onepiece.otboo.domain.dm.entity.DirectMessage;
+import com.onepiece.otboo.domain.dm.fixture.DirectMessageFixture;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.enums.Role;
+import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
-import com.onepiece.otboo.global.config.QuerydslConfig;
+import com.onepiece.otboo.global.config.TestJpaConfig;
+import com.onepiece.otboo.global.config.TestJpaConfig.MutableDateTimeProvider;
 import java.time.Instant;
 import java.util.List;
-import org.junit.jupiter.api.DisplayName;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
-@Import(QuerydslConfig.class)
+@ActiveProfiles("test")
+@Import(TestJpaConfig.class)
 class DirectMessageRepositoryTest {
 
     @Autowired
@@ -27,131 +31,83 @@ class DirectMessageRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-    private User createUser(String email) {
-        User user = User.builder()
-            .email(email)
-            .password("pw")
-            .role(Role.USER)
-            .locked(false)
-            .build();
-        ReflectionTestUtils.setField(user, "createdAt", Instant.now());
-        return userRepository.save(user);
-    }
+    @Autowired
+    private MutableDateTimeProvider time;
 
-    @Test
-    @DisplayName("DM 목록 조회 - 기본 조회 성공 (최신순)")
-    void findDirectMessages_success() {
-        User sender = createUser("sender@test.com");
-        User receiver = createUser("receiver@test.com");
+    private UUID userId1, userId2, id1, id2, id3;
 
-        DirectMessage dm = DirectMessage.builder()
-            .sender(sender)
-            .receiver(receiver)
-            .content("첫 번째 DM")
-            .build();
-        ReflectionTestUtils.setField(dm, "createdAt", Instant.now());
-        directMessageRepository.save(dm);
+    @BeforeEach
+    void setUp() {
 
-        List<DirectMessageDto> result =
-            directMessageRepository.findDirectMessages(sender.getId(), null, null, 10, null);
+        User user1 = UserFixture.createUser("han@test.com");
+        User user2 = UserFixture.createUser("shin@test.com");
+        userRepository.saveAll(List.of(user1, user2));
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getContent()).isEqualTo("첫 번째 DM");
-    }
-
-//    @Test
-//    @DisplayName("DM 목록 조회 - Limit 적용 성공 (최신순)")
-//    void findDirectMessages_withLimit_success() {
-//        User sender = createUser("sender@test.com");
-//        User receiver = createUser("receiver@test.com");
-//
-//        Instant base = Instant.now();
-//
-//        for (int i = 1; i <= 5; i++) {
-//            DirectMessage dm = DirectMessage.builder()
-//                .sender(sender)
-//                .receiver(receiver)
-//                .content("메시지 " + i)
-//                .build();
-//
-//            ReflectionTestUtils.setField(dm, "createdAt", base.plusSeconds(i * 10L));
-//            directMessageRepository.save(dm);
-//        }
-//
-//        List<DirectMessageDto> result =
-//            directMessageRepository.findDirectMessages(sender.getId(), null, null, 3, null);
-//
-//        assertThat(result).hasSize(3);
-//        assertThat(result.get(0).getContent()).isEqualTo("메시지 5");
-//        assertThat(result.get(1).getContent()).isEqualTo("메시지 4");
-//        assertThat(result.get(2).getContent()).isEqualTo("메시지 3");
-//    }
-
-    @Test
-    @DisplayName("DM 목록 조회 - idAfter 기반 커서 페이징 (최신순)")
-    void findDirectMessages_withIdAfter_success() {
-        User sender = createUser("sender@test.com");
-        User receiver = createUser("receiver@test.com");
-
-        Instant base = Instant.now();
-
-        DirectMessage dm1 = DirectMessage.builder()
-            .sender(sender)
-            .receiver(receiver)
-            .content("메시지 1")
-            .build();
-        ReflectionTestUtils.setField(dm1, "createdAt", base.plusSeconds(10));
+        time.setNow(Instant.parse("2025-10-15T08:00:00Z"));
+        DirectMessage dm1 = DirectMessageFixture.createDirectMessage(user1, user2, "message1");
         directMessageRepository.save(dm1);
 
-        DirectMessage dm2 = DirectMessage.builder()
-            .sender(sender)
-            .receiver(receiver)
-            .content("메시지 2")
-            .build();
-        ReflectionTestUtils.setField(dm2, "createdAt", base.plusSeconds(20));
+        time.setNow(Instant.parse("2025-10-15T09:00:00Z"));
+        DirectMessage dm2 = DirectMessageFixture.createDirectMessage(user2, user1, "message2");
         directMessageRepository.save(dm2);
 
-        DirectMessage dm3 = DirectMessage.builder()
-            .sender(sender)
-            .receiver(receiver)
-            .content("메시지 3")
-            .build();
-        ReflectionTestUtils.setField(dm3, "createdAt", base.plusSeconds(30));
+        time.setNow(Instant.parse("2025-10-15T10:00:00Z"));
+        DirectMessage dm3 = DirectMessageFixture.createDirectMessage(user1, user2, "message3");
         directMessageRepository.save(dm3);
 
-        List<DirectMessageDto> result =
-            directMessageRepository.findDirectMessages(sender.getId(), null, dm3.getId(), 10, null);
-
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getContent()).isEqualTo("메시지 2");
-        assertThat(result.get(1).getContent()).isEqualTo("메시지 1");
+        userId1 = user1.getId();
+        userId2 = user2.getId();
+        id1 = dm1.getId();
+        id2 = dm2.getId();
+        id3 = dm3.getId();
     }
 
-//    @Test
-//    @DisplayName("DM 목록 조회 - 최신순 정렬 유지")
-//    void findDirectMessages_descOrder_success() {
-//        User sender = createUser("sender@test.com");
-//        User receiver = createUser("receiver@test.com");
-//
-//        Instant base = Instant.now();
-//
-//        for (int i = 1; i <= 3; i++) {
-//            DirectMessage dm = DirectMessage.builder()
-//                .sender(sender)
-//                .receiver(receiver)
-//                .content("메시지 " + i)
-//                .build();
-//            ReflectionTestUtils.setField(dm, "createdAt", base.plusMillis(i * 10L));
-//            directMessageRepository.save(dm);
-//        }
-//
-//        List<DirectMessageDto> result =
-//            directMessageRepository.findDirectMessages(sender.getId(), null, null, 10,
-//                "createdAt,DESC");
-//
-//        assertThat(result).hasSize(3);
-//        assertThat(result.get(0).getContent()).isEqualTo("메시지 3");
-//        assertThat(result.get(1).getContent()).isEqualTo("메시지 2");
-//        assertThat(result.get(2).getContent()).isEqualTo("메시지 1");
-//    }
+    @Test
+    void limit보다_한개_더_많이_조회한다() {
+
+        // when
+        List<DirectMessage> result = directMessageRepository.findDirectMessages(userId1, userId2,
+            null, null, 2);
+
+        // then
+        assertEquals(3, result.size());
+    }
+
+    @Test
+    void 두번째_페이지_커서_조회_테스트() {
+
+        // given
+        List<DirectMessage> first = directMessageRepository.findDirectMessages(userId1, userId2,
+            null, null, 2);
+        DirectMessage last = first.get(1);
+
+        String cursor = last.getCreatedAt().toString();
+        UUID nextIdAfter = last.getId();
+
+        // when
+        List<DirectMessage> result = directMessageRepository.findDirectMessages(userId1, userId2,
+            cursor, nextIdAfter, 2);
+
+        // then
+        assertEquals(1, result.size());
+        assertEquals(id1, result.get(0).getId());
+        assertEquals("message1", result.get(0).getContent());
+    }
+
+
+    @Test
+    void 조건에_맞는_데이터_개수_조회_테스트() {
+
+        // when
+        Long count = directMessageRepository.countConversation(userId1, userId2);
+
+        // then
+        assertEquals(3L, count);
+    }
+
+    @AfterEach
+    void tearDown() {
+        directMessageRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 }

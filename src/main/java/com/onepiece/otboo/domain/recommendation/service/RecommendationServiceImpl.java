@@ -120,9 +120,9 @@ public class RecommendationServiceImpl implements RecommendationService {
         RecommendationParameter parameter = extractData(recommendation);
 
         Double maxTemp = parameter.getMaxTemp();
-        double curTemp = parameter.getCurTemp();
-        double feelHot = parameter.getFeelHot();
-        double feelCold = parameter.getFeelCold();
+        Double curTemp = parameter.getCurTemp();
+        Double feelHot = parameter.getFeelHot();
+        Double feelCold = parameter.getFeelCold();
 
         // 체감 온도
         double feelTemp = curTemp + feelHot - feelCold;
@@ -156,7 +156,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         List<Clothes> userClothesList = recommendationRepository.getClothesByOwnerIdAndAttributesAndParameters(
             userId, parameter.getId());
 
-        if (userClothesList.size() != 0) {
+        if (userClothesList.size() > 0) {
             if (chooseDress) {
                 for (ClothesType type : ClothesType.values()) {
                     if (type == ClothesType.TOP || type == ClothesType.BOTTOM) {
