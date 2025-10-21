@@ -31,7 +31,6 @@ import java.util.Random;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,18 +57,13 @@ public class RecommendationServiceImpl implements RecommendationService {
     private final FileStorage fileStorage;
 
     @Override
-    public RecommendationDto getRecommendation(UUID weatherId) {
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> UserNotFoundException.byEmail(email));
-        UUID userId = user.getId();
+    public RecommendationDto getRecommendation(UUID weatherId, UUID userId) {
 
         log.info("[추천 조회] 작업 시작 - weatherId: {}, userId: {}", weatherId, userId);
 
         Weather weather = weatherRepository.findById(weatherId).orElseThrow();
 
-        Profile profile = profileRepository.findByUserId(userId).orElseThrow(
+        User user = userRepository.findById(userId).orElseThrow(
             () -> UserNotFoundException.byId(userId)
         );
 
@@ -77,7 +71,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         Recommendation recommendation =
             Recommendation.builder()
                 .weather(weather)
-                .profile(profile)
+                .user(user)
                 .build();
 
         log.debug("추천 객체 저장 - recommendationId: {}", recommendation.getId());
@@ -93,10 +87,6 @@ public class RecommendationServiceImpl implements RecommendationService {
     }
 
     public List<RecommendationClothes> getRecommendationClothes(Recommendation recommendation) {
-        Weather weather = recommendation.getWeather();
-        Profile profile = recommendation.getProfile();
-        UUID userId = profile.getUser().getId();
-
         // 추천 로직 실행
         List<Clothes> clothesList = recommendClothes(recommendation);
 
@@ -131,7 +121,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         boolean excludeOuter = (maxTemp != null && maxTemp >= 30) || feelTemp >= 30;
 
         // 상하의 / 원피스 케이스 나누기
-        UUID userId = recommendation.getProfile().getUser().getId();
+        UUID userId = recommendation.getUser().getId();
 
         boolean hasDress =
             clothesRepository.countClothesByOwnerIdAndType(userId, ClothesType.DRESS) > 0;
@@ -228,7 +218,8 @@ public class RecommendationServiceImpl implements RecommendationService {
     public RecommendationParameter extractData(Recommendation recommendation) {
 
         Weather weather = recommendation.getWeather();
-        Profile profile = recommendation.getProfile();
+        User user = recommendation.getUser();
+        Profile profile = profileRepository.findByUserId(user.getId()).orElseThrow();
 
         // 계절 파라미터
         LocalDate now = LocalDate.now();
