@@ -37,6 +37,8 @@ otboo:
         - POST
         - PUT
         - DELETE
+        - PATCH
+        - OPTIONS
       allow-credentials: true
     csrf:
       ignored-paths:
