@@ -1,5 +1,5 @@
 # 1단계: 빌드 스테이지
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:17 AS build
+FROM amazoncorretto:17 AS build
 WORKDIR /app
 # 프로젝트 정보를 환경 변수로 설정
 ENV PROJECT_NAME=otboo
@@ -13,7 +13,7 @@ COPY src/ src/
 RUN ./gradlew clean bootJar --no-daemon
 
 # 2단계: 런타임 스테이지 (경량)
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-alpine3.22-jdk
+FROM amazoncorretto:17-alpine
 WORKDIR /app
 # curl 설치
 RUN apk add --no-cache curl
