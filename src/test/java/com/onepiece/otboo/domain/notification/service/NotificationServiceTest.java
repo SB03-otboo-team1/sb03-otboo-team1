@@ -11,6 +11,7 @@ import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
 import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
+import com.onepiece.otboo.global.sse.SseService;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -26,6 +27,9 @@ class NotificationServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
+
+    @Mock
+    private SseService sseService;
 
     @InjectMocks
     private NotificationServiceImpl notificationService;
@@ -56,7 +60,7 @@ class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("알림 생성 성공 - 수신자 여러 명")
+    @DisplayName("알림 생성 성공 - 수신자 여러 명 (SSE 전송 포함)")
     void createNotifications_Success() {
         Set<UUID> receiverIds = Set.of(UUID.randomUUID(), UUID.randomUUID());
         String title = "새 알림";
@@ -65,16 +69,19 @@ class NotificationServiceTest {
 
         notificationService.create(receiverIds, title, content, level);
 
-        verify(notificationRepository, times(1)).saveAll(any());
+        verify(notificationRepository, times(receiverIds.size())).save(
+            any());
+        verify(sseService, times(receiverIds.size())).send(any(), any());
     }
 
     @Test
-    @DisplayName("알림 생성 실패 - 수신자 없음")
+    @DisplayName("알림 생성 실패 - 수신자 없음 (SSE 미전송)")
     void createNotifications_EmptyReceivers() {
         Set<UUID> receiverIds = Set.of();
 
         notificationService.create(receiverIds, "제목", "내용", Level.ERROR);
 
-        verify(notificationRepository, never()).saveAll(any());
+        verify(notificationRepository, never()).save(any());
+        verify(sseService, never()).send(any(), any());
     }
 }

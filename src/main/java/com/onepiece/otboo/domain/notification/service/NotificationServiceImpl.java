@@ -4,6 +4,7 @@ import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.entity.Notification;
 import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
+import com.onepiece.otboo.global.sse.SseService;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -20,31 +21,44 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final ApplicationEventPublisher publisher;
+    private final SseService sseService;
 
     /**
-     * 알림 생성
+     * 알림 생성 + SSE 실시간 전송
      */
     @Override
     @Transactional
     public void create(Set<UUID> receiverIds, String title, String content, Level level) {
-
         if (receiverIds.isEmpty()) {
             log.warn("[NotificationService] 알림 수신자가 없음");
             return;
         }
+
         log.info("[NotificationService] 알림 생성 시작 - receiverIds: {}", receiverIds);
 
-        List<Notification> notifications = receiverIds.stream()
-            .map(receiverId -> Notification.builder()
+        receiverIds.forEach(receiverId -> {
+            Notification notification = Notification.builder()
                 .receiverId(receiverId)
                 .title(title)
                 .content(content)
                 .level(level)
-                .build())
-            .toList();
+                .build();
 
-        notificationRepository.saveAll(notifications);
-        log.info("[NotificationService] 알림 {}개 생성 완료", notifications.size());
+            notificationRepository.save(notification);
+            log.info("[NotificationService] 알림 저장 완료 - receiverId: {}", receiverId);
+
+            NotificationResponse response = NotificationResponse.builder()
+                .id(notification.getId())
+                .receiverId(notification.getReceiverId())
+                .title(notification.getTitle())
+                .content(notification.getContent())
+                .level(notification.getLevel())
+                .createdAt(notification.getCreatedAt())
+                .build();
+
+            sseService.send(receiverId, response);
+            log.info("[NotificationService] SSE 전송 완료 - receiverId: {}", receiverId);
+        });
     }
 
     /**
