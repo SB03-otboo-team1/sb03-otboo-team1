@@ -28,9 +28,8 @@ otboo:
   security:
     cors:
       allowed-origins:
-        - "https://nine.it.kr"
-        - "http://otboo-lord-balencer-342590016.ap-northeast-2.elb.amazonaws.com"
-        - "https://otboo-lord-balencer-342590016.ap-northeast-2.elb.amazonaws.com"
+        - "https://otboo.site"
+        - "http://otboo.site"
         - "http://localhost:3000"
       allowed-methods:
         - GET
