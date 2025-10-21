@@ -3,11 +3,14 @@ package com.onepiece.otboo.domain.recommendation.controller;
 import com.onepiece.otboo.domain.recommendation.controller.api.RecommendationApi;
 import com.onepiece.otboo.domain.recommendation.dto.data.RecommendationDto;
 import com.onepiece.otboo.domain.recommendation.service.RecommendationService;
+import com.onepiece.otboo.global.util.SecurityUtil;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,11 +29,12 @@ public class RecommendationController implements RecommendationApi {
     public ResponseEntity<RecommendationDto> getRecommendation(
         @NotNull @RequestParam UUID weatherId) {
 
-        // TODO: Controller 단에서 Authorize할 수 있는 방법?!
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = SecurityUtil.requireAuthorizedUser(auth);
 
-        log.info("추천 조회 API 호출 - weatherId: {}", weatherId);
+        log.info("추천 조회 API 호출 - weatherId: {}, userId: {}", weatherId, userId);
 
-        RecommendationDto result = recommendationService.getRecommendation(weatherId);
+        RecommendationDto result = recommendationService.getRecommendation(weatherId, userId);
 
         log.debug("추천 조회 API 호출 완료 - {}", result);
 
