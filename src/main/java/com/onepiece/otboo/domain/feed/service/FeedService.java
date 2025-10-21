@@ -23,7 +23,7 @@ import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
 import com.onepiece.otboo.global.storage.FileStorage;
 import com.onepiece.otboo.global.storage.S3Storage;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -99,16 +99,13 @@ public class FeedService {
             .commentCount(0L)
             .build();
 
-        Set<UUID> dedup = new HashSet<>(clothesIds);
-        for (Clothes c : clothesList) {
-            if (dedup.contains(c.getId())) {
-                FeedClothes link = FeedClothes.builder()
-                    .clothesId(c.getId())
-                    .build();
-                link.setFeed(feed);
-                feed.getFeedClothes().add(link);
-            }
-        }
+       for (Clothes c : clothesList) {
+           FeedClothes link = FeedClothes.builder()
+               .clothesId(c.getId())
+               .build();
+           link.setFeed(feed);
+           feed.getFeedClothes().add(link);
+       }
 
         Feed saved = feedRepository.save(feed);
 

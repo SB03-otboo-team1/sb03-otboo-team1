@@ -5,6 +5,7 @@ import static com.onepiece.otboo.domain.feed.entity.QFeed.feed;
 import static com.onepiece.otboo.domain.feed.entity.QFeedClothes.feedClothes;
 import static com.onepiece.otboo.domain.profile.entity.QProfile.profile;
 import static com.onepiece.otboo.domain.weather.entity.QWeather.weather;
+import static java.util.Objects.requireNonNull;
 
 import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
@@ -71,8 +72,8 @@ public class FeedQueryService {
     ) {
         if (limit <= 0 || limit > 100) throw new IllegalArgumentException("limit must be between 1 and 100");
 
-        final SortBy sb = sortBy;
-        final SortDirection sd = sortDirection;
+        final SortBy sb = requireNonNull(sortBy, "sortBy must not be null");
+        final SortDirection sd = requireNonNull(sortDirection, "sortDirection must not be null");
 
         BooleanBuilder where = new BooleanBuilder();
         if (authorIdEqual != null) where.and(feed.authorId.eq(authorIdEqual));
