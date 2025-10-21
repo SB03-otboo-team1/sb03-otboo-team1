@@ -22,6 +22,7 @@ import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepos
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
 import com.onepiece.otboo.domain.clothes.service.parser.ClothesInfoParser;
+import com.onepiece.otboo.domain.recommendation.repository.RecommendationClothesRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
@@ -54,6 +55,7 @@ public class ClothesServiceImpl implements ClothesService {
     private final ClothesAttributeDefRepository defRepository;
     private final ClothesAttributeOptionsRepository optionsRepository;
     private final ClothesAttributeRepository attributeRepository;
+    private final RecommendationClothesRepository recommendationClothesRepository;
     private final ClothesMapper clothesMapper;
     private final ClothesAttributeMapper clothesAttributeMapper;
     private final FileStorage fileStorage;
@@ -278,6 +280,7 @@ public class ClothesServiceImpl implements ClothesService {
         Clothes clothes = clothesRepository.findById(clothesId)
             .orElseThrow(() -> new ClothesNotFoundException("의상 정보를 찾을 수 없습니다. id: " + clothesId));
 
+        recommendationClothesRepository.deleteByClothesId(clothesId);
         fileStorage.deleteFile(clothes.getImageUrl());
         attributeRepository.deleteByClothesId(clothesId);
         clothesRepository.deleteById(clothesId);

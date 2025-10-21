@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface RecommendationClothesRepository extends
     JpaRepository<RecommendationClothes, UUID> {
 
+    void deleteByClothesId(UUID clothesId);
 }
