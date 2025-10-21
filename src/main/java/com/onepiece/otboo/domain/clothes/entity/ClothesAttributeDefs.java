@@ -35,4 +35,8 @@ public class ClothesAttributeDefs extends BaseUpdatableEntity {
             this.name = newName;
         }
     }
+
+    public void updateOptions(List<ClothesAttributeOptions> savedOptions) {
+        this.options.addAll(savedOptions);
+    }
 }

@@ -1,8 +1,6 @@
 package com.onepiece.otboo.global.util;
 
 import com.onepiece.otboo.domain.auth.exception.UnAuthorizedException;
-import com.onepiece.otboo.global.exception.ErrorCode;
-import com.onepiece.otboo.global.exception.GlobalException;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import java.util.UUID;
 import org.springframework.security.core.Authentication;
@@ -20,17 +18,28 @@ public class SecurityUtil {
         Object principal = authentication.getPrincipal();
         if (principal instanceof CustomUserDetails cud) {
             return userId.equals(cud.getUserId());
-        }
-        try {
-            return userId.equals(UUID.fromString(authentication.getName()));
-        } catch (IllegalArgumentException e) {
+        } else {
             throw new UnAuthorizedException();
         }
     }
 
-    public static void requireAuthorizedUser(UUID userId) {
+    public static UUID requireAuthorizedUser(Authentication auth) {
+        UUID userId = resolveRequesterId(auth);
         if (!isRequester(userId)) {
-            throw new GlobalException(ErrorCode.FORBIDDEN);
+            throw new UnAuthorizedException();
+        }
+        return userId;
+    }
+
+    private static UUID resolveRequesterId(Authentication auth) {
+        if (auth == null) {
+            throw new UnAuthorizedException();
+        }
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails cud) {
+            return cud.getUserId();
+        } else {
+            throw new UnAuthorizedException();
         }
     }
 }

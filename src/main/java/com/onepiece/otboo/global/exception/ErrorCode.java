@@ -59,6 +59,10 @@ public enum ErrorCode {
     CLOTHES_NOT_FOUND(HttpStatus.NOT_FOUND, "의상 확인 실패", "의상을 찾을 수 없습니다."),
     INVALID_CLOTHES_SORT(HttpStatus.BAD_REQUEST, "의상 조회 실패", "유효하지 않은 정렬 기준입니다."),
     CLOTHES_OWNERSHIP_MISMATCH(HttpStatus.FORBIDDEN, "의류 소유권 불일치", "요청한 의류 중 소유하지 않은 항목이 있습니다."),
+    PARSING_PAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "쇼핑몰 페이지 로드 실패", "쇼핑몰 페이지를 찾을 수 없습니다"),
+    PARSING_PAGE_ACCESS_BLOCKED(HttpStatus.FORBIDDEN, "쇼핑몰 페이지 로드 실패", "쇼핑몰에서 접근을 차단했습니다"),
+    CLOTHES_PARSING_FAILED(HttpStatus.BAD_REQUEST, "쇼핑몰 페이지 파싱 실패", "상품 정보를 가져오는데 실패했습니다"),
+    UNSUPPORTED_SHOPPING_MALL(HttpStatus.BAD_REQUEST, "쇼핑몰 파싱 불가", "파싱을 지원하지 않는 쇼핑몰입니다"),
 
     // CLOTHES_ATTRIBUTES
     CLOTHES_ATTRIBUTE_DEF_NOT_FOUND(HttpStatus.NOT_FOUND, "의상 속성 정의 확인 실패", "의상 속성을 찾을 수 없습니다."),
