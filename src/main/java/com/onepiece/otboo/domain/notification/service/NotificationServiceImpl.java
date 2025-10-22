@@ -36,6 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(readOnly = true)
     @Override
     public CursorPageResponseDto<NotificationResponse> getNotifications(
+        UUID receiverId,
         String cursor,
         UUID idAfter,
         int limit
