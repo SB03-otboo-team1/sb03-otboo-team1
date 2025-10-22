@@ -20,7 +20,7 @@ import org.mapstruct.Named;
 public interface RecommendationMapper {
 
     @Mapping(target = "weatherId", source = "recommendation.weather.id")
-    @Mapping(target = "userId", source = "recommendation.profile.user.id")
+    @Mapping(target = "userId", source = "recommendation.user.id")
     @Mapping(target = "clothes", source = "clothes")
     RecommendationDto toDto(Recommendation recommendation, List<RecommendationClothes> clothes,
         @Context FileStorage fileStorage);

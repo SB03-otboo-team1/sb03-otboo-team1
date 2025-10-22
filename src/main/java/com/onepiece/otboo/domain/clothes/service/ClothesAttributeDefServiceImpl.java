@@ -82,10 +82,12 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
             ).toList();
 
         log.debug("의상 속성값 저장");
-        clothesAttributeOptionsRepository.saveAll(options);
+        List<ClothesAttributeOptions> savedOptions = clothesAttributeOptionsRepository.saveAll(
+            options);
+        savedDef.updateOptions(savedOptions);
 
         log.info("[의상 속성 정의] 등록 작업 완료 - definitionId: {}, countOptions: {}", savedDef.getId(),
-            options.size());
+            savedOptions.size());
 
         return clothesAttributeMapper.toAttributeDefDto(savedDef);
     }
