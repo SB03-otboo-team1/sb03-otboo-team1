@@ -94,14 +94,12 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
 
         ClothesAttributeDefDto response = clothesAttributeMapper.toAttributeDefDto(savedDef);
 
-        UUID userId = UUID.randomUUID();
-
         eventPublisher.publishEvent(
-            new ClothesAttributeAddedEvent(userId, response, Instant.now())
+            new ClothesAttributeAddedEvent(response, Instant.now())
         );
 
-        log.info("[의상 속성 정의] ClothesAttributeAddedEvent 발행 완료 - defId: {}, userId: {}",
-            savedDef.getId(), userId);
+        log.info("[의상 속성 정의] ClothesAttributeAddedEvent 발행 완료 - defId: {}",
+            savedDef.getId());
 
         return clothesAttributeMapper.toAttributeDefDto(savedDef);
     }

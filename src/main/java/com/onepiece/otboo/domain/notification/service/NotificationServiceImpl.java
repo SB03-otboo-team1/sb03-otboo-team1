@@ -101,9 +101,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .createdAt(Instant.now())
                 .build();
 
-            notificationRepository.save(notification);
-
-            NotificationResponse response = notificationMapper.toResponse(notification);
+            Notification saved = notificationRepository.save(notification);
+            
+            NotificationResponse response = notificationMapper.toResponse(saved);
 
             try {
                 sseService.send(receiverId, "notifications", response);

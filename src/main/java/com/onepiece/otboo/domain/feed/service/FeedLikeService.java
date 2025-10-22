@@ -1,10 +1,13 @@
 package com.onepiece.otboo.domain.feed.service;
 
+import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.feed.dto.response.FeedResponse;
 import com.onepiece.otboo.domain.feed.entity.Feed;
 import com.onepiece.otboo.domain.feed.entity.FeedLike;
 import com.onepiece.otboo.domain.feed.repository.FeedLikeRepository;
 import com.onepiece.otboo.domain.feed.repository.FeedRepository;
+import com.onepiece.otboo.domain.profile.entity.Profile;
+import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.user.mapper.UserMapper;
@@ -30,6 +33,7 @@ public class FeedLikeService {
     private final FeedRepository feedRepository;
     private final FeedLikeRepository feedLikeRepository;
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final UserMapper userMapper;
     private final EntityManager em;
     private final ApplicationEventPublisher eventPublisher;
@@ -48,11 +52,20 @@ public class FeedLikeService {
 
         syncLikeCount(feedId);
 
+        Profile profile = profileRepository.findByUserId(feed.getAuthorId())
+            .orElseThrow(() -> new GlobalException(ErrorCode.PROFILE_NOT_FOUND));
+
+        AuthorDto authorDto = AuthorDto.builder()
+            .userId(feed.getAuthorId())
+            .name(profile.getNickname())
+            .profileImageUrl(profile.getProfileImageUrl())
+            .build();
+
         FeedResponse feedResponse = new FeedResponse(
             feed.getId(),
             feed.getCreatedAt(),
             feed.getUpdatedAt(),
-            null,
+            authorDto,
             null,
             List.of(),
             feed.getContent(),

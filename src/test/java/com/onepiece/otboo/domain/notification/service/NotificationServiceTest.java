@@ -16,9 +16,11 @@ import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.sse.SseService;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,9 @@ class NotificationServiceTest {
 
     @Mock
     private NotificationMapper notificationMapper;
+
+    @Mock
+    private SseService sseService;
 
     @InjectMocks
     private NotificationServiceImpl notificationService;
@@ -142,4 +147,80 @@ class NotificationServiceTest {
         verify(notificationRepository).findById(id);
         verify(notificationRepository, never()).delete(notification);
     }
+
+
+    @Test
+    @DisplayName("알림 생성 성공 - 저장 후 SSE 전송 호출")
+    void createNotification_Success() {
+        UUID receiverId = UUID.randomUUID();
+        Set<UUID> receivers = Set.of(receiverId);
+        Notification notification = Notification.builder()
+            .receiverId(receiverId)
+            .title("테스트 알림")
+            .content("내용")
+            .level(Level.INFO)
+            .createdAt(Instant.now())
+            .build();
+
+        Notification saved = Notification.builder()
+            .receiverId(receiverId)
+            .title("테스트 알림")
+            .content("내용")
+            .level(Level.INFO)
+            .createdAt(notification.getCreatedAt())
+            .build();
+
+        NotificationResponse response = NotificationResponse.builder()
+            .receiverId(receiverId)
+            .title("테스트 알림")
+            .content("내용")
+            .level("INFO")
+            .createdAt(saved.getCreatedAt())
+            .build();
+
+        given(notificationRepository.save(any(Notification.class))).willReturn(saved);
+        given(notificationMapper.toResponse(saved)).willReturn(response);
+
+        notificationService.create(receivers, "테스트 알림", "내용", Level.INFO);
+
+        verify(notificationRepository).save(any(Notification.class));
+        verify(notificationMapper).toResponse(saved);
+        verify(sseService).send(receiverId, "notifications", response);
+    }
+
+    @Test
+    @DisplayName("알림 생성 중 SSE 전송 실패해도 예외 발생 없이 처리됨")
+    void createNotification_SSEFailure_NoException() {
+        UUID receiverId = UUID.randomUUID();
+        Set<UUID> receivers = Set.of(receiverId);
+
+        Notification saved = Notification.builder()
+            .receiverId(receiverId)
+            .title("테스트 알림")
+            .content("내용")
+            .level(Level.INFO)
+            .createdAt(Instant.now())
+            .build();
+
+        NotificationResponse response = NotificationResponse.builder()
+            .receiverId(receiverId)
+            .title("테스트 알림")
+            .content("내용")
+            .level("INFO")
+            .createdAt(saved.getCreatedAt())
+            .build();
+
+        given(notificationRepository.save(any(Notification.class))).willReturn(saved);
+        given(notificationMapper.toResponse(saved)).willReturn(response);
+
+        org.mockito.Mockito.doThrow(new RuntimeException("SSE 실패"))
+            .when(sseService).send(any(UUID.class), any(), any());
+
+        notificationService.create(receivers, "테스트 알림", "내용", Level.INFO);
+
+        verify(notificationRepository).save(any(Notification.class));
+        verify(sseService).send(any(UUID.class), any(), any());
+    }
+
+
 }

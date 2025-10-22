@@ -10,6 +10,8 @@ import com.onepiece.otboo.domain.notification.service.NotificationService;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.exception.ProfileNotFoundException;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
+import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
 import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
@@ -21,6 +23,7 @@ import com.onepiece.otboo.global.event.event.WeatherChangeEvent;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -37,6 +40,7 @@ public class NotificationRequiredTopicListener {
     private final ProfileRepository profileRepository;
     private final FeedRepository feedRepository;
     private final FollowRepository followRepository;
+    private final UserRepository userRepository;
 
 
     @KafkaListener(
@@ -92,27 +96,28 @@ public class NotificationRequiredTopicListener {
         containerFactory = "processingKafkaListenerContainerFactory"
     )
     public void onClothesAttributeAdded(String kafkaEvent, Acknowledgment ack) {
-        handle(
-            kafkaEvent, ack,
-            "ClothesAttributeAddedEvent",
-            ClothesAttributeAddedEvent.class,
+        handle(kafkaEvent, ack, "ClothesAttributeAddedEvent", ClothesAttributeAddedEvent.class,
             event -> {
-                UUID userId = event.userId();
                 String attributeName = event.data().name();
 
+                Set<UUID> allUserIds = userRepository.findAll()
+                    .stream()
+                    .map(User::getId)
+                    .collect(Collectors.toSet());
+
                 notificationService.create(
-                    Set.of(userId),
+                    allUserIds,
                     "의상 속성 추가",
                     "새로운 의상 속성이 추가되었습니다: " + attributeName,
                     Level.INFO
                 );
 
                 log.debug(
-                    "[NotificationRequiredTopicListener] ClothesAttributeAddedEvent 처리 완료 - userId: {}, attribute={}",
-                    userId, attributeName);
-            }
-        );
+                    "[NotificationRequiredTopicListener] ClothesAttributeAddedEvent 처리 완료 - 전체 사용자 수: {}",
+                    allUserIds.size());
+            });
     }
+
 
     @KafkaListener(
         topics = "otboo.FeedCommentCreatedEvent",
