@@ -31,7 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationMapper notificationMapper;
 
     /**
-     * 알림 목록 조회 (cursor + idAfter 기반)
+     * 알림 목록 조회 (receiverId + cursor + idAfter 기반)
      */
     @Transactional(readOnly = true)
     @Override
@@ -51,7 +51,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         List<Notification> notifications =
-            notificationRepository.findNotifications(cursorInstant, idAfter, limit + 1);
+            notificationRepository.findNotifications(receiverId, cursorInstant, idAfter, limit + 1);
 
         boolean hasNext = notifications.size() > limit;
         if (hasNext) {
@@ -65,7 +65,7 @@ public class NotificationServiceImpl implements NotificationService {
             ? notifications.get(notifications.size() - 1).getId()
             : null;
 
-        long totalCount = notificationRepository.countAll();
+        long totalCount = notificationRepository.countByReceiverId(receiverId);
 
         List<NotificationResponse> data = notifications.stream()
             .map(notificationMapper::toResponse)
@@ -84,11 +84,6 @@ public class NotificationServiceImpl implements NotificationService {
 
     /**
      * 알림 생성
-     *
-     * @param receiverIds 알림을 받을 사용자 ID
-     * @param title       알림 제목
-     * @param content     알림 내용
-     * @param level       알림 중요도 수준 (INFO, WARNING, ERROR)
      */
     @Transactional
     @Override
@@ -105,7 +100,6 @@ public class NotificationServiceImpl implements NotificationService {
             notificationRepository.save(notification);
         });
     }
-
 
     /**
      * 알림 읽음 처리 (삭제 대체)

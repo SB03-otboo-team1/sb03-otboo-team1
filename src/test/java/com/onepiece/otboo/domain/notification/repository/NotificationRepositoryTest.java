@@ -40,9 +40,11 @@ class NotificationRepositoryTest {
     @Test
     @DisplayName("알림 목록 조회 성공 - 커서 기반 (createdAt + idAfter)")
     void findNotifications_Success() {
+        UUID receiverId = UUID.randomUUID();
+
         for (int i = 0; i < 5; i++) {
             Notification n = Notification.builder()
-                .receiverId(UUID.randomUUID())
+                .receiverId(receiverId)
                 .title("테스트 알림 " + i)
                 .content("내용 " + i)
                 .level(Level.INFO)
@@ -54,7 +56,7 @@ class NotificationRepositoryTest {
         em.clear();
 
         List<Notification> firstPage =
-            notificationRepository.findNotifications(null, null, 3);
+            notificationRepository.findNotifications(receiverId, null, null, 3);
 
         assertThat(firstPage).hasSizeBetween(3, 4);
 
@@ -62,7 +64,7 @@ class NotificationRepositoryTest {
         UUID nextIdAfter = firstPage.get(firstPage.size() - 1).getId();
 
         List<Notification> secondPage =
-            notificationRepository.findNotifications(nextCursor, nextIdAfter, 3);
+            notificationRepository.findNotifications(receiverId, nextCursor, nextIdAfter, 3);
 
         if (!secondPage.isEmpty()) {
             assertThat(secondPage.get(0).getCreatedAt())
@@ -73,11 +75,12 @@ class NotificationRepositoryTest {
     @Test
     @DisplayName("알림 목록 조회 성공 - 동일 createdAt 내 idAfter 적용")
     void findNotifications_WithIdAfter_Success() {
+        UUID receiverId = UUID.randomUUID();
         Instant now = Instant.now();
 
         for (int i = 0; i < 5; i++) {
             Notification n = Notification.builder()
-                .receiverId(UUID.randomUUID())
+                .receiverId(receiverId)
                 .title("동일시각 알림 " + i)
                 .content("내용 " + i)
                 .level(Level.INFO)
@@ -88,11 +91,13 @@ class NotificationRepositoryTest {
         em.flush();
         em.clear();
 
-        List<Notification> all = notificationRepository.findNotifications(null, null, 5);
+        List<Notification> all = notificationRepository.findNotifications(receiverId, null, null,
+            5);
         Instant cursor = all.get(0).getCreatedAt();
         UUID idAfter = all.get(2).getId();
 
-        List<Notification> next = notificationRepository.findNotifications(cursor, idAfter, 2);
+        List<Notification> next = notificationRepository.findNotifications(receiverId, cursor,
+            idAfter, 2);
 
         if (!next.isEmpty()) {
             assertThat(next.get(0).getCreatedAt()).isEqualTo(cursor);

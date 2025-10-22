@@ -30,6 +30,9 @@ public enum ErrorCode {
     DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM 확인 실패", "DM을 찾을 수 없습니다."),
     CANNOT_SEND_MESSAGE_TO_SELF(HttpStatus.BAD_REQUEST, "DM 전송 실패", "자기 자신에게는 DM을 보낼 수 없습니다."),
 
+    // Notification
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림 확인 실패", "존재하지 않는 알림입니다."),
+    
     // Weather
     WEATHER_NOT_FOUND(HttpStatus.NOT_FOUND, "날씨 확인 실패", "날씨 정보를 찾을 수 없습니다."),
 

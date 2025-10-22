@@ -15,7 +15,7 @@ public interface NotificationRepositoryCustom {
      * @param limit   조회 개수
      * @return 알림 목록
      */
-    List<Notification> findNotifications(Instant cursor, UUID idAfter, int limit);
+    List<Notification> findNotifications(UUID receiverId, Instant cursor, UUID idAfter, int limit);
 
     /**
      * 전체 알림 개수 (receiverId 기준)
