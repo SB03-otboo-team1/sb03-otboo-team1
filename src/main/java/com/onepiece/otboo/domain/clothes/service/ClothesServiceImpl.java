@@ -215,6 +215,8 @@ public class ClothesServiceImpl implements ClothesService {
         Clothes clothes = clothesRepository.findById(clothesId)
             .orElseThrow(() -> new ClothesNotFoundException("의상 정보를 찾을 수 없습니다. id: " + clothesId));
 
+        String oldImageUrl = clothes.getImageUrl();
+
         String newName = request.name();
         ClothesType newType = request.type();
         String newImageUrl = null;
@@ -222,11 +224,52 @@ public class ClothesServiceImpl implements ClothesService {
             newImageUrl = fileStorage.uploadFile(CLOTHES_PREFIX, imageFile);
         }
 
+        List<ClothesAttributes> attributes = attributeRepository.findByClothesId(clothesId);
+
+        List<ClothesAttributeDto> reqAttrs =
+            request.attributes() == null ? List.of() : request.attributes();
+        List<ClothesAttributes> newAttributes =
+            reqAttrs.stream().map(
+                dto -> {
+                    ClothesAttributeDefs def = defRepository.findById(dto.definitionId())
+                        .orElseThrow(
+                            () -> ClothesAttributeDefNotFoundException.byId(dto.definitionId())
+                        );
+                    String value = dto.value();
+                    return ClothesAttributes.builder()
+                        .clothes(clothes)
+                        .definition(def)
+                        .optionValue(value)
+                        .build();
+                }
+            ).toList();
+
+        if (!newAttributes.isEmpty() && !newAttributes.equals(attributes)) {
+            attributeRepository.deleteAll(attributes);
+            attributes = attributeRepository.saveAll(newAttributes);
+        }
+
         clothes.update(newName, newType, newImageUrl);
 
         Clothes updatedClothes = clothesRepository.save(clothes);
 
-        return clothesMapper.toDto(updatedClothes, Collections.emptyList(), fileStorage);
+        if (newImageUrl != null && oldImageUrl != null && !oldImageUrl.isBlank()) {
+            try {
+                fileStorage.deleteFile(oldImageUrl);
+            } catch (Exception e) {
+                log.warn("기존 이미지 삭제 실패: {}", oldImageUrl, e);
+                // 삭제 실패는 치명적이지 않으므로 계속 진행
+            }
+        }
+
+        List<ClothesAttributeWithDefDto> clothesAttributeWithDefDto =
+            attributes.stream().map(a -> {
+                ClothesAttributeDefs def = a.getDefinition();
+                String value = a.getOptionValue();
+                return clothesAttributeMapper.toAttributeWithDefDto(def, value);
+            }).toList();
+
+        return clothesMapper.toDto(updatedClothes, clothesAttributeWithDefDto, fileStorage);
     }
 
     @Override
