@@ -35,7 +35,6 @@ class NotificationTest {
         assertThat(notification.getCreatedAt())
             .isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
 
-        // ✅ 삭제 관련 기본값 확인
         assertThat(notification.getDeletedAt()).isNull();
     }
 

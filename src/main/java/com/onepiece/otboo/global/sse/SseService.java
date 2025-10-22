@@ -65,6 +65,7 @@ public class SseService {
         } catch (IOException e) {
             log.error("[SSE] Send failed, removing emitter for user: {}", userId, e);
             emitterRepository.delete(userId);
+            emitter.completeWithError(e);
         }
     }
 }

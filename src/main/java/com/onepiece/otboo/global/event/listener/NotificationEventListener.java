@@ -3,12 +3,12 @@ package com.onepiece.otboo.global.event.listener;
 import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.service.NotificationService;
 import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
-import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedLikedEvent;
 import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
 import com.onepiece.otboo.global.event.event.RoleUpdatedEvent;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -22,25 +22,7 @@ public class NotificationEventListener {
     private final NotificationService notificationService;
 
     /**
-     * 1. DM 생성 알림
-     */
-    @EventListener
-    public void handleDirectMessageCreated(DirectMessageCreatedEvent event) {
-        var dto = event.data();
-
-        notificationService.create(
-            Set.of(dto.receiver().userId()),
-            "새로운 메시지",
-            dto.sender().name() + "님이 메시지를 보냈습니다.",
-            Level.INFO
-        );
-
-        log.info("[NotificationEventListener] DM 알림 전송 완료 - receiverId: {}",
-            dto.receiver().userId());
-    }
-
-    /**
-     * 2. 팔로우 생성 알림
+     * 팔로우 생성 알림
      */
     @EventListener
     public void handleFollowCreated(FollowCreatedEvent event) {
@@ -58,23 +40,25 @@ public class NotificationEventListener {
     }
 
     /**
-     * 3. 피드 좋아요 알림
+     * 피드 좋아요 알림
      */
     @EventListener
     public void handleFeedLiked(FeedLikedEvent event) {
-        var dto = event.data();
+        var feed = event.data();
+
+        UUID feedAuthorId = feed.author().userId();
         notificationService.create(
-            Set.of(dto.author().userId()),
+            Set.of(feedAuthorId),
             "피드 좋아요",
             "누군가 당신의 피드를 좋아했습니다.",
             Level.INFO
         );
-        log.info("[NotificationEventListener] 피드 좋아요 알림 전송 완료 - authorId: {}",
-            dto.author().userId());
+
+        log.info("[NotificationEventListener] 피드 좋아요 알림 전송 완료 - feedAuthorId: {}", feedAuthorId);
     }
 
     /**
-     * 4. 피드 댓글 알림
+     * 피드 댓글 알림
      */
     @EventListener
     public void handleFeedCommentCreated(FeedCommentCreatedEvent event) {
@@ -90,7 +74,7 @@ public class NotificationEventListener {
     }
 
     /**
-     * 5. 의상 속성 추가 알림
+     * 의상 속성 추가 알림
      */
     @EventListener
     public void handleClothesAttributeAdded(ClothesAttributeAddedEvent event) {
@@ -104,7 +88,7 @@ public class NotificationEventListener {
     }
 
     /**
-     * 6. 권한 변경 알림
+     * 권한 변경 알림
      */
     @EventListener
     public void handleRoleUpdated(RoleUpdatedEvent event) {
