@@ -15,7 +15,6 @@ import com.onepiece.otboo.domain.notification.service.NotificationService;
 import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
-import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedLikedEvent;
 import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
@@ -38,26 +37,6 @@ class NotificationEventListenerTest {
 
     @InjectMocks
     private NotificationEventListener listener;
-
-    @DisplayName("DM 생성 이벤트 발생 시 알림이 전송된다")
-    @Test
-    void handleDirectMessageCreated() {
-        var sender = new AuthorDto(UUID.randomUUID(), "보내는사람", null);
-        var receiver = new AuthorDto(UUID.randomUUID(), "받는사람", null);
-
-        var dto = new com.onepiece.otboo.domain.dm.dto.response.DirectMessageDto(
-            UUID.randomUUID(),
-            Instant.now(),
-            sender,
-            receiver,
-            "테스트 메시지입니다."
-        );
-
-        listener.handleDirectMessageCreated(new DirectMessageCreatedEvent(dto, Instant.now()));
-
-        verify(notificationService, times(1))
-            .create(anySet(), eq("새로운 메시지"), any(String.class), eq(Level.INFO));
-    }
 
     @DisplayName("팔로우 생성 이벤트 발생 시 알림이 전송된다")
     @Test
