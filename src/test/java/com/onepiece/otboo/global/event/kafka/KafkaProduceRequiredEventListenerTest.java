@@ -14,19 +14,28 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.notification.enums.AlertStatus;
 import com.onepiece.otboo.domain.weather.service.WeatherAlertOutboxService;
+import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
 import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
+import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
+import com.onepiece.otboo.global.event.event.FeedLikedEvent;
+import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
+import com.onepiece.otboo.global.event.event.RoleUpdatedEvent;
 import com.onepiece.otboo.global.event.event.WeatherChangeEvent;
 import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+
 
 @ExtendWith(MockitoExtension.class)
 class KafkaProduceRequiredEventListenerTest {
@@ -146,4 +155,46 @@ class KafkaProduceRequiredEventListenerTest {
                 verify(outboxService, never()).updateStatus(outboxId, AlertStatus.SEND);
             });
     }
+
+    /**
+     * 여러 일반 이벤트(팔로우, 좋아요, 댓글, 의류속성, 역할변경)가 공통 send(Object) 메서드를 통해 정상적으로 Kafka로 전송되는지 확인
+     */
+    @ParameterizedTest
+    @MethodSource("provideCommonEvents")
+    void 여러_일반_이벤트_전송_성공_테스트(Object event) throws Exception {
+        String payload = "{\"event\":\"ok\"}";
+        given(objectMapper.writeValueAsString(event)).willReturn(payload);
+
+        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        given(kafkaTemplate.send(anyString(), eq(payload))).willReturn(future);
+
+        if (event instanceof FollowCreatedEvent e) {
+            listener.on(e);
+        } else if (event instanceof FeedLikedEvent e) {
+            listener.on(e);
+        } else if (event instanceof FeedCommentCreatedEvent e) {
+            listener.on(e);
+        } else if (event instanceof ClothesAttributeAddedEvent e) {
+            listener.on(e);
+        } else if (event instanceof RoleUpdatedEvent e) {
+            listener.on(e);
+        }
+
+        future.complete(mock(SendResult.class));
+        await().atMost(Duration.ofSeconds(2))
+            .untilAsserted(() ->
+                verify(kafkaTemplate, times(1)).send(anyString(), eq(payload))
+            );
+    }
+
+    private static Stream<Object> provideCommonEvents() {
+        return Stream.of(
+            mock(FollowCreatedEvent.class),
+            mock(FeedLikedEvent.class),
+            mock(FeedCommentCreatedEvent.class),
+            mock(ClothesAttributeAddedEvent.class),
+            mock(RoleUpdatedEvent.class)
+        );
+    }
+
 }

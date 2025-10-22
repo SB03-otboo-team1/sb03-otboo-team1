@@ -1,6 +1,5 @@
 package com.onepiece.otboo.global.sse;
 
-import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -44,12 +43,13 @@ public class SseService {
     }
 
     /**
-     * 특정 사용자에게 알림(NotificationResponse)을 전송합니다.
+     * 특정 사용자에게 이벤트를 전송합니다.
      *
-     * @param userId       수신자 ID
-     * @param notification 전송할 알림 데이터
+     * @param userId    수신자 ID
+     * @param eventName 이벤트 이름 (예: "notifications", "directMessages" 등)
+     * @param data      전송할 데이터 (DTO, 문자열 등)
      */
-    public void send(UUID userId, NotificationResponse notification) {
+    public void send(UUID userId, String eventName, Object data) {
         SseEmitter emitter = emitterRepository.get(userId);
         if (emitter == null) {
             log.warn("[SSE] No active emitter for user: {}", userId);
@@ -58,10 +58,10 @@ public class SseService {
 
         try {
             emitter.send(SseEmitter.event()
-                .id(notification.getId().toString())
-                .name("notifications")
-                .data(notification));
-            log.info("[SSE] Sent notification event to user: {}", userId);
+                .id(UUID.randomUUID().toString())
+                .name(eventName)
+                .data(data));
+            log.info("[SSE] Sent event '{}' to user: {}", eventName, userId);
         } catch (IOException e) {
             log.error("[SSE] Send failed, removing emitter for user: {}", userId, e);
             emitterRepository.delete(userId);

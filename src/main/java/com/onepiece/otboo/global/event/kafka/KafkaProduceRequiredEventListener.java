@@ -4,7 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.notification.enums.AlertStatus;
 import com.onepiece.otboo.domain.weather.service.WeatherAlertOutboxService;
+import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
 import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
+import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
+import com.onepiece.otboo.global.event.event.FeedLikedEvent;
+import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
+import com.onepiece.otboo.global.event.event.RoleUpdatedEvent;
 import com.onepiece.otboo.global.event.event.WeatherChangeEvent;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +40,32 @@ public class KafkaProduceRequiredEventListener {
     public void on(DirectMessageCreatedEvent event) {
         send(event);
     }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(ClothesAttributeAddedEvent event) {
+        send(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(FeedCommentCreatedEvent event) {
+        send(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(FeedLikedEvent event) {
+        send(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(FollowCreatedEvent event) {
+        send(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(RoleUpdatedEvent event) {
+        send(event);
+    }
+
 
     // 일반적인 이벤트 처리
     private void send(Object event) {
