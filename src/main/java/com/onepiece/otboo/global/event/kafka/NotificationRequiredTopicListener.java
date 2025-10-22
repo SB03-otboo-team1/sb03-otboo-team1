@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onepiece.otboo.domain.feed.entity.Feed;
 import com.onepiece.otboo.domain.feed.repository.FeedRepository;
+import com.onepiece.otboo.domain.follow.repository.FollowRepository;
 import com.onepiece.otboo.domain.notification.enums.Level;
 import com.onepiece.otboo.domain.notification.service.NotificationService;
 import com.onepiece.otboo.domain.profile.entity.Profile;
@@ -12,6 +13,7 @@ import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
 import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
 import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
+import com.onepiece.otboo.global.event.event.FeedCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedLikedEvent;
 import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
 import com.onepiece.otboo.global.event.event.RoleUpdatedEvent;
@@ -34,6 +36,7 @@ public class NotificationRequiredTopicListener {
     private final NotificationService notificationService;
     private final ProfileRepository profileRepository;
     private final FeedRepository feedRepository;
+    private final FollowRepository followRepository;
 
 
     @KafkaListener(
@@ -214,6 +217,46 @@ public class NotificationRequiredTopicListener {
                 log.debug(
                     "[NotificationRequiredTopicListener] FollowCreatedEvent 처리 완료 - followerId={}, followeeId={}",
                     followerId, followeeId);
+            }
+        );
+    }
+
+    @KafkaListener(
+        topics = "otboo.FeedCreatedEvent",
+        containerFactory = "processingKafkaListenerContainerFactory"
+    )
+    public void onFeedCreated(String kafkaEvent, Acknowledgment ack) {
+        handle(
+            kafkaEvent, ack,
+            "FeedCreatedEvent",
+            FeedCreatedEvent.class,
+            event -> {
+                var dto = event.data();
+
+                UUID authorId = dto.author().userId();
+                String authorName = dto.author().name();
+
+                var followers = followRepository.findAllByFollowingId(authorId);
+                if (followers.isEmpty()) {
+                    log.debug("[NotificationRequiredTopicListener] 팔로워 없음, 알림 생략 - authorId={}",
+                        authorId);
+                    return;
+                }
+
+                Set<UUID> receiverIds = followers.stream()
+                    .map(f -> f.getFollower().getId())
+                    .collect(java.util.stream.Collectors.toSet());
+
+                notificationService.create(
+                    receiverIds,
+                    "새로운 피드 등록",
+                    authorName + "님이 새로운 피드를 올렸습니다.",
+                    Level.INFO
+                );
+
+                log.debug(
+                    "[NotificationRequiredTopicListener] FeedCreatedEvent 처리 완료 - author={}, followerCount={}",
+                    authorName, receiverIds.size());
             }
         );
     }

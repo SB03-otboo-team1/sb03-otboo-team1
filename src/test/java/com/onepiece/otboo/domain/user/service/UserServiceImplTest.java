@@ -44,6 +44,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -66,6 +67,9 @@ class UserServiceImplTest {
 
     @Mock
     private JwtRegistry jwtRegistry;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -378,5 +382,17 @@ class UserServiceImplTest {
             .hasMessageContaining("사용자");
         verify(userRepository, never()).save(any());
         verify(passwordEncoder, never()).encode(anyString());
+    }
+
+    @Test
+    void 권한변경_시_RoleUpdatedEvent_가_발행된다() {
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.save(user)).willReturn(user);
+        given(profileRepository.findByUserId(userId)).willReturn(Optional.of(profile));
+        given(userMapper.toDto(user, profile)).willReturn(userDto);
+
+        userService.changeRole(userId, Role.ADMIN);
+
+        verify(eventPublisher).publishEvent(any());
     }
 }

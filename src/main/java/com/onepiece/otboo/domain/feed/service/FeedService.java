@@ -19,13 +19,13 @@ import com.onepiece.otboo.domain.weather.dto.response.WeatherSummaryDto;
 import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.domain.weather.mapper.WeatherMapper;
 import com.onepiece.otboo.domain.weather.repository.WeatherRepository;
+import com.onepiece.otboo.global.event.event.FeedCreatedEvent;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.exception.GlobalException;
 import com.onepiece.otboo.global.storage.FileStorage;
 import com.onepiece.otboo.global.storage.S3Storage;
-import org.springframework.transaction.annotation.Transactional;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -33,7 +33,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +51,7 @@ public class FeedService {
     private final WeatherMapper weatherMapper;
     private final ClothesRepository clothesRepository;
     private final FileStorage storage;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.cdn-base-url:}")
     private String cdnBaseUrl;
@@ -99,13 +102,13 @@ public class FeedService {
             .commentCount(0L)
             .build();
 
-       for (Clothes c : clothesList) {
-           FeedClothes link = FeedClothes.builder()
-               .clothesId(c.getId())
-               .build();
-           link.setFeed(feed);
-           feed.getFeedClothes().add(link);
-       }
+        for (Clothes c : clothesList) {
+            FeedClothes link = FeedClothes.builder()
+                .clothesId(c.getId())
+                .build();
+            link.setFeed(feed);
+            feed.getFeedClothes().add(link);
+        }
 
         Feed saved = feedRepository.save(feed);
 
@@ -122,7 +125,14 @@ public class FeedService {
 
         boolean likedByMe = false;
 
-        return feedMapper.toResponse(saved, authorDto, weatherDto, ootds, likedByMe);
+        FeedResponse response = feedMapper.toResponse(saved, authorDto, weatherDto, ootds,
+            likedByMe);
+
+        eventPublisher.publishEvent(
+            new FeedCreatedEvent(response, Instant.now())
+        );
+
+        return response;
     }
 
     @Transactional
@@ -189,15 +199,21 @@ public class FeedService {
     }
 
     private String toPublicUrl(String key) {
-        if (key == null || key.isBlank()) return null;
-        if (key.startsWith("http://") || key.startsWith("https://")) return key;
+        if (key == null || key.isBlank()) {
+            return null;
+        }
+        if (key.startsWith("http://") || key.startsWith("https://")) {
+            return key;
+        }
 
         if (storage instanceof S3Storage s3) {
             return s3.generatePresignedUrl(key);
         }
 
         if (cdnBaseUrl != null && !cdnBaseUrl.isBlank()) {
-            String left  = cdnBaseUrl.endsWith("/") ? cdnBaseUrl.substring(0, cdnBaseUrl.length() - 1) : cdnBaseUrl;
+            String left =
+                cdnBaseUrl.endsWith("/") ? cdnBaseUrl.substring(0, cdnBaseUrl.length() - 1)
+                    : cdnBaseUrl;
             String right = key.startsWith("/") ? key.substring(1) : key;
             return left + "/" + right;
         }

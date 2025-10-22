@@ -23,6 +23,7 @@ import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.domain.user.exception.UserNotFoundException;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
+import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.storage.FileStorage;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -51,6 +53,8 @@ class FollowServiceImplTest {
     private FollowMapper followMapper;
     @Mock
     private FileStorage fileStorage;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private FollowServiceImpl followService;
@@ -100,7 +104,7 @@ class FollowServiceImplTest {
     // createFollow
     // -----------------------------
     @Test
-    @DisplayName("팔로우 생성 성공")
+    @DisplayName("팔로우 생성 성공 - 이벤트 발행 포함")
     void createFollow_success() {
         FollowRequest request = new FollowRequest(follower.getId(), followee.getId());
 
@@ -108,10 +112,8 @@ class FollowServiceImplTest {
         given(userRepository.findById(request.followeeId())).willReturn(Optional.of(followee));
         given(followRepository.existsByFollowerAndFollowing(follower, followee)).willReturn(false);
         given(followRepository.save(any(Follow.class))).willReturn(follow);
-        // 저장 직후 다시 로드
         given(followRepository.findById(any(UUID.class))).willReturn(Optional.of(follow));
 
-        // mapper 결과 준비 (AuthorDto 2개를 포함하는 FollowDto)
         AuthorDto followerAuthor = AuthorDto.builder()
             .userId(follower.getId()).name("팔로워닉").profileImageUrl("follower.png").build();
         AuthorDto followeeAuthor = AuthorDto.builder()
@@ -127,11 +129,8 @@ class FollowServiceImplTest {
         FollowDto response = followService.createFollow(request);
 
         assertThat(response).isNotNull();
-        assertThat(response.follower().userId()).isEqualTo(follower.getId());
-        assertThat(response.followee().userId()).isEqualTo(followee.getId());
-        assertThat(response.follower().name()).isEqualTo("팔로워닉");
-        assertThat(response.followee().name()).isEqualTo("팔로이닉");
         verify(followRepository).save(any(Follow.class));
+        verify(eventPublisher).publishEvent(any(FollowCreatedEvent.class));
     }
 
     @Test

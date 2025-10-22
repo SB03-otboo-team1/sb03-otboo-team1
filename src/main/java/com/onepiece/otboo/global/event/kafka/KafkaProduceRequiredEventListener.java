@@ -7,6 +7,7 @@ import com.onepiece.otboo.domain.weather.service.WeatherAlertOutboxService;
 import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
 import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
+import com.onepiece.otboo.global.event.event.FeedCreatedEvent;
 import com.onepiece.otboo.global.event.event.FeedLikedEvent;
 import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
 import com.onepiece.otboo.global.event.event.RoleUpdatedEvent;
@@ -58,6 +59,11 @@ public class KafkaProduceRequiredEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(FollowCreatedEvent event) {
+        send(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(FeedCreatedEvent event) {
         send(event);
     }
 
