@@ -12,39 +12,56 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.onepiece.otboo.domain.notification.dto.response.NotificationResponse;
 import com.onepiece.otboo.domain.notification.service.NotificationService;
+import com.onepiece.otboo.domain.user.enums.Role;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(NotificationController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(NotificationController.class)
 class NotificationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Mock
+    @MockitoBean
     private NotificationService notificationService;
 
     @Test
     @DisplayName("알림 목록 조회 성공 (GET /api/notifications)")
     void getNotifications_Success() throws Exception {
+        UUID userId = UUID.randomUUID();
+        CustomUserDetails mockUser = new CustomUserDetails(
+            userId,
+            "test@email.com",
+            "password",
+            Role.USER,
+            false,
+            null,
+            Instant.now().plusSeconds(3600)
+        );
+
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(mockUser, null, mockUser.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
         NotificationResponse notificationResponse = NotificationResponse.builder()
             .id(UUID.randomUUID())
-            .receiverId(UUID.randomUUID())
+            .receiverId(userId)
             .title("새 팔로워 알림")
             .content("민준님을 팔로우했습니다.")
             .level("INFO")
