@@ -9,6 +9,9 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "요청 경로를 찾을 수 없음", "존재하지 않는 경로입니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "허용되지 않은 HTTP 메서드", "지원하지 않는 메서드입니다."),
 
+    // Redis
+    REDIS_LOCK_ACQUISITION_FAILED(HttpStatus.CONFLICT, "분산 락 획득 실패", "다른 인스턴스가 락을 보유 중입니다."),
+
     // HTTP
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 Content-Type입니다.",
         "요청의 Content-Type을 확인해 주세요."),
@@ -18,17 +21,14 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 확인 실패", "존재하지 않는 사용자입니다."),
     DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일", "이미 존재하는 이메일입니다."),
 
-    // NOTIFICATION
-    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림 확인 실패", "해당 알림을 찾을 수 없습니다."),
-
     // FOLLOW
     DUPLICATE_FOLLOW(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "이미 해당 사용자를 팔로우하고 있습니다."),
     FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "팔로우 확인 실패", "팔로우 관계가 존재하지 않습니다."),
     FOLLOW_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "자기 자신을 팔로우할 수 없습니다."),
 
     // DM
-    CANNOT_SEND_MESSAGE_TO_SELF(HttpStatus.BAD_REQUEST, "DM 전송 실패", "자기 자신에게 메시지를 보낼 수 없습니다."),
-    DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM 확인 실패", "메시지를 찾을 수 없습니다."),
+    DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM 확인 실패", "DM을 찾을 수 없습니다."),
+    CANNOT_SEND_MESSAGE_TO_SELF(HttpStatus.BAD_REQUEST, "DM 전송 실패", "자기 자신에게는 DM을 보낼 수 없습니다."),
 
     // Weather
     WEATHER_NOT_FOUND(HttpStatus.NOT_FOUND, "날씨 확인 실패", "날씨 정보를 찾을 수 없습니다."),
@@ -69,7 +69,10 @@ public enum ErrorCode {
 
     // FILE
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 타입", "이미지 파일만 업로드 가능합니다."),
-    FILE_SIZE_EXCEED(HttpStatus.BAD_REQUEST, "파일 크기 초과", "최대 업로드 가능 크기를 확인해 주세요.");
+    FILE_SIZE_EXCEED(HttpStatus.BAD_REQUEST, "파일 크기 초과", "최대 업로드 가능 크기를 확인해 주세요."),
+
+    // RECOMMENDATION
+    RECOMMENDATION_NOT_FOUND(HttpStatus.NOT_FOUND, "추천 데이터 부재", "추천 데이터를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
