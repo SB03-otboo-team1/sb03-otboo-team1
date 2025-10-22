@@ -48,7 +48,7 @@ public class FollowServiceImpl implements FollowService {
         UUID followeeId = request.followeeId();
 
         if (followerId.equals(followeeId)) {
-            throw new FollowNotAllowedException(ErrorCode.FOLLOW_NOT_ALLOW);
+            throw new FollowNotAllowedException(ErrorCode.FOLLOW_NOT_ALLOWED);
         }
 
         User follower = findUser(followerId);
