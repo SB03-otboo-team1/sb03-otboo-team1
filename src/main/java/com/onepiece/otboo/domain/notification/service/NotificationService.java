@@ -9,6 +9,7 @@ import java.util.UUID;
 public interface NotificationService {
 
     CursorPageResponseDto<NotificationResponse> getNotifications(
+        UUID receiverId,
         String cursor,
         UUID idAfter,
         int limit

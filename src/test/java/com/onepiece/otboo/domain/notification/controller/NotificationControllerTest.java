@@ -62,7 +62,7 @@ class NotificationControllerTest {
                 SortDirection.DESCENDING
             );
 
-        given(notificationService.getNotifications(anyString(), any(), eq(10)))
+        given(notificationService.getNotifications(any(UUID.class), anyString(), any(), eq(10)))
             .willReturn(mockResponse);
 
         mockMvc.perform(get("/api/notifications")
