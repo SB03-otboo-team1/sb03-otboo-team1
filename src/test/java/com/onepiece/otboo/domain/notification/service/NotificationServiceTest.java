@@ -67,7 +67,7 @@ class NotificationServiceTest {
         given(notificationRepository.findNotifications(any(UUID.class), any(), any(), anyInt()))
             .willReturn(List.of(notification));
         given(notificationMapper.toResponse(notification)).willReturn(response);
-        given(notificationRepository.countAll()).willReturn(1L);
+        given(notificationRepository.countByReceiverId(any(UUID.class))).willReturn(1L);
 
         CursorPageResponseDto<NotificationResponse> result =
             notificationService.getNotifications(receiverId, cursor, idAfter, limit);
@@ -80,7 +80,7 @@ class NotificationServiceTest {
         assertThat(result.sortDirection()).isEqualTo(SortDirection.DESCENDING);
 
         verify(notificationRepository).findNotifications(any(UUID.class), any(), any(), anyInt());
-        verify(notificationRepository).countAll();
+        verify(notificationRepository).countByReceiverId(any(UUID.class));
     }
 
     @Test
@@ -101,7 +101,7 @@ class NotificationServiceTest {
 
         assertThat(notification.getDeletedAt()).isNotNull();
         verify(notificationRepository).findById(id);
-        verify(notificationRepository, never()).delete(notification); // Soft delete 방식
+        verify(notificationRepository, never()).delete(notification);
     }
 
     @Test
