@@ -14,7 +14,9 @@ import com.onepiece.otboo.domain.comment.dto.response.CommentDto;
 import com.onepiece.otboo.domain.comment.entity.Comment;
 import com.onepiece.otboo.domain.comment.mapper.CommentMapper;
 import com.onepiece.otboo.domain.comment.repository.CommentRepository;
+import com.onepiece.otboo.domain.feed.dto.response.AuthorDto;
 import com.onepiece.otboo.domain.feed.entity.Feed;
+import com.onepiece.otboo.domain.feed.repository.FeedRepository;
 import com.onepiece.otboo.domain.user.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,6 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
@@ -37,6 +40,10 @@ class CommentServiceTest {
     CommentMapper mapper;
     @Mock
     EntityManager em;
+    @Mock
+    FeedRepository feedRepository;
+    @Mock
+    ApplicationEventPublisher publisher;
 
     @InjectMocks
     CommentService service;
@@ -60,14 +67,17 @@ class CommentServiceTest {
         when(em.find(Feed.class, feedId)).thenReturn(feed);
         when(em.find(User.class, authorId)).thenReturn(author);
 
+        Comment savedComment = mock(Comment.class);
+        when(repository.save(any(Comment.class))).thenReturn(savedComment);
+
         CommentDto expected = new CommentDto(
             UUID.randomUUID(),
             Instant.now(),
             feedId,
-            new com.onepiece.otboo.domain.feed.dto.response.AuthorDto(authorId, "", null),
+            new AuthorDto(authorId, "", null),
             "댓글"
         );
-        when(mapper.toDto(any(Comment.class))).thenReturn(expected);
+        when(mapper.toDto(savedComment)).thenReturn(expected);
 
         // when
         CommentDto actual = service.create(feedId, req);
@@ -85,9 +95,9 @@ class CommentServiceTest {
         assertThat(saved.getAuthor()).isEqualTo(author);
         assertThat(saved.getContent()).isEqualTo("댓글");
 
-        verify(mapper, times(1)).toDto(saved);
+        verify(mapper, times(1)).toDto(savedComment);
+        verify(feedRepository, times(1)).increaseCommentCount(feedId, 1L);
     }
-
 
     @Test
     void 존재하지_않는_피드() {

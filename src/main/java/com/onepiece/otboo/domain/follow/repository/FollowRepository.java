@@ -29,4 +29,7 @@ public interface FollowRepository extends JpaRepository<Follow, UUID>, FollowRep
 
     @EntityGraph(attributePaths = {"follower.profile", "following.profile"})
     Optional<Follow> findById(UUID id);
+
+    @EntityGraph(attributePaths = {"follower.profile", "following.profile"})
+    List<Follow> findAllByFollowingId(UUID followingId);
 }

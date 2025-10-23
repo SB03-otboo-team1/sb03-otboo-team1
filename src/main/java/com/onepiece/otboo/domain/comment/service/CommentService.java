@@ -6,11 +6,15 @@ import com.onepiece.otboo.domain.comment.entity.Comment;
 import com.onepiece.otboo.domain.comment.mapper.CommentMapper;
 import com.onepiece.otboo.domain.comment.repository.CommentRepository;
 import com.onepiece.otboo.domain.feed.entity.Feed;
+import com.onepiece.otboo.domain.feed.repository.FeedRepository;
 import com.onepiece.otboo.domain.user.entity.User;
+import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +26,8 @@ public class CommentService {
     private final EntityManager em;
     private final CommentRepository repository;
     private final CommentMapper mapper;
+    private final FeedRepository feedRepository;
+    private final ApplicationEventPublisher publisher;
 
     public CommentDto create(UUID feedIdFromPath, CommentCreateRequest req) {
         if (req.feedId() != null && !req.feedId().equals(feedIdFromPath)) {
@@ -49,7 +55,14 @@ public class CommentService {
             .content(trimmedContent)
             .build();
 
-        repository.save(comment);
-        return mapper.toDto(comment);
+        Comment saved = repository.save(comment);
+
+        CommentDto dto = mapper.toDto(saved);
+
+        feedRepository.increaseCommentCount(feedIdFromPath, 1L);
+
+        publisher.publishEvent(new FeedCommentCreatedEvent(dto, Instant.now()));
+        
+        return dto;
     }
 }

@@ -136,6 +136,9 @@ dependencies {
         }
     }
 
+    // 구매 링크로 의상 정보 조회 시 사용
+    implementation 'org.jsoup:jsoup:1.18.1'
+
     // ======================== Test ========================
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

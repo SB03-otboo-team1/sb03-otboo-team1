@@ -13,7 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ClothesService {
 
-    CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor, UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual);
+    CursorPageResponseDto<ClothesDto> getClothesWithCursor(UUID ownerId, String cursor,
+        UUID idAfter, int limit, SortBy sortBy, SortDirection sortDirection, ClothesType typeEqual);
 
     ClothesDto getClothes(UUID clothesId);
 
@@ -24,4 +25,6 @@ public interface ClothesService {
         throws IOException;
 
     void deleteClothes(UUID clothesId);
+
+    ClothesDto getClothesByUrl(UUID userId, String url) throws IOException;
 }

@@ -16,14 +16,17 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.global.storage.FileStorage;
 import com.onepiece.otboo.infra.security.userdetails.CustomUserDetails;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,7 @@ public class FollowServiceImpl implements FollowService {
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
     private final FileStorage fileStorage;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 팔로우 생성
@@ -48,7 +52,7 @@ public class FollowServiceImpl implements FollowService {
         UUID followeeId = request.followeeId();
 
         if (followerId.equals(followeeId)) {
-            throw new FollowNotAllowedException(ErrorCode.FOLLOW_NOT_ALLOW);
+            throw new FollowNotAllowedException(ErrorCode.FOLLOW_NOT_ALLOWED);
         }
 
         User follower = findUser(followerId);
@@ -63,6 +67,13 @@ public class FollowServiceImpl implements FollowService {
                 .follower(follower)
                 .following(followee)
                 .build()
+        );
+
+        eventPublisher.publishEvent(
+            new FollowCreatedEvent(
+                followMapper.toDto(saved, fileStorage),
+                Instant.now()
+            )
         );
 
         Follow loaded = followRepository.findById(saved.getId())

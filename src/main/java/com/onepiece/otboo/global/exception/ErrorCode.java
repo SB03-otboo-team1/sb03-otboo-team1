@@ -24,12 +24,15 @@ public enum ErrorCode {
     // FOLLOW
     DUPLICATE_FOLLOW(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "이미 해당 사용자를 팔로우하고 있습니다."),
     FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "팔로우 확인 실패", "팔로우 관계가 존재하지 않습니다."),
-    FOLLOW_NOT_ALLOW(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "자기 자신은 팔로우할 수 없습니다."),
+    FOLLOW_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "팔로우 등록 실패", "자기 자신을 팔로우할 수 없습니다."),
 
     // DM
     DM_NOT_FOUND(HttpStatus.NOT_FOUND, "DM 확인 실패", "DM을 찾을 수 없습니다."),
     CANNOT_SEND_MESSAGE_TO_SELF(HttpStatus.BAD_REQUEST, "DM 전송 실패", "자기 자신에게는 DM을 보낼 수 없습니다."),
 
+    // Notification
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림 확인 실패", "존재하지 않는 알림입니다."),
+    
     // Weather
     WEATHER_NOT_FOUND(HttpStatus.NOT_FOUND, "날씨 확인 실패", "날씨 정보를 찾을 수 없습니다."),
 
@@ -58,6 +61,11 @@ public enum ErrorCode {
     // CLOTHES
     CLOTHES_NOT_FOUND(HttpStatus.NOT_FOUND, "의상 확인 실패", "의상을 찾을 수 없습니다."),
     INVALID_CLOTHES_SORT(HttpStatus.BAD_REQUEST, "의상 조회 실패", "유효하지 않은 정렬 기준입니다."),
+    CLOTHES_OWNERSHIP_MISMATCH(HttpStatus.FORBIDDEN, "의류 소유권 불일치", "요청한 의류 중 소유하지 않은 항목이 있습니다."),
+    PARSING_PAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "쇼핑몰 페이지 로드 실패", "쇼핑몰 페이지를 찾을 수 없습니다"),
+    PARSING_PAGE_ACCESS_BLOCKED(HttpStatus.FORBIDDEN, "쇼핑몰 페이지 로드 실패", "쇼핑몰에서 접근을 차단했습니다"),
+    CLOTHES_PARSING_FAILED(HttpStatus.BAD_REQUEST, "쇼핑몰 페이지 파싱 실패", "상품 정보를 가져오는데 실패했습니다"),
+    UNSUPPORTED_SHOPPING_MALL(HttpStatus.BAD_REQUEST, "쇼핑몰 파싱 불가", "파싱을 지원하지 않는 쇼핑몰입니다"),
 
     // CLOTHES_ATTRIBUTES
     CLOTHES_ATTRIBUTE_DEF_NOT_FOUND(HttpStatus.NOT_FOUND, "의상 속성 정의 확인 실패", "의상 속성을 찾을 수 없습니다."),

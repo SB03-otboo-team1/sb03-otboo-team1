@@ -1,6 +1,6 @@
 package com.onepiece.otboo.domain.recommendation.entity;
 
-import com.onepiece.otboo.domain.profile.entity.Profile;
+import com.onepiece.otboo.domain.user.entity.User;
 import com.onepiece.otboo.domain.weather.entity.Weather;
 import com.onepiece.otboo.global.base.BaseEntity;
 import jakarta.persistence.Entity;
@@ -24,7 +24,7 @@ public class Recommendation extends BaseEntity {
 
     @JoinColumn(name = "user_id", nullable = false, columnDefinition = "uuid")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private Profile profile;
+    private User user;
 
     @JoinColumn(name = "weather_id", nullable = false, columnDefinition = "uuid")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
