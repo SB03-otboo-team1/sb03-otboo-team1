@@ -44,9 +44,6 @@ public class Notification {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column
-    private Instant deletedAt;
-
     @Builder
     public Notification(UUID receiverId, String title, String content,
         Level level, Instant createdAt) {
@@ -55,12 +52,6 @@ public class Notification {
         this.content = content;
         this.level = level;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
-    }
-
-    public void delete() {
-        if (this.deletedAt == null) {
-            this.deletedAt = Instant.now();
-        }
     }
 
     @Override

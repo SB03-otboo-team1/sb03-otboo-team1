@@ -34,8 +34,6 @@ class NotificationTest {
         assertThat(notification.getCreatedAt()).isNotNull();
         assertThat(notification.getCreatedAt())
             .isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
-
-        assertThat(notification.getDeletedAt()).isNull();
     }
 
     @Test
@@ -64,45 +62,5 @@ class NotificationTest {
 
         assertThat(n1).isEqualTo(n2);
         assertThat(n1.hashCode()).isEqualTo(n2.hashCode());
-    }
-
-    @Test
-    @DisplayName("delete() 호출 시 deletedAt이 현재 시간으로 설정된다")
-    void delete_Success() {
-        Notification notification = Notification.builder()
-            .receiverId(UUID.randomUUID())
-            .title("팔로워 알림")
-            .content("새 팔로워가 있습니다.")
-            .level(Level.INFO)
-            .createdAt(Instant.now())
-            .build();
-
-        assertThat(notification.getDeletedAt()).isNull();
-
-        notification.delete();
-
-        assertThat(notification.getDeletedAt()).isNotNull();
-        assertThat(notification.getDeletedAt())
-            .isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
-    }
-
-    @Test
-    @DisplayName("이미 삭제된 알림에 delete() 재호출 시 중복 갱신되지 않는다")
-    void delete_AlreadyDeleted_NoChange() throws InterruptedException {
-        Notification notification = Notification.builder()
-            .receiverId(UUID.randomUUID())
-            .title("테스트 알림")
-            .content("이미 삭제된 알림입니다.")
-            .level(Level.INFO)
-            .createdAt(Instant.now())
-            .build();
-
-        notification.delete();
-        Instant firstDeletedAt = notification.getDeletedAt();
-
-        Thread.sleep(10);
-        notification.delete();
-
-        assertThat(notification.getDeletedAt()).isEqualTo(firstDeletedAt);
     }
 }
