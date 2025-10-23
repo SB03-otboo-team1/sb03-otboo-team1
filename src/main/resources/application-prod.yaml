@@ -40,9 +40,6 @@ spring:
 server:
   port: ${SERVER_PORT:80}
 
-server:
-  port: ${SERVER_PORT:80}
-
 logging:
   level:
     root: info
