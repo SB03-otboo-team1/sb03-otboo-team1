@@ -169,11 +169,10 @@ public class NotificationRequiredTopicListener {
             FeedLikedEvent.class,
             event -> {
                 var feed = event.feed();
-                var liker = event.liker();
+                UUID likerId = event.likerId();
 
                 UUID feedAuthorId = feed.author().userId();
                 String feedAuthorName = feed.author().name();
-                UUID likerId = liker.id();
 
                 if (likerId.equals(feedAuthorId)) {
                     log.debug("[NotificationRequiredTopicListener] 자기 피드 좋아요, 알림 생략 - userId={}",
@@ -181,16 +180,18 @@ public class NotificationRequiredTopicListener {
                     return;
                 }
 
+                Profile liker = findProfile(likerId);
+
                 notificationService.create(
                     Set.of(feedAuthorId),
                     "피드 좋아요",
-                    liker.name() + "님이 당신의 피드를 좋아했습니다.",
+                    liker.getNickname() + "님이 당신의 피드를 좋아했습니다.",
                     Level.INFO
                 );
 
                 log.debug(
-                    "[NotificationRequiredTopicListener] FeedLikedEvent 처리 완료 - feedAuthorId={}, liker={}",
-                    feedAuthorName, liker.name());
+                    "[NotificationRequiredTopicListener] FeedLikedEvent 처리 완료 - feedAuthorName={}, liker={}",
+                    feedAuthorName, liker.getNickname());
             }
         );
     }
