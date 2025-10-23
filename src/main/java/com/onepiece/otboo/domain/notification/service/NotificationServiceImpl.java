@@ -9,12 +9,14 @@ import com.onepiece.otboo.domain.notification.repository.NotificationRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.sse.SseService;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,12 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>
  * - 알림 목록 조회 (커서 기반) - 알림 생성 - 알림 읽음 처리
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
+    private final SseService sseService;
 
     /**
      * 알림 목록 조회 (receiverId + cursor + idAfter 기반)
@@ -83,7 +87,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     /**
-     * 알림 생성
+     * 알림 생성 + SSE 실시간 전송
      */
     @Transactional
     @Override
@@ -97,7 +101,18 @@ public class NotificationServiceImpl implements NotificationService {
                 .createdAt(Instant.now())
                 .build();
 
-            notificationRepository.save(notification);
+            Notification saved = notificationRepository.save(notification);
+            
+            NotificationResponse response = notificationMapper.toResponse(saved);
+
+            try {
+                sseService.send(receiverId, "notifications", response);
+                log.debug("[NotificationServiceImpl] SSE 전송 완료 - receiverId={}, title={}",
+                    receiverId, title);
+            } catch (Exception e) {
+                log.warn("[NotificationServiceImpl] SSE 전송 실패 - receiverId={}, 이유={}", receiverId,
+                    e.getMessage());
+            }
         });
     }
 

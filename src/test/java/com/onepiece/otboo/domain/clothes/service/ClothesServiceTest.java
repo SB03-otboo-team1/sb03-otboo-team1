@@ -6,9 +6,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.onepiece.otboo.domain.clothes.dto.data.ClothesDto;
+import com.onepiece.otboo.domain.clothes.dto.request.ClothesAttributeDefCreateRequest;
 import com.onepiece.otboo.domain.clothes.entity.Clothes;
+import com.onepiece.otboo.domain.clothes.entity.ClothesAttributeDefs;
 import com.onepiece.otboo.domain.clothes.entity.ClothesType;
+import com.onepiece.otboo.domain.clothes.mapper.ClothesAttributeMapper;
 import com.onepiece.otboo.domain.clothes.mapper.ClothesMapper;
+import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeDefRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.domain.clothes.repository.ClothesRepository;
@@ -17,6 +21,7 @@ import com.onepiece.otboo.domain.user.fixture.UserFixture;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -33,6 +39,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 class ClothesServiceTest {
 
+    // -------------------------
+    // ClothesServiceImpl 관련
+    // -------------------------
     @Mock
     private ClothesRepository clothesRepository;
 
@@ -47,6 +56,21 @@ class ClothesServiceTest {
 
     @InjectMocks
     private ClothesServiceImpl clothesService;
+
+    // -------------------------
+    // ClothesAttributeDefServiceImpl 관련
+    // -------------------------
+    @Mock
+    private ClothesAttributeDefRepository clothesAttributeDefRepository;
+
+    @Mock
+    private ClothesAttributeMapper clothesAttributeMapper;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @InjectMocks
+    private ClothesAttributeDefServiceImpl clothesAttributeDefService;
 
     @Test
     void 옷_목록_조회_성공_hasNext_false() {
@@ -175,5 +199,22 @@ class ClothesServiceTest {
         assertThat(response.data()).isEmpty();
         assertThat(response.totalCount()).isEqualTo(0L);
         assertThat(response.hasNext()).isFalse();
+    }
+    
+    @Test
+    void 의상속성정의_등록시_이벤트_발행된다() {
+        ClothesAttributeDefCreateRequest request =
+            new ClothesAttributeDefCreateRequest("색상", List.of("빨강", "파랑", "노랑"));
+
+        ClothesAttributeDefs savedDef = ClothesAttributeDefs.builder()
+            .name("색상")
+            .build();
+
+        given(clothesAttributeDefRepository.save(any())).willReturn(savedDef);
+        given(optionsRepository.saveAll(any())).willReturn(List.of());
+
+        clothesAttributeDefService.createClothesAttributeDef(request);
+
+        verify(eventPublisher).publishEvent(any(ClothesAttributeAddedEvent.class));
     }
 }

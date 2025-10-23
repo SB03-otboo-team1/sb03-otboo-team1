@@ -16,13 +16,16 @@ import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.dto.response.CursorPageResponseDto;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.event.event.RoleUpdatedEvent;
 import com.onepiece.otboo.global.exception.ErrorCode;
 import com.onepiece.otboo.infra.security.jwt.JwtRegistry;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtRegistry jwtRegistry;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -132,7 +136,15 @@ public class UserServiceImpl implements UserService {
 
         log.info("[UserService] 사용자 권한 변경 - userId: {}, role: {}, 토큰 무효화 완료", userId, role);
 
-        return userMapper.toDto(user, profileRepository.findByUserId(userId).orElse(null));
+        Profile profile = profileRepository.findByUserId(userId)
+            .orElse(null);
+        UserDto userDto = userMapper.toDto(user, profile);
+
+        eventPublisher.publishEvent(new RoleUpdatedEvent(userDto, Instant.now()));
+
+        log.info("[UserService] RoleUpdatedEvent 발행 완료 - userId={}, role={}", userId, role);
+
+        return userDto;
     }
 
     @Override

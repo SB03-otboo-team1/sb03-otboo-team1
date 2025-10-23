@@ -12,10 +12,13 @@ import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeOptionsRepos
 import com.onepiece.otboo.domain.clothes.repository.ClothesAttributeRepository;
 import com.onepiece.otboo.global.enums.SortBy;
 import com.onepiece.otboo.global.enums.SortDirection;
+import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +32,7 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
     private final ClothesAttributeOptionsRepository clothesAttributeOptionsRepository;
     private final ClothesAttributeRepository clothesAttributeRepository;
     private final ClothesAttributeMapper clothesAttributeMapper;
-
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -88,6 +91,15 @@ public class ClothesAttributeDefServiceImpl implements ClothesAttributeDefServic
 
         log.info("[의상 속성 정의] 등록 작업 완료 - definitionId: {}, countOptions: {}", savedDef.getId(),
             savedOptions.size());
+
+        ClothesAttributeDefDto response = clothesAttributeMapper.toAttributeDefDto(savedDef);
+
+        eventPublisher.publishEvent(
+            new ClothesAttributeAddedEvent(response, Instant.now())
+        );
+
+        log.info("[의상 속성 정의] ClothesAttributeAddedEvent 발행 완료 - defId: {}",
+            savedDef.getId());
 
         return clothesAttributeMapper.toAttributeDefDto(savedDef);
     }
