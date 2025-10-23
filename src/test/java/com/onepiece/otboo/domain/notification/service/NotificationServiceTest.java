@@ -104,7 +104,6 @@ class NotificationServiceTest {
 
         notificationService.deleteNotification(id);
 
-        assertThat(notification.getDeletedAt()).isNotNull();
         verify(notificationRepository).findById(id);
         verify(notificationRepository, never()).delete(notification);
     }
@@ -123,32 +122,7 @@ class NotificationServiceTest {
         verify(notificationRepository).findById(invalidId);
         verify(notificationRepository, never()).delete(any(Notification.class));
     }
-
-    @Test
-    @DisplayName("이미 삭제된 알림에 delete() 호출 시 중복 저장되지 않음")
-    void deleteNotification_AlreadyDeleted_NoUpdate() {
-        UUID id = UUID.randomUUID();
-        Notification notification = Notification.builder()
-            .receiverId(UUID.randomUUID())
-            .title("이미 삭제된 알림")
-            .content("내용")
-            .level(Level.INFO)
-            .createdAt(Instant.now())
-            .build();
-
-        notification.delete();
-        Instant deletedAtBefore = notification.getDeletedAt();
-
-        given(notificationRepository.findById(id)).willReturn(Optional.of(notification));
-
-        notificationService.deleteNotification(id);
-
-        assertThat(notification.getDeletedAt()).isEqualTo(deletedAtBefore);
-        verify(notificationRepository).findById(id);
-        verify(notificationRepository, never()).delete(notification);
-    }
-
-
+    
     @Test
     @DisplayName("알림 생성 성공 - 저장 후 SSE 전송 호출")
     void createNotification_Success() {

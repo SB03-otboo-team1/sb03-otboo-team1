@@ -102,7 +102,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .build();
 
             Notification saved = notificationRepository.save(notification);
-            
+
             NotificationResponse response = notificationMapper.toResponse(saved);
 
             try {
@@ -125,6 +125,6 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationRepository.findById(id)
             .orElseThrow(() -> new NotificationNotFoundException(id));
 
-        notification.delete();
+        notificationRepository.deleteById(id);
     }
 }

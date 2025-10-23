@@ -29,6 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
@@ -41,6 +42,8 @@ class CommentServiceTest {
     EntityManager em;
     @Mock
     FeedRepository feedRepository;
+    @Mock
+    ApplicationEventPublisher publisher;
 
     @InjectMocks
     CommentService service;

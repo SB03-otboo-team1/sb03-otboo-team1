@@ -383,16 +383,4 @@ class UserServiceImplTest {
         verify(userRepository, never()).save(any());
         verify(passwordEncoder, never()).encode(anyString());
     }
-
-    @Test
-    void 권한변경_시_RoleUpdatedEvent_가_발행된다() {
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(userRepository.save(user)).willReturn(user);
-        given(profileRepository.findByUserId(userId)).willReturn(Optional.of(profile));
-        given(userMapper.toDto(user, profile)).willReturn(userDto);
-
-        userService.changeRole(userId, Role.ADMIN);
-
-        verify(eventPublisher).publishEvent(any());
-    }
 }

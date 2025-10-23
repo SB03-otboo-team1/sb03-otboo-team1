@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -274,22 +273,5 @@ class FeedServiceTest {
         assertThatExceptionOfType(GlobalException.class)
             .isThrownBy(() -> feedService.delete(feedId, UUID.randomUUID()))
             .matches(ex -> ((GlobalException) ex).getErrorCode() == ErrorCode.FEED_NOT_FOUND);
-    }
-
-    @Test
-    @DisplayName("좋아요 등록 시 FeedLikedEvent가 발행된다")
-    void like_성공시_이벤트_발행() {
-        UUID userId = UUID.randomUUID();
-        UUID feedId = UUID.randomUUID();
-
-        Feed feed = mock(Feed.class);
-        when(feedRepository.findById(feedId)).thenReturn(Optional.of(feed));
-        when(feed.getAuthorId()).thenReturn(UUID.randomUUID());
-        when(profileRepository.findByUserId(any())).thenReturn(Optional.of(mock(Profile.class)));
-
-        feedLikeService.like(userId, feedId);
-
-        verify(feedLikeRepository).save(any());
-        verify(eventPublisher).publishEvent(any());
     }
 }

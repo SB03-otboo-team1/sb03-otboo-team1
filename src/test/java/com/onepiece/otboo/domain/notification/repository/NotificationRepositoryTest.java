@@ -1,7 +1,6 @@
 package com.onepiece.otboo.domain.notification.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 
 import com.onepiece.otboo.domain.notification.entity.Notification;
 import com.onepiece.otboo.domain.notification.enums.Level;
@@ -101,7 +100,7 @@ class NotificationRepositoryTest {
 
         if (!next.isEmpty()) {
             assertThat(next.get(0).getCreatedAt()).isEqualTo(cursor);
-            assertThat(next.get(0).getId()).isLessThan(idAfter);
+            assertThat(next.get(0).getId().toString()).isLessThan(idAfter.toString());
         }
     }
 
@@ -126,36 +125,5 @@ class NotificationRepositoryTest {
         long count = notificationRepository.countByReceiverId(receiverId);
 
         assertThat(count).isEqualTo(2L);
-    }
-
-    @Test
-    @DisplayName("delete() 호출 시 deletedAt이 설정된다")
-    void delete_Success() {
-        UUID receiverId = UUID.randomUUID();
-
-        Notification notification = Notification.builder()
-            .receiverId(receiverId)
-            .title("삭제 테스트 알림")
-            .content("삭제 처리 전 상태입니다.")
-            .level(Level.INFO)
-            .createdAt(Instant.now())
-            .build();
-
-        notificationRepository.save(notification);
-        em.flush();
-        em.clear();
-
-        Notification saved = notificationRepository.findById(notification.getId()).orElseThrow();
-        assertThat(saved.getDeletedAt()).isNull();
-
-        saved.delete();
-        notificationRepository.save(saved);
-        em.flush();
-        em.clear();
-
-        Notification updated = notificationRepository.findById(notification.getId()).orElseThrow();
-        assertThat(updated.getDeletedAt()).isNotNull();
-        assertThat(updated.getDeletedAt())
-            .isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS));
     }
 }

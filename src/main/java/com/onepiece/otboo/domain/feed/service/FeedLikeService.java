@@ -8,9 +8,7 @@ import com.onepiece.otboo.domain.feed.repository.FeedLikeRepository;
 import com.onepiece.otboo.domain.feed.repository.FeedRepository;
 import com.onepiece.otboo.domain.profile.entity.Profile;
 import com.onepiece.otboo.domain.profile.repository.ProfileRepository;
-import com.onepiece.otboo.domain.user.dto.response.UserDto;
 import com.onepiece.otboo.domain.user.entity.User;
-import com.onepiece.otboo.domain.user.mapper.UserMapper;
 import com.onepiece.otboo.domain.user.repository.UserRepository;
 import com.onepiece.otboo.global.event.event.FeedLikedEvent;
 import com.onepiece.otboo.global.exception.ErrorCode;
@@ -34,7 +32,6 @@ public class FeedLikeService {
     private final FeedLikeRepository feedLikeRepository;
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
-    private final UserMapper userMapper;
     private final EntityManager em;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -74,10 +71,8 @@ public class FeedLikeService {
             false
         );
 
-        UserDto likerDto = userMapper.toDto(liker, null);
-
         eventPublisher.publishEvent(
-            new FeedLikedEvent(feedResponse, likerDto, Instant.now())
+            new FeedLikedEvent(feedResponse, userId, Instant.now())
         );
     }
 
