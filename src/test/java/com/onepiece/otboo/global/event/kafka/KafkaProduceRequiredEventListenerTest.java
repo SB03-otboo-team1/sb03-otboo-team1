@@ -1,0 +1,200 @@
+package com.onepiece.otboo.global.event.kafka;
+
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onepiece.otboo.domain.notification.enums.AlertStatus;
+import com.onepiece.otboo.domain.weather.service.WeatherAlertOutboxService;
+import com.onepiece.otboo.global.event.event.ClothesAttributeAddedEvent;
+import com.onepiece.otboo.global.event.event.DirectMessageCreatedEvent;
+import com.onepiece.otboo.global.event.event.FeedCommentCreatedEvent;
+import com.onepiece.otboo.global.event.event.FeedLikedEvent;
+import com.onepiece.otboo.global.event.event.FollowCreatedEvent;
+import com.onepiece.otboo.global.event.event.RoleUpdatedEvent;
+import com.onepiece.otboo.global.event.event.WeatherChangeEvent;
+import java.time.Duration;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+
+
+@ExtendWith(MockitoExtension.class)
+class KafkaProduceRequiredEventListenerTest {
+
+    @Mock
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private WeatherAlertOutboxService outboxService;
+
+    @InjectMocks
+    private KafkaProduceRequiredEventListener listener;
+
+    private static final String WEATHER_CHANGE_TOPIC = "otboo.WeatherChangeEvent";
+
+    @Test
+    void 직렬화_성공및_카프카_전송_성공_테스트() throws Exception {
+
+        // given
+        UUID outboxId = UUID.randomUUID();
+        WeatherChangeEvent event = mock(WeatherChangeEvent.class);
+        given(event.outboxId()).willReturn(outboxId);
+
+        String payload = "{\"foo\":\"bar\"}";
+        given(objectMapper.writeValueAsString(event)).willReturn(payload);
+
+        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        given(kafkaTemplate.send(WEATHER_CHANGE_TOPIC, payload)).willReturn(future);
+
+        // when
+        listener.on(event); // 내부에서 send(WeatherChangeEvent) 호출
+
+        // then(성공 콜백 트리거)
+        SendResult sendResult = mock(SendResult.class);
+        RecordMetadata recordMetadata = mock(RecordMetadata.class);
+        given(sendResult.getRecordMetadata()).willReturn(recordMetadata);
+        given(recordMetadata.offset()).willReturn(42L);
+        future.complete(sendResult);
+        await().atMost(Duration.ofSeconds(2))
+            .untilAsserted(() -> {
+                verify(kafkaTemplate, times(1)).send(WEATHER_CHANGE_TOPIC, payload);
+                verify(outboxService, times(1)).updateStatus(outboxId, AlertStatus.SEND);
+                verify(outboxService, never()).updateStatus(outboxId, AlertStatus.FAILED);
+            });
+    }
+
+    @Test
+    void 일반적인_이벤트_전송_성공_테스트() throws Exception {
+
+        // given
+        DirectMessageCreatedEvent event = mock(DirectMessageCreatedEvent.class);
+
+        String payload = "{\"dm\":\"send\"}";
+        given(objectMapper.writeValueAsString(event)).willReturn(payload);
+
+        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        given(kafkaTemplate.send(any(), eq(payload))).willReturn(future);
+
+        // when
+        listener.on(event);
+
+        // then
+        SendResult sendResult = mock(SendResult.class);
+        future.complete(sendResult);
+        await().atMost(Duration.ofSeconds(2))
+            .untilAsserted(() -> {
+                verify(kafkaTemplate, times(1)).send(any(), eq(payload));
+            });
+    }
+
+    @Test
+    void 직렬화_실패_테스트() throws Exception {
+
+        // given
+        UUID outboxId = UUID.randomUUID();
+        WeatherChangeEvent event = mock(WeatherChangeEvent.class);
+        given(event.outboxId()).willReturn(outboxId);
+
+        given(objectMapper.writeValueAsString(event))
+            .willThrow(new JsonProcessingException("boom") {
+            });
+
+        // when
+        listener.on(event);
+
+        // then
+        verify(outboxService, times(1)).updateStatus(outboxId, AlertStatus.FAILED);
+        verify(kafkaTemplate, never()).send(anyString(), anyString());
+    }
+
+    @Test
+    void 카프카_전송_실패_테스트() throws Exception {
+
+        // given
+        UUID outboxId = UUID.randomUUID();
+        WeatherChangeEvent event = mock(WeatherChangeEvent.class);
+        given(event.outboxId()).willReturn(outboxId);
+
+        String payload = "{\"ok\":true}";
+        given(objectMapper.writeValueAsString(event)).willReturn(payload);
+
+        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        given(kafkaTemplate.send(WEATHER_CHANGE_TOPIC, payload)).willReturn(future);
+
+        // when
+        listener.on(event);
+
+        // then
+        future.completeExceptionally(new RuntimeException("send failed"));
+        await().atMost(Duration.ofSeconds(2))
+            .untilAsserted(() -> {
+                verify(kafkaTemplate, times(1)).send(WEATHER_CHANGE_TOPIC, payload);
+                verify(outboxService, times(1)).updateStatus(outboxId, AlertStatus.FAILED);
+                verify(outboxService, never()).updateStatus(outboxId, AlertStatus.SEND);
+            });
+    }
+
+    /**
+     * 여러 일반 이벤트(팔로우, 좋아요, 댓글, 의류속성, 역할변경)가 공통 send(Object) 메서드를 통해 정상적으로 Kafka로 전송되는지 확인
+     */
+    @ParameterizedTest
+    @MethodSource("provideCommonEvents")
+    void 여러_일반_이벤트_전송_성공_테스트(Object event) throws Exception {
+        String payload = "{\"event\":\"ok\"}";
+        given(objectMapper.writeValueAsString(event)).willReturn(payload);
+
+        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        given(kafkaTemplate.send(anyString(), eq(payload))).willReturn(future);
+
+        if (event instanceof FollowCreatedEvent e) {
+            listener.on(e);
+        } else if (event instanceof FeedLikedEvent e) {
+            listener.on(e);
+        } else if (event instanceof FeedCommentCreatedEvent e) {
+            listener.on(e);
+        } else if (event instanceof ClothesAttributeAddedEvent e) {
+            listener.on(e);
+        } else if (event instanceof RoleUpdatedEvent e) {
+            listener.on(e);
+        }
+
+        future.complete(mock(SendResult.class));
+        await().atMost(Duration.ofSeconds(2))
+            .untilAsserted(() ->
+                verify(kafkaTemplate, times(1)).send(anyString(), eq(payload))
+            );
+    }
+
+    private static Stream<Object> provideCommonEvents() {
+        return Stream.of(
+            mock(FollowCreatedEvent.class),
+            mock(FeedLikedEvent.class),
+            mock(FeedCommentCreatedEvent.class),
+            mock(ClothesAttributeAddedEvent.class),
+            mock(RoleUpdatedEvent.class)
+        );
+    }
+
+}

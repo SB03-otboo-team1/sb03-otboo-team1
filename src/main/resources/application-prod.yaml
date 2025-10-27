@@ -1,0 +1,70 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  h2:
+    console:
+      enabled: false
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="${KAFKA_API_KEY}"
+        password="${KAFKA_API_SECRET}";
+      ssl.endpoint.identification.algorithm: https
+      client.dns.lookup: use_all_dns_ips
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:onepiece-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        isolation.level: read_committed
+      enable-auto-commit: false
+
+server:
+  port: ${SERVER_PORT:80}
+
+logging:
+  level:
+    root: info
+    com.onepiece.otboo: info
+    org.springframework: info
+    org.hibernate.SQL: off
+otboo:
+  security:
+    cors:
+      allowed-origins:
+        - "https://otboo.site"
+        - "http://otboo.site"
+        - "http://localhost:3000"
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+        - OPTIONS
+      allow-credentials: true
+    csrf:
+      ignored-paths:
+    swagger:
+      basic:
+        enabled: true
+        username: ${SWAGGER_BASIC_USERNAME}
+        password: ${SWAGGER_BASIC_PASSWORD}

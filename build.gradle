@@ -1,0 +1,254 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+    id 'idea'
+}
+
+group = 'com.onepiece'
+version = '0.0.1-SNAPSHOT'
+description = 'Otboo'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    // integrationTest에서 test 의존성 확장
+    integrationTestImplementation {
+        extendsFrom testImplementation
+    }
+    integrationTestRuntimeOnly {
+        extendsFrom testRuntimeOnly
+    }
+}
+
+def querydslGeneratedDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
+
+sourceSets {
+    main {
+        java.srcDir querydslGeneratedDir
+    }
+    test {
+        java.srcDir querydslGeneratedDir
+    }
+    integrationTest {
+        java.srcDir querydslGeneratedDir
+        java.srcDir 'src/integrationTest/java'
+        resources.srcDir 'src/integrationTest/resources'
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += output + compileClasspath + configurations.testRuntimeClasspath
+    }
+}
+
+// integrationTest 리소스 중복 파일 허용 설정 기본 값 INHERIT
+tasks.named('processIntegrationTestResources') {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// QueryDSL 설정
+tasks.named('compileJava') {
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
+}
+tasks.named('compileTestJava') {
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
+}
+tasks.named('compileIntegrationTestJava') {
+    options.annotationProcessorGeneratedSourcesDirectory = querydslGeneratedDir
+}
+
+clean {
+    delete querydslGeneratedDir
+}
+
+idea {
+    module {
+        testSources.from(sourceSets.integrationTest.java.srcDirs)
+        testResources.from(sourceSets.integrationTest.resources.srcDirs)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // ======================== Main ========================
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+    // Auth
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
+
+    // Swagger UI 제공
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+
+    // Lombok과 MapStruct를 동시에 사용할 때 Lombok이 선행 실행되도록 순서 유지
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // MapStruct
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+    // AWS S3 SDK 의존성 추가
+    implementation 'software.amazon.awssdk:s3:2.31.7'
+
+    // dotenv-java 의존성 추가
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+
+    // Querydsl 설정
+    // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+
+    // Database
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
+
+    // Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // WebClient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // https://mvnrepository.com/artifact/io.netty/netty-resolver-dns-native-macos
+    runtimeOnly('io.netty:netty-resolver-dns-native-macos') {
+        artifact {
+            classifier = 'osx-aarch_64'
+        }
+    }
+
+    // 구매 링크로 의상 정보 조회 시 사용
+    implementation 'org.jsoup:jsoup:1.18.1'
+
+    // ======================== Test ========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+    testImplementation "org.mockito:mockito-junit-jupiter:5.12.0"
+    testImplementation "org.mockito:mockito-inline:5.2.0"
+
+    // Lombok
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // https://mvnrepository.com/artifact/io.netty/netty-resolver-dns-native-macos
+    runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.2.Final:osx-aarch_64'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // security-messaging
+    implementation 'org.springframework.security:spring-security-messaging'
+
+    // =================== Integration test ===================
+    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+    integrationTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+jacoco {
+    toolVersion = '0.8.13'
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('compileIntegrationTestJava')
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('integrationTest')
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    finalizedBy 'jacocoTestReport'
+}
+
+tasks.register('integrationTest', Test) {
+    description = '통합 테스트 실행'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    shouldRunAfter 'test'
+    useJUnitPlatform()
+    finalizedBy 'jacocoIntegrationTestReport'
+}
+
+jacocoTestReport {
+    dependsOn 'test'
+    reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacoco.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/test/html')
+    }
+    classDirectories.setFrom(
+            files(sourceSets.main.output.classesDirs).asFileTree.matching {
+                exclude '**/seeder/**'
+            }
+    )
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
+}
+
+tasks.register('jacocoIntegrationTestReport', JacocoReport) {
+    group = 'verification'
+    description = '통합 테스트 JaCoCo 리포트 생성'
+    dependsOn 'integrationTest'
+    reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/integrationTest/jacoco.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/integrationTest/html')
+    }
+    sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom(
+            files(sourceSets.main.output.classesDirs).asFileTree.matching {
+                exclude '**/seeder/**'
+            }
+    )
+    executionData.setFrom(layout.buildDirectory.file('jacoco/integrationTest.exec'))
+}
+
+tasks.register('jacocoMergedReport', JacocoReport) {
+    group = 'verification'
+    description = '일반 테스트와 통합 테스트의 커버리지 병합 JaCoCo 리포트 생성'
+    dependsOn 'test', 'integrationTest'
+    reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/merged/jacoco.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/merged/html')
+    }
+    sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom(
+            files(sourceSets.main.output.classesDirs).asFileTree.matching {
+                exclude '**/seeder/**'
+            }
+    )
+    executionData.setFrom(fileTree(layout.buildDirectory.dir("jacoco")).matching {
+        include 'test.exec', 'integrationTest.exec'
+    })
+}

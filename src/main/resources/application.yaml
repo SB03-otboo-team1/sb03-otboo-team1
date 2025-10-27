@@ -1,0 +1,179 @@
+spring:
+  application:
+    name: otboo
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true      # H2 Console 사용 여부
+      path: /h2-console  # H2 Console 접속 주소
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    sender-email: ${MAIL_SENDER_EMAIL}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          starttls:
+            enable: true
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:onepiece-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        isolation.level: read_committed
+      enable-auto-commit: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-name: GOOGLE
+            client-id: ${OAUTH2_GOOGLE_CLIENT_ID}
+            client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile
+              - email
+          kakao:
+            client-name: KAKAO
+            client-id: ${OAUTH2_KAKAO_CLIENT_ID}
+            client-secret: ${OAUTH2_KAKAO_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile_nickname
+              - profile_image
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            user-name-attribute: sub
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      ssl:
+        enabled: true
+  cache:
+    type: redis
+
+logging:
+  level:
+    root: info
+    com.onepiece.otboo: info
+    org.springframework: info
+    org.hibernate.SQL: warn
+otboo:
+  jwt:
+    access-token:
+      secret: ${JWT_ACCESS_SECRET}
+      expiration-ms: ${JWT_ACCESS_EXPIRATION_MS}
+    refresh-token:
+      secret: ${JWT_REFRESH_SECRET}
+      expiration-ms: ${JWT_REFRESH_EXPIRATION_MS}
+    max-active-jwt-count: 1
+  temporary-password:
+    validity-seconds: ${TEMP_PASSWORD_VALIDITY_SECONDS}
+    charset: ${TEMP_PASSWORD_CHARSET}
+    special-charset: ${TEMP_PASSWORD_SPECIAL_CHARSET}
+  security:
+    cors:
+      allowed-origins:
+        - "http://localhost:80"
+        - "http://localhost:8080"
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      allow-credentials: true
+    csrf:
+      ignored-paths:
+    swagger:
+      basic:
+        enabled: true
+        username: ${SWAGGER_BASIC_USERNAME}
+        password: ${SWAGGER_BASIC_PASSWORD}
+  admin:
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
+  location:
+    default: ${DEFAULT_LOCATION_NAME}
+
+api:
+  kakao:
+    rest-api-key: ${REST_API_KEY}
+  weather:
+    service-api-key: ${SERVICE_API_KEY}
+
+aws:
+  storage:
+    type: ${STORAGE_TYPE:s3}
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+    region: ${AWS_REGION}
+    bucket: ${AWS_BUCKET}
+    presigned-url-expiration: ${AWS_PRESIGNED_URL_EXPIRATION:600}
+    prefix:
+      profile: ${PROFILE_PREFIX}
+      clothes: ${CLOTHES_PREFIX}
+
+springdoc:
+  swagger-ui:
+    path: /api/swagger-ui
+  api-docs:
+    path: /api/v3/api-docs
+
+async:
+  executors:
+    default:
+      core-size: ${ASYNC_THREAD_POOL_DEFAULT_CORE_SIZE:2}
+      max-size: ${ASYNC_THREAD_POOL_DEFAULT_MAX_SIZE:10}
+      queue-capacity: ${ASYNC_THREAD_POOL_DEFAULT_QUEUE_CAPACITY:100}
+      keep-alive: ${ASYNC_THREAD_POOL_DEFAULT_KEEP_ALIVE:60}
+    binary-content:
+      core-size: ${MAX_CORE_SIZE:4}
+      max-size: ${MAX_SIZE:8}
+      queue-capacity: ${QUEUE_CAPACITY:200}
+      keep-alive: ${KEEP_ALIVE:60}
+    mail-content:
+      core-size: ${ASYNC_THREAD_POOL_MAIL_CONTENT_CORE_SIZE:2}
+      max-size: ${ASYNC_THREAD_POOL_MAIL_CONTENT_MAX_SIZE:4}
+      queue-capacity: ${ASYNC_THREAD_POOL_MAIL_CONTENT_QUEUE_CAPACITY:50}
+      keep-alive: ${ASYNC_THREAD_POOL_MAIL_CONTENT_KEEP_ALIVE:60}
